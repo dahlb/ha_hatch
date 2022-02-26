@@ -1,0 +1,8 @@
+{
+  "name": "HA Hatch Sound Machine",
+  "render_readme": true,
+  "content_in_root": false,
+  "country": ["US"],
+  "homeassistant": "2021.10.0b0",
+  "domains": ["media_player"]
+}
