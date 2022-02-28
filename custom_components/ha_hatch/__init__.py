@@ -44,12 +44,12 @@ async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    _LOGGER.debug(f"async setup entry")
+    _LOGGER.debug(f"async setup entry: {config_entry}")
     email = config_entry.data[CONF_EMAIL]
     password = config_entry.data[CONF_PASSWORD]
 
     client_session = async_get_clientsession(hass)
-    _, mqtt_connection, rest_minis = get_rest_minis(email=email, password=password, client_session=client_session)
+    _, mqtt_connection, rest_minis = await get_rest_minis(email=email, password=password, client_session=client_session)
 
     data = {
         DATA_MQTT_CONNECTION: mqtt_connection,

@@ -2,7 +2,7 @@
   "title": "Hatch Rest Mini",
   "config": {
     "step": {
-      "auth": {
+      "user": {
         "title": "Hatch Auth",
         "description": "Configure your Credentials.",
         "data": {
@@ -16,7 +16,7 @@
       }
     },
     "error": {
-      "auth": "Login failed into Kia/Hyundai. Please use official Hatch app to logout and log back in and try again."
+      "auth": "Login failed into Hatch. Please use official Hatch app to logout and log back in and try again."
     }
   }
 }

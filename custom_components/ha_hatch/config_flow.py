@@ -30,7 +30,7 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
     def __init__(self):
         pass
 
-    async def async_step_auth(self, user_input: Optional[Dict[str, Any]] = None):
+    async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
         data_schema = {
             vol.Required(CONF_EMAIL): str,
             vol.Required(CONF_PASSWORD): str,
@@ -45,6 +45,7 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
             try:
                 api_cloud = Hatch()
                 await api_cloud.login(email=email, password=password)
+                self.data.update(user_input)
                 return self.async_create_entry(
                     title=email,
                     data=self.data,
@@ -53,8 +54,8 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
                 errors["base"] = "auth"
             finally:
                 if api_cloud is not None:
-                    await api_cloud.cleanup()
+                    await api_cloud.cleanup_client_session()
 
         return self.async_show_form(
-            step_id="auth", data_schema=vol.Schema(data_schema), errors=errors
+            step_id="user", data_schema=vol.Schema(data_schema), errors=errors
         )

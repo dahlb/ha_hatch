@@ -18,6 +18,9 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from hatch_rest_api import RestMini, RestMiniAudioTrack, REST_MINI_AUDIO_TRACKS
+from homeassistant.helpers.entity import DeviceInfo
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,31 +34,42 @@ class RestMiniEntity(MediaPlayerEntity):
                                     | SUPPORT_PLAY
                                     | SUPPORT_STOP
                                     | SUPPORT_SELECT_SOUND_MODE
-                                    | SUPPORT_VOLUME_MUTE
                                     | SUPPORT_VOLUME_SET
                                     | SUPPORT_VOLUME_STEP
-#                                    | SUPPORT_PREVIOUS_TRACK
-#                                    | SUPPORT_NEXT_TRACK
+                                    | SUPPORT_PREVIOUS_TRACK
+                                    | SUPPORT_NEXT_TRACK
                                 )
 
     def __init__(self, rest_mini: RestMini):
+        self._attr_unique_id = rest_mini.thing_name
+        self._attr_name = rest_mini.device_name
         self.rest_mini = rest_mini
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer="Hatch",
+            model="Rest Mini",
+            name=self._attr_name,
+            sw_version=self.rest_mini.firmware_version,
+        )
+        self._attr_sound_mode_list = list(map(lambda x : x.name, REST_MINI_AUDIO_TRACKS[1:]))
+
         self.rest_mini.register_callback(self._update_local_state)
 
-        self._attr_sound_mode_list = list(map(lambda x : x.name, REST_MINI_AUDIO_TRACKS))
-
     def _update_local_state(self):
-        self._attr_name = self.rest_mini.thing_name
+        _LOGGER.debug(f"updating state:{self.rest_mini}")
         if self.rest_mini.is_playing:
             self._attr_state = STATE_PLAYING
         else:
             self._attr_state = STATE_IDLE
         self._attr_sound_mode = self.rest_mini.audio_track.name
         self._attr_volume_level = self.rest_mini.volume / 100
-#        self.rest_mini.firmware_version
+        self._attr_device_info.update(sw_version=self.rest_mini.firmware_version)
+        self.async_write_ha_state()
 
-    def mute_volume(self, mute):
-        self.rest_mini.set_audio_track(RestMiniAudioTrack.NONE)
+    def _find_track(self, sound_mode = None):
+        if sound_mode is None:
+            sound_mode = self._attr_sound_mode
+        return next((track for track in REST_MINI_AUDIO_TRACKS if track.name == sound_mode), None)
 
     def set_volume_level(self, volume):
         self.rest_mini.set_volume(volume*100)
@@ -64,11 +78,26 @@ class RestMiniEntity(MediaPlayerEntity):
         self.rest_mini.set_audio_track(self.rest_mini.audio_track)
 
     def media_pause(self):
-        self.mute_volume()
+        self.rest_mini.set_audio_track(RestMiniAudioTrack.NONE)
 
     def media_stop(self):
-        self.mute_volume()
+        self.rest_mini.set_audio_track(RestMiniAudioTrack.NONE)
 
     def select_sound_mode(self, sound_mode: str):
-        track = next((track for track in REST_MINI_AUDIO_TRACKS if track.name == sound_mode), REST_MINI_AUDIO_TRACKS.NONE)
+        track = self._find_track(sound_mode=sound_mode)
+        if track is None:
+            track = REST_MINI_AUDIO_TRACKS.NONE
         self.rest_mini.set_audio_track(track)
+
+    def media_previous_track(self):
+        current_track = self._find_track()
+        index = self._attr_sound_mode_list.index(current_track)
+        self._attr_sound_mode_list[index - 1]
+
+    def media_next_track(self):
+        current_track = self._find_track()
+        index = self._attr_sound_mode_list.index(current_track)
+        next_index = index + 1
+        if next_index == len(self._attr_sound_mode_list):
+            next_index = 0
+        self._attr_sound_mode_list[next_index]
