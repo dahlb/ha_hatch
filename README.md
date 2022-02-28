@@ -11,6 +11,10 @@ Warning ahead; this is alpha phase, if you notice something missing please open 
 ## Installation ##
 You can install this either manually copying files or using HACS. Configuration can be done on UI, you need to enter your username and password, (I know, translations are missing). 
 
+Due to upstream limitation https://github.com/awslabs/aws-crt-python/issues/315
+
+if you use alpine linux for home assistant like the official docker image; run `apk add gcc g++ cmake make`
+
 ## Troubleshooting ##
 If you receive an error while trying to login, please go through these steps;
 1. You can enable logging for this integration specifically and share your logs, so I can have a deep dive investigation. To enable logging, update your `configuration.yaml` like this, we can get more information in Configuration -> Logs page

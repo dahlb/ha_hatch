@@ -4,11 +4,8 @@ from homeassistant.components.media_player import MediaPlayerEntity, DEVICE_CLAS
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_NEXT_TRACK,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
     MEDIA_TYPE_MUSIC,
@@ -36,8 +33,6 @@ class RestMiniEntity(MediaPlayerEntity):
                                     | SUPPORT_SELECT_SOUND_MODE
                                     | SUPPORT_VOLUME_SET
                                     | SUPPORT_VOLUME_STEP
-                                    | SUPPORT_PREVIOUS_TRACK
-                                    | SUPPORT_NEXT_TRACK
                                 )
 
     def __init__(self, rest_mini: RestMini):
@@ -88,16 +83,3 @@ class RestMiniEntity(MediaPlayerEntity):
         if track is None:
             track = REST_MINI_AUDIO_TRACKS.NONE
         self.rest_mini.set_audio_track(track)
-
-    def media_previous_track(self):
-        current_track = self._find_track()
-        index = self._attr_sound_mode_list.index(current_track)
-        self._attr_sound_mode_list[index - 1]
-
-    def media_next_track(self):
-        current_track = self._find_track()
-        index = self._attr_sound_mode_list.index(current_track)
-        next_index = index + 1
-        if next_index == len(self._attr_sound_mode_list):
-            next_index = 0
-        self._attr_sound_mode_list[next_index]
