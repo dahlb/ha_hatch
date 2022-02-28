@@ -22,7 +22,3 @@ async def async_setup_entry(
 
     rest_entities = map(lambda rest_mini : RestMiniEntity(rest_mini), rest_minis)
     async_add_entities(rest_entities)
-#    platform = entity_platform.async_get_current_platform()
-#    platform.async_register_entity_service(
-#        SERVICE_UPDATE_SETTING, UPDATE_SETTING_SCHEMA, "async_update_setting"
-#    )
