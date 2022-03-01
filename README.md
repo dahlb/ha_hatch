@@ -15,6 +15,26 @@ Due to upstream limitation https://github.com/awslabs/aws-crt-python/issues/315
 
 if you use alpine linux for home assistant like the official docker image; run `apk add gcc g++ cmake make`
 
+can be automated with configuration.yaml
+``` 
+shell_command:
+  hatch_rest_apk: /config/setup_ha_hatch.sh
+```
+and automation.yaml
+``` 
+- id: '1646074445984'
+  alias: APK install
+  description: ''
+  trigger:
+  - platform: homeassistant
+    event: start
+  condition: []
+  action:
+  - service: shell_command.hatch_rest_apk
+    data: {}
+  mode: single
+```
+
 ## Troubleshooting ##
 If you receive an error while trying to login, please go through these steps;
 1. You can enable logging for this integration specifically and share your logs, so I can have a deep dive investigation. To enable logging, update your `configuration.yaml` like this, we can get more information in Configuration -> Logs page
