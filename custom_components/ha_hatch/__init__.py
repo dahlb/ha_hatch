@@ -81,7 +81,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
     )
     if unload_ok:
-        mqtt_connection: Connection = config_entry.data[DATA_MQTT_CONNECTION]
+        mqtt_connection: Connection = hass.data[DOMAIN][DATA_MQTT_CONNECTION]
         mqtt_connection.disconnect().result()
 
         hass.data[DOMAIN] = None
