@@ -61,6 +61,8 @@ class RestMiniEntity(MediaPlayerEntity):
         self.rest_mini.register_callback(self._update_local_state)
 
     def _update_local_state(self):
+        if self.platform is None:
+            return
         _LOGGER.debug(f"updating state:{self.rest_mini}")
         if self.rest_mini.is_playing:
             self._attr_state = STATE_PLAYING
@@ -70,6 +72,10 @@ class RestMiniEntity(MediaPlayerEntity):
         self._attr_volume_level = self.rest_mini.volume / 100
         self._attr_device_info.update(sw_version=self.rest_mini.firmware_version)
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        if self.rest_mini.is_playing is not None:
+            self._update_local_state()
 
     def _find_track(self, sound_mode=None):
         if sound_mode is None:
