@@ -11,15 +11,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from hatch_rest_api import get_rest_minis
 import asyncio
 from awscrt.mqtt import Connection
+import datetime
 
 from .const import (
     DOMAIN,
     PLATFORMS,
     DATA_MQTT_CONNECTION,
     DATA_REST_MINIS,
+    DATA_EXPIRATION_LISTENER,
+    DATA_MEDIA_PlAYERS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,13 +52,32 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     email = config_entry.data[CONF_EMAIL]
     password = config_entry.data[CONF_PASSWORD]
 
-    client_session = async_get_clientsession(hass)
-    _, mqtt_connection, rest_minis = await get_rest_minis(email=email, password=password, client_session=client_session)
+    data = {}
 
-    data = {
-        DATA_MQTT_CONNECTION: mqtt_connection,
-        DATA_REST_MINIS: rest_minis,
-    }
+    async def setup_connection(arg):
+        _LOGGER.debug(f"updating credentials: {arg}")
+        client_session = async_get_clientsession(hass)
+        _, mqtt_connection, rest_minis, expiration_time = await get_rest_minis(
+            email=email, password=password, client_session=client_session
+        )
+        if DATA_MQTT_CONNECTION in data:
+            mqtt_connection: Connection = data[DATA_MQTT_CONNECTION]
+            mqtt_connection.disconnect().result()
+        data[DATA_MQTT_CONNECTION] = mqtt_connection
+
+        if DATA_MEDIA_PlAYERS in data:
+            for rest_mini in rest_minis:
+                for media_player in data[DATA_MEDIA_PlAYERS]:
+                    if rest_mini.thing_name == media_player.rest_mini.thing_name:
+                        media_player.replace_rest_mini(rest_mini)
+        else:
+            data[DATA_REST_MINIS] = rest_minis
+
+        data[DATA_EXPIRATION_LISTENER] = async_track_point_in_utc_time(
+            hass, setup_connection, datetime.datetime.fromtimestamp(expiration_time)
+        )
+
+    await setup_connection("initial setup")
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -83,6 +106,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     if unload_ok:
         mqtt_connection: Connection = hass.data[DOMAIN][DATA_MQTT_CONNECTION]
         mqtt_connection.disconnect().result()
+        hass.data[DOMAIN][DATA_EXPIRATION_LISTENER]()
 
         hass.data[DOMAIN] = None
 
