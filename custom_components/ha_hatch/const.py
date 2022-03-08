@@ -10,3 +10,5 @@ PLATFORMS = ["media_player"]
 # Home Assistant Data Storage Constants
 DATA_MQTT_CONNECTION: str = "mqtt_connection"
 DATA_REST_MINIS: str = "rest_minis"
+DATA_MEDIA_PlAYERS: str = "media_players"
+DATA_EXPIRATION_LISTENER: str = "expiration_listener"
