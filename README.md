@@ -2,10 +2,10 @@
 
 A custom integration for Hatch Rest Mini Sound Machine. This project is mostly from looking at other core integrations
 
-Warning ahead; this is alpha phase, if you notice something missing please open an issue.
+Warning ahead; this is beta phase, if you notice something missing please open an issue.
 
 ## Feature Highlights ##
-- start and stop sound machine with variety of built in sounds
+- start and stop sound machine with variety of built-in sounds
 - adjust the volume
 
 ## Installation ##
