@@ -19,6 +19,6 @@ async def async_setup_entry(
 
     rest_minis = hass.data[DOMAIN][DATA_REST_MINIS]
 
-    rest_entities = map(lambda rest_mini: RestMiniEntity(rest_mini), rest_minis)
+    rest_entities = list(map(lambda rest_mini: RestMiniEntity(rest_mini), rest_minis))
     hass.data[DOMAIN][DATA_MEDIA_PlAYERS] = rest_entities
     async_add_entities(rest_entities)

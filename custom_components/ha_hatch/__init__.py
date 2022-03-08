@@ -57,24 +57,47 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     async def setup_connection(arg):
         _LOGGER.debug(f"updating credentials: {arg}")
         client_session = async_get_clientsession(hass)
-        _, mqtt_connection, rest_minis, expiration_time = await get_rest_minis(
-            email=email, password=password, client_session=client_session
-        )
+
+        def disconnect():
+            _LOGGER.debug(f"disconnected")
+
+        def resumed():
+            _LOGGER.debug(f"resumed")
+
         if DATA_MQTT_CONNECTION in data:
             mqtt_connection: Connection = data[DATA_MQTT_CONNECTION]
-            mqtt_connection.disconnect().result()
+            try:
+                mqtt_connection.disconnect().result()
+            except Exception as error:
+                _LOGGER.debug(f"mqtt_connection disconnect failed during reconnect: {error}")
+
+        _, mqtt_connection, rest_minis, expiration_time = await get_rest_minis(
+            email=email,
+            password=password,
+            client_session=client_session,
+            on_connection_interrupted=disconnect,
+            on_connection_resumed=resumed,
+        )
+        _LOGGER.debug(
+            f"credentials expire at: {datetime.datetime.fromtimestamp(expiration_time)}"
+        )
         data[DATA_MQTT_CONNECTION] = mqtt_connection
 
         if DATA_MEDIA_PlAYERS in data:
+            _LOGGER.debug(f"updating existing media players ... {data[DATA_MEDIA_PlAYERS]}")
             for rest_mini in rest_minis:
+                _LOGGER.debug(f"looping new rest mini : {rest_mini.thing_name}, {rest_mini.device_name}")
                 for media_player in data[DATA_MEDIA_PlAYERS]:
+                    _LOGGER.debug(f"looping existing media players : {media_player._attr_unique_id}, {media_player._attr_name}")
+                    # media_player.recreate_failed_connection_callback = setup_connection
                     if rest_mini.thing_name == media_player.rest_mini.thing_name:
+                        _LOGGER.debug(f"matched and replacing media player's rest mini")
                         media_player.replace_rest_mini(rest_mini)
         else:
             data[DATA_REST_MINIS] = rest_minis
 
         data[DATA_EXPIRATION_LISTENER] = async_track_point_in_utc_time(
-            hass, setup_connection, datetime.datetime.fromtimestamp(expiration_time)
+            hass, setup_connection, datetime.datetime.fromtimestamp(expiration_time - 60)
         )
 
     await setup_connection("initial setup")
@@ -105,7 +128,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     )
     if unload_ok:
         mqtt_connection: Connection = hass.data[DOMAIN][DATA_MQTT_CONNECTION]
-        mqtt_connection.disconnect().result()
+        try:
+            mqtt_connection.disconnect().result()
+        except Exception as error:
+            _LOGGER.debug(f"mqtt_connection disconnect failed during unload: {error}")
         hass.data[DOMAIN][DATA_EXPIRATION_LISTENER]()
 
         hass.data[DOMAIN] = None
