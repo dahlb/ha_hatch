@@ -69,7 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             try:
                 mqtt_connection.disconnect().result()
             except Exception as error:
-                _LOGGER.debug(f"mqtt_connection disconnect failed during reconnect: {error}")
+                _LOGGER.debug(
+                    f"mqtt_connection disconnect failed during reconnect: {error}"
+                )
 
         _, mqtt_connection, rest_minis, expiration_time = await get_rest_minis(
             email=email,
@@ -84,11 +86,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         data[DATA_MQTT_CONNECTION] = mqtt_connection
 
         if DATA_MEDIA_PlAYERS in data:
-            _LOGGER.debug(f"updating existing media players ... {data[DATA_MEDIA_PlAYERS]}")
+            _LOGGER.debug(
+                f"updating existing media players ... {data[DATA_MEDIA_PlAYERS]}"
+            )
             for rest_mini in rest_minis:
-                _LOGGER.debug(f"looping new rest mini : {rest_mini.thing_name}, {rest_mini.device_name}")
+                _LOGGER.debug(
+                    f"looping new rest mini : {rest_mini.thing_name}, {rest_mini.device_name}"
+                )
                 for media_player in data[DATA_MEDIA_PlAYERS]:
-                    _LOGGER.debug(f"looping existing media players : {media_player._attr_unique_id}, {media_player._attr_name}")
+                    _LOGGER.debug(
+                        f"looping existing media players : {media_player._attr_unique_id}, {media_player._attr_name}"
+                    )
                     # media_player.recreate_failed_connection_callback = setup_connection
                     if rest_mini.thing_name == media_player.rest_mini.thing_name:
                         _LOGGER.debug(f"matched and replacing media player's rest mini")
@@ -97,7 +105,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             data[DATA_REST_MINIS] = rest_minis
 
         data[DATA_EXPIRATION_LISTENER] = async_track_point_in_utc_time(
-            hass, setup_connection, datetime.datetime.fromtimestamp(expiration_time - 60)
+            hass,
+            setup_connection,
+            datetime.datetime.fromtimestamp(expiration_time - 60),
         )
 
     await setup_connection("initial setup")
