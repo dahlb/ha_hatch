@@ -97,7 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     _LOGGER.debug(
                         f"looping existing media players : {media_player._attr_unique_id}, {media_player._attr_name}"
                     )
-                    # media_player.recreate_failed_connection_callback = setup_connection
                     if rest_mini.thing_name == media_player.rest_mini.thing_name:
                         _LOGGER.debug(f"matched and replacing media player's rest mini")
                         media_player.replace_rest_mini(rest_mini)
