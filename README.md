@@ -13,7 +13,7 @@ You can install this either manually copying files or using HACS. Configuration 
 
 Due to upstream limitation https://github.com/awslabs/aws-crt-python/issues/315
 
-if you use alpine linux for home assistant like the official docker image; run `apk add gcc g++ cmake make`
+if you use alpine linux for home assistant like the official docker image; run `apk add gcc g++ cmake make` or `pip install awscrt -f https://qqaatw.github.io/aws-crt-python-musllinux/`
 
 can be automated with configuration.yaml
 ``` 
