@@ -4,8 +4,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, DATA_REST_MINIS, DATA_MEDIA_PlAYERS
+from .const import DOMAIN, DATA_REST_DEVICES, DATA_MEDIA_PlAYERS
 from .rest_mini_entity import RestMiniEntity
+from hatch_rest_api import RestMini
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,8 +18,12 @@ async def async_setup_entry(
 ) -> None:
     hass.data.setdefault(DOMAIN, {})
 
-    rest_minis = hass.data[DOMAIN][DATA_REST_MINIS]
+    rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
 
-    rest_entities = list(map(lambda rest_mini: RestMiniEntity(rest_mini), rest_minis))
+    rest_entities = []
+    for rest_device in rest_devices:
+        if isinstance(rest_device, RestMini):
+            rest_entities.append(RestMiniEntity(rest_device))
+
     hass.data[DOMAIN][DATA_MEDIA_PlAYERS] = rest_entities
     async_add_entities(rest_entities)

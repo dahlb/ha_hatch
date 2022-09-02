@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from hatch_rest_api import get_rest_minis
+from hatch_rest_api import get_rest_devices, RestMini
 import asyncio
 from awscrt.mqtt import Connection
 import datetime
@@ -21,7 +21,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     DATA_MQTT_CONNECTION,
-    DATA_REST_MINIS,
+    DATA_REST_DEVICES,
     DATA_EXPIRATION_LISTENER,
     DATA_MEDIA_PlAYERS,
 )
@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     f"mqtt_connection disconnect failed during reconnect: {error}"
                 )
 
-        _, mqtt_connection, rest_minis, expiration_time = await get_rest_minis(
+        _, mqtt_connection, rest_devices, expiration_time = await get_rest_devices(
             email=email,
             password=password,
             client_session=client_session,
@@ -89,19 +89,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             _LOGGER.debug(
                 f"updating existing media players ... {data[DATA_MEDIA_PlAYERS]}"
             )
-            for rest_mini in rest_minis:
+            for rest_device in rest_devices:
                 _LOGGER.debug(
-                    f"looping new rest mini : {rest_mini.thing_name}, {rest_mini.device_name}"
+                    f"looping new rest devices : {rest_device.thing_name}, {rest_device.device_name}"
                 )
                 for media_player in data[DATA_MEDIA_PlAYERS]:
                     _LOGGER.debug(
                         f"looping existing media players : {media_player._attr_unique_id}, {media_player._attr_name}"
                     )
-                    if rest_mini.thing_name == media_player.rest_mini.thing_name:
+                    if rest_device.thing_name == media_player.rest_mini.thing_name:
                         _LOGGER.debug(f"matched and replacing media player's rest mini")
-                        media_player.replace_rest_mini(rest_mini)
+                        media_player.replace_rest_mini(rest_device)
         else:
-            data[DATA_REST_MINIS] = rest_minis
+            data[DATA_REST_DEVICES] = rest_devices
 
         data[DATA_EXPIRATION_LISTENER] = async_track_point_in_utc_time(
             hass,
