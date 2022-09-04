@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from hatch_rest_api import get_rest_devices, RestMini
+from hatch_rest_api import get_rest_devices
 import asyncio
 from awscrt.mqtt import Connection
 import datetime
@@ -97,9 +97,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     _LOGGER.debug(
                         f"looping existing media players : {media_player._attr_unique_id}, {media_player._attr_name}"
                     )
-                    if rest_device.thing_name == media_player.rest_mini.thing_name:
-                        _LOGGER.debug(f"matched and replacing media player's rest mini")
-                        media_player.replace_rest_mini(rest_device)
+                    if rest_device.thing_name == media_player.rest_device.thing_name:
+                        _LOGGER.debug(f"matched and replacing media player's rest device")
+                        media_player.replace_rest_device(rest_device)
         else:
             data[DATA_REST_DEVICES] = rest_devices
 
