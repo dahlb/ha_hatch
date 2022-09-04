@@ -21,29 +21,18 @@ from homeassistant.const import (
     STATE_OFF,
 )
 from hatch_rest_api import RestPlus, RestPlusAudioTrack, REST_PLUS_AUDIO_TRACKS, RestMini, RestMiniAudioTrack, REST_MINI_AUDIO_TRACKS
-from homeassistant.helpers.entity import DeviceInfo
-
-from .const import DOMAIN
+from .rest_entity import RestEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class RestMediaEntity(MediaPlayerEntity):
+class RestMediaEntity(RestEntity, MediaPlayerEntity):
     _attr_should_poll = False
     _attr_media_content_type = MEDIA_TYPE_MUSIC
     _attr_device_class = DEVICE_CLASS_SPEAKER
 
     def __init__(self, rest_device: RestMini | RestPlus):
-        self._attr_unique_id = rest_device.thing_name
-        self._attr_name = rest_device.device_name
-        self.rest_device = rest_device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            manufacturer="Hatch",
-            model=rest_device.__class__.__name__,
-            name=self._attr_name,
-            sw_version=self.rest_device.firmware_version,
-        )
+        super().__init__(rest_device, "Media Player")
         if isinstance(rest_device, RestMini):
             self._attr_sound_mode_list = list(
                 map(lambda x: x.name, REST_MINI_AUDIO_TRACKS[1:])
@@ -73,15 +62,8 @@ class RestMediaEntity(MediaPlayerEntity):
                     | SUPPORT_TURN_OFF
             )
 
-        self.rest_device.register_callback(self._update_local_state)
-
-    def replace_rest_device(self, rest_device):
-        self.rest_device.remove_callback(self._update_local_state)
-        self.rest_device = rest_device
-        self.rest_device.register_callback(self._update_local_state)
-
     def _update_local_state(self):
-        if self.platform is None:
+        if self.platform is None or self.rest_device.audio_track is None:
             return
         _LOGGER.debug(f"updating state:{self.rest_device}")
         if isinstance(self.rest_device, RestMini) or self.rest_device.is_on:
@@ -95,10 +77,6 @@ class RestMediaEntity(MediaPlayerEntity):
         self._attr_volume_level = self.rest_device.volume / 100
         self._attr_device_info.update(sw_version=self.rest_device.firmware_version)
         self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        if self.rest_device.is_playing is not None:
-            self._update_local_state()
 
     def _find_track(self, sound_mode=None):
         if sound_mode is None:
@@ -131,13 +109,3 @@ class RestMediaEntity(MediaPlayerEntity):
         if track is None:
             track = self.none_track
         self.rest_device.set_audio_track(track)
-
-    def turn_on(self):
-        if isinstance(self.rest_device, RestMini):
-            raise NotImplementedError()
-        self.rest_device.set_on(True)
-
-    def turn_off(self):
-        if isinstance(self.rest_device, RestMini):
-            raise NotImplementedError()
-        self.rest_device.set_on(False)

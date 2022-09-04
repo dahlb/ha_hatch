@@ -18,6 +18,6 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})
 
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
-    rest_entities = list(map(lambda rest_device: RestMediaEntity(rest_device), rest_devices))
-    hass.data[DOMAIN][DATA_MEDIA_PlAYERS] = rest_entities
-    async_add_entities(rest_entities)
+    medie_player_entities = list(map(lambda rest_device: RestMediaEntity(rest_device), rest_devices))
+    hass.data[DOMAIN][DATA_MEDIA_PlAYERS] = medie_player_entities
+    async_add_entities(medie_player_entities)

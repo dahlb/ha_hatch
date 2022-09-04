@@ -24,7 +24,9 @@ from .const import (
     DATA_REST_DEVICES,
     DATA_EXPIRATION_LISTENER,
     DATA_MEDIA_PlAYERS,
+    DATA_LIGHTS,
 )
+from .util import find_rest_device_by_thing_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,24 +86,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             f"credentials expire at: {datetime.datetime.fromtimestamp(expiration_time)}"
         )
         data[DATA_MQTT_CONNECTION] = mqtt_connection
+        data[DATA_REST_DEVICES] = rest_devices
 
         if DATA_MEDIA_PlAYERS in data:
-            _LOGGER.debug(
-                f"updating existing media players ... {data[DATA_MEDIA_PlAYERS]}"
-            )
-            for rest_device in rest_devices:
-                _LOGGER.debug(
-                    f"looping new rest devices : {rest_device.thing_name}, {rest_device.device_name}"
-                )
-                for media_player in data[DATA_MEDIA_PlAYERS]:
-                    _LOGGER.debug(
-                        f"looping existing media players : {media_player._attr_unique_id}, {media_player._attr_name}"
-                    )
-                    if rest_device.thing_name == media_player.rest_device.thing_name:
-                        _LOGGER.debug(f"matched and replacing media player's rest device")
-                        media_player.replace_rest_device(rest_device)
-        else:
-            data[DATA_REST_DEVICES] = rest_devices
+            _LOGGER.debug(f"updating existing media players ... {data[DATA_MEDIA_PlAYERS]}")
+            for media_player in data[DATA_MEDIA_PlAYERS]:
+                media_player.replace_rest_device(find_rest_device_by_thing_name(rest_devices, media_player.rest_device.thing_name))
+
+        if DATA_LIGHTS in data:
+            _LOGGER.debug(f"updating existing lights ... {data[DATA_LIGHTS]}")
+            for light in data[DATA_LIGHTS]:
+                light.replace_rest_device(find_rest_device_by_thing_name(rest_devices, light.rest_device.thing_name))
 
         data[DATA_EXPIRATION_LISTENER] = async_track_point_in_utc_time(
             hass,
