@@ -14,7 +14,7 @@ class RestEntity(ABC):
             identifiers={(DOMAIN, rest_device.thing_name)},
             manufacturer="Hatch",
             model=rest_device.__class__.__name__,
-            name=self._attr_name,
+            name=rest_device.device_name,
             sw_version=self.rest_device.firmware_version,
         )
         self.rest_device.register_callback(self._update_local_state)

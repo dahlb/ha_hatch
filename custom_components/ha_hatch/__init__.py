@@ -25,6 +25,8 @@ from .const import (
     DATA_EXPIRATION_LISTENER,
     DATA_MEDIA_PlAYERS,
     DATA_LIGHTS,
+    DATA_BINARY_SENSORS,
+    DATA_SENSORS,
 )
 from .util import find_rest_device_by_thing_name
 
@@ -89,14 +91,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         data[DATA_REST_DEVICES] = rest_devices
 
         if DATA_MEDIA_PlAYERS in data:
-            _LOGGER.debug(f"updating existing media players ... {data[DATA_MEDIA_PlAYERS]}")
             for media_player in data[DATA_MEDIA_PlAYERS]:
                 media_player.replace_rest_device(find_rest_device_by_thing_name(rest_devices, media_player.rest_device.thing_name))
 
         if DATA_LIGHTS in data:
-            _LOGGER.debug(f"updating existing lights ... {data[DATA_LIGHTS]}")
             for light in data[DATA_LIGHTS]:
                 light.replace_rest_device(find_rest_device_by_thing_name(rest_devices, light.rest_device.thing_name))
+
+        if DATA_BINARY_SENSORS in data:
+            for binary_sensor in data[DATA_BINARY_SENSORS]:
+                binary_sensor.replace_rest_device(find_rest_device_by_thing_name(rest_devices, binary_sensor.rest_device.thing_name))
+
+        if DATA_SENSORS in data:
+            for sensor in data[DATA_SENSORS]:
+                sensor.replace_rest_device(find_rest_device_by_thing_name(rest_devices, sensor.rest_device.thing_name))
 
         data[DATA_EXPIRATION_LISTENER] = async_track_point_in_utc_time(
             hass,

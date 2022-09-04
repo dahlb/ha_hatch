@@ -22,12 +22,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     light_entities = []
     for rest_device in rest_devices:
         if isinstance(rest_device, RestPlus):
-            light_entities.append(BlueairLightEntity(rest_device))
+            light_entities.append(HatchLightEntity(rest_device))
     hass.data[DOMAIN][DATA_LIGHTS] = light_entities
     async_add_entities(light_entities)
 
 
-class BlueairLightEntity(RestEntity, LightEntity):
+class HatchLightEntity(RestEntity, LightEntity):
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
 
