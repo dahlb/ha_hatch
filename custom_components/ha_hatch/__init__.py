@@ -23,10 +23,7 @@ from .const import (
     DATA_MQTT_CONNECTION,
     DATA_REST_DEVICES,
     DATA_EXPIRATION_LISTENER,
-    DATA_MEDIA_PlAYERS,
-    DATA_LIGHTS,
-    DATA_BINARY_SENSORS,
-    DATA_SENSORS,
+    DATA_ENTITIES_KEYS,
 )
 from .util import find_rest_device_by_thing_name
 
@@ -90,21 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         data[DATA_MQTT_CONNECTION] = mqtt_connection
         data[DATA_REST_DEVICES] = rest_devices
 
-        if DATA_MEDIA_PlAYERS in data:
-            for media_player in data[DATA_MEDIA_PlAYERS]:
-                media_player.replace_rest_device(find_rest_device_by_thing_name(rest_devices, media_player.rest_device.thing_name))
-
-        if DATA_LIGHTS in data:
-            for light in data[DATA_LIGHTS]:
-                light.replace_rest_device(find_rest_device_by_thing_name(rest_devices, light.rest_device.thing_name))
-
-        if DATA_BINARY_SENSORS in data:
-            for binary_sensor in data[DATA_BINARY_SENSORS]:
-                binary_sensor.replace_rest_device(find_rest_device_by_thing_name(rest_devices, binary_sensor.rest_device.thing_name))
-
-        if DATA_SENSORS in data:
-            for sensor in data[DATA_SENSORS]:
-                sensor.replace_rest_device(find_rest_device_by_thing_name(rest_devices, sensor.rest_device.thing_name))
+        for entity_key in DATA_ENTITIES_KEYS:
+            if entity_key in data:
+                for entity in data[entity_key]:
+                    entity.replace_rest_device(find_rest_device_by_thing_name(rest_devices, entity.rest_device.thing_name))
 
         data[DATA_EXPIRATION_LISTENER] = async_track_point_in_utc_time(
             hass,

@@ -16,3 +16,11 @@ DATA_BINARY_SENSORS: str = "binary_sensors"
 DATA_SENSORS: str = "sensors"
 DATA_SWITCHES: str = "switches"
 DATA_EXPIRATION_LISTENER: str = "expiration_listener"
+
+DATA_ENTITIES_KEYS = [
+    DATA_SWITCHES,
+    DATA_SENSORS,
+    DATA_LIGHTS,
+    DATA_BINARY_SENSORS,
+    DATA_MEDIA_PlAYERS
+]
