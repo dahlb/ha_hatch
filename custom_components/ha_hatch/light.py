@@ -38,13 +38,10 @@ class HatchLightEntity(RestEntity, LightEntity):
         if self.platform is None:
             return
         _LOGGER.debug(f"updating state:{self.rest_device}")
+        self._attr_is_on = self.rest_device.is_on
         self._attr_brightness = round(self.rest_device.brightness / 100 * 255.0, 0)
         self._attr_rgb_color = (self.rest_device.red, self.rest_device.green, self.rest_device.blue)
         self.async_write_ha_state()
-
-    @property
-    def is_on(self) -> bool:
-        return self.rest_device.is_on
 
     def turn_on(self, **kwargs):
         _LOGGER.debug(f"args:{kwargs}")
@@ -62,3 +59,6 @@ class HatchLightEntity(RestEntity, LightEntity):
         _LOGGER.debug(f"turning on light to {rgb} with {brightness}")
         self.rest_device.set_color(rgb[0], rgb[1], rgb[2], brightness)
         self.rest_device.set_on(True)
+
+    def turn_off(self):
+        self.rest_device.set_color(self.rest_device.red, self.rest_device.green, self.rest_device.blue, 0)

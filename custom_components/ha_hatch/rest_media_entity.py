@@ -109,3 +109,6 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
         if track is None:
             track = self.none_track
         self.rest_device.set_audio_track(track)
+
+    def turn_off(self):
+        self.media_stop()

@@ -36,8 +36,3 @@ class RestEntity(ABC):
         if isinstance(self.rest_device, RestMini):
             raise NotImplementedError()
         self.rest_device.set_on(True)
-
-    def turn_off(self):
-        if isinstance(self.rest_device, RestMini):
-            raise NotImplementedError()
-        self.rest_device.set_on(False)
