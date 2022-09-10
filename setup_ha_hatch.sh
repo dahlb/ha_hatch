@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pip install awscrt==0.13.6 -f https://qqaatw.github.io/aws-crt-python-musllinux/
-pip install awsiotsdk==1.10.0 hatch-rest-api==1.10.0
+pip install awsiotsdk==1.10.0 hatch-rest-api==1.12.1
 exit 0
 
 # old version for below 1.10.0 release
