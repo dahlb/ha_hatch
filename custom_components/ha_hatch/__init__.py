@@ -12,9 +12,9 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from hatch_rest_api import get_rest_devices
+from homeassistant.requirements import RequirementsNotFound
+from homeassistant.util.package import install_package, is_installed
 import asyncio
-from awscrt.mqtt import Connection
 import datetime
 
 from .const import (
@@ -42,6 +42,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _lazy_install():
+    custom_required_packages = ["awscrt==0.13.11", "hatch-rest-api==1.13.1"]
+    links = "https://qqaatw.github.io/aws-crt-python-musllinux/"
+    for pkg in custom_required_packages:
+        if not is_installed(pkg) and not install_package(pkg, find_links=links):
+            raise RequirementsNotFound(DOMAIN, [pkg])
+
+
 async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
     _LOGGER.debug(f"async setup")
@@ -50,6 +58,7 @@ async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     _LOGGER.debug(f"async setup entry: {config_entry}")
+    _lazy_install()
     email = config_entry.data[CONF_EMAIL]
     password = config_entry.data[CONF_PASSWORD]
 
@@ -65,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         def resumed():
             _LOGGER.debug(f"resumed")
 
+        from awscrt.mqtt import Connection
         if DATA_MQTT_CONNECTION in data:
             mqtt_connection: Connection = data[DATA_MQTT_CONNECTION]
             try:
@@ -74,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     f"mqtt_connection disconnect failed during reconnect: {error}"
                 )
 
+        from hatch_rest_api import get_rest_devices
         _, mqtt_connection, rest_devices, expiration_time = await get_rest_devices(
             email=email,
             password=password,
@@ -125,7 +136,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
     )
     if unload_ok:
-        mqtt_connection: Connection = hass.data[DOMAIN][DATA_MQTT_CONNECTION]
+        mqtt_connection = hass.data[DOMAIN][DATA_MQTT_CONNECTION]
         try:
             mqtt_connection.disconnect().result()
         except Exception as error:
