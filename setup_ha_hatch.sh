@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pip install hatch-rest-api==1.12.1 -f https://qqaatw.github.io/aws-crt-python-musllinux/
-exit 0
+#exit 0
 
 # old version for below 1.10.0 release
 
