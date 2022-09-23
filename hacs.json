@@ -3,6 +3,5 @@
   "render_readme": true,
   "content_in_root": false,
   "country": ["US"],
-  "homeassistant": "2021.10.0b0",
-  "domains": ["media_player"]
+  "homeassistant": "2021.10.0b0"
 }
