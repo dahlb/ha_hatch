@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def _lazy_install():
-    custom_required_packages = ["awscrt==0.13.11", "hatch-rest-api==1.13.1"]
+    custom_required_packages = ["hatch-rest-api==1.13.2"]
     links = "https://qqaatw.github.io/aws-crt-python-musllinux/"
     for pkg in custom_required_packages:
         if not is_installed(pkg) and not install_package(pkg, find_links=links):
