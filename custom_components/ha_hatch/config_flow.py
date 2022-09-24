@@ -9,8 +9,7 @@ from homeassistant.const import (
     CONF_EMAIL,
 )
 
-from hatch_rest_api import Hatch
-
+from . import _lazy_install
 from .const import (
     DOMAIN,
     CONFIG_FLOW_VERSION,
@@ -28,6 +27,7 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
     data: Optional[Dict[str, Any]] = {}
 
     def __init__(self):
+        _lazy_install()
         pass
 
     async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
@@ -43,6 +43,7 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
 
             api_cloud = None
             try:
+                from hatch_rest_api import Hatch
                 api_cloud = Hatch()
                 await api_cloud.login(email=email, password=password)
                 self.data.update(user_input)
