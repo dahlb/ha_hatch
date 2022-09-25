@@ -6,12 +6,8 @@
         "description": "Configure your Credentials.",
         "data": {
           "email": "Email",
-          "password": "[%key:common::config_flow::data::password%]",
+          "password": "Password"
         }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Hatch integration needs to re-authenticate your account."
       }
     },
     "error": {

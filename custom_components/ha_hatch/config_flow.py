@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Optional, Any
 
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -32,8 +33,8 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
         data_schema = {
-            vol.Required(CONF_EMAIL): str,
-            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_EMAIL): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
         }
         errors: Dict[str, str] = {}
 

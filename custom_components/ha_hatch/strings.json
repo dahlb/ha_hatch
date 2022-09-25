@@ -8,10 +8,6 @@
           "email": "Email",
           "password": "Password"
         }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Hatch integration needs to re-authenticate your account."
       }
     },
     "error": {
