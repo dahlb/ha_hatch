@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hatch Auth",
+        "description": "Configure your Credentials.",
+        "data": {
+          "email": "Email",
+          "password": "[%key:common::config_flow::data::password%]",
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Hatch integration needs to re-authenticate your account."
+      }
+    },
+    "error": {
+      "auth": "Login failed into Hatch. Please use official Hatch app to logout and log back in and try again."
+    }
+  }
+}

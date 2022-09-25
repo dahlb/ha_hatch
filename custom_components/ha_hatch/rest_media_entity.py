@@ -97,6 +97,7 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
 
     def media_play(self):
         self.rest_device.set_audio_track(self.rest_device.audio_track)
+        self.turn_on()
 
     def media_pause(self):
         self.rest_device.set_audio_track(self.none_track)
@@ -109,6 +110,7 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
         if track is None:
             track = self.none_track
         self.rest_device.set_audio_track(track)
+        self.turn_on()
 
     def turn_off(self):
         self.media_stop()
