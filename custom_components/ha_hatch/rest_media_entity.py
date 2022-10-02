@@ -31,8 +31,9 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
     _attr_media_content_type = MEDIA_TYPE_MUSIC
     _attr_device_class = DEVICE_CLASS_SPEAKER
 
-    def __init__(self, rest_device: RestMini | RestPlus):
+    def __init__(self, rest_device: RestMini | RestPlus, config_turn_on_media):
         super().__init__(rest_device, "Media Player")
+        self.config_turn_on_media = config_turn_on_media
         if isinstance(rest_device, RestMini):
             self._attr_sound_mode_list = list(
                 map(lambda x: x.name, REST_MINI_AUDIO_TRACKS[1:])
@@ -97,7 +98,8 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
 
     def media_play(self):
         self.rest_device.set_audio_track(self.rest_device.audio_track)
-        self.turn_on()
+        if self.config_turn_on_media:
+            self.turn_on()
 
     def media_pause(self):
         self.rest_device.set_audio_track(self.none_track)
@@ -110,7 +112,8 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
         if track is None:
             track = self.none_track
         self.rest_device.set_audio_track(track)
-        self.turn_on()
+        if self.config_turn_on_media:
+            self.turn_on()
 
     def turn_off(self):
         self.media_stop()
