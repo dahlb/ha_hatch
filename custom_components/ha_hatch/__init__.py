@@ -61,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    _LOGGER.debug(f"async setup entry: {config_entry}")
+    _LOGGER.debug(f"async setup entry: {config_entry.data}:{config_entry.options}")
     _lazy_install()
     email = config_entry.data[CONF_EMAIL]
     password = config_entry.data[CONF_PASSWORD]

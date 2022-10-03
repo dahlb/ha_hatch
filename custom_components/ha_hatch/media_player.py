@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     hass.data.setdefault(DOMAIN, {})
-    config_turn_on_media = config_entry.data.get(
+    config_turn_on_media = config_entry.options.get(
         CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT
     )
 

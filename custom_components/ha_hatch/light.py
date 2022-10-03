@@ -23,10 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data.setdefault(DOMAIN, {})
-    config_turn_on_light = config_entry.data.get(
+    config_turn_on_light = config_entry.options.get(
         CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT
     )
 
+    _LOGGER.debug(f"setting up hatch lights, auto turn on switch set to {config_turn_on_light}")
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
     light_entities = []
     for rest_device in rest_devices:
@@ -69,6 +70,7 @@ class HatchLightEntity(RestEntity, LightEntity):
         _LOGGER.debug(f"turning on light to {rgb} with {brightness}")
         self.rest_device.set_color(rgb[0], rgb[1], rgb[2], brightness)
         if self.config_turn_on_light:
+            _LOGGER.debug(f"auto turning on the hatch power switch for the light")
             self.rest_device.set_on(True)
 
     def turn_off(self):
