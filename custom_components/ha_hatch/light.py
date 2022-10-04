@@ -9,7 +9,13 @@ from homeassistant.components.light import (
 import logging
 from hatch_rest_api import RestPlus
 
-from .const import DOMAIN, DATA_REST_DEVICES, DATA_LIGHTS
+from .const import (
+    DOMAIN,
+    DATA_REST_DEVICES,
+    DATA_LIGHTS,
+    CONFIG_TURN_ON_LIGHT,
+    CONFIG_TURN_ON_DEFAULT,
+)
 from .rest_entity import RestEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,12 +23,16 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data.setdefault(DOMAIN, {})
+    config_turn_on_light = config_entry.options.get(
+        CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT
+    )
 
+    _LOGGER.debug(f"setting up hatch lights, auto turn on switch set to {config_turn_on_light}")
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
     light_entities = []
     for rest_device in rest_devices:
         if isinstance(rest_device, RestPlus):
-            light_entities.append(HatchLightEntity(rest_device))
+            light_entities.append(HatchLightEntity(rest_device, config_turn_on_light))
     hass.data[DOMAIN][DATA_LIGHTS] = light_entities
     async_add_entities(light_entities)
 
@@ -31,8 +41,9 @@ class HatchLightEntity(RestEntity, LightEntity):
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
 
-    def __init__(self, rest_device: RestPlus):
+    def __init__(self, rest_device: RestPlus, config_turn_on_light: bool):
         super().__init__(rest_device, "Light")
+        self.config_turn_on_light = config_turn_on_light
 
     def _update_local_state(self):
         if self.platform is None:
@@ -58,7 +69,9 @@ class HatchLightEntity(RestEntity, LightEntity):
 
         _LOGGER.debug(f"turning on light to {rgb} with {brightness}")
         self.rest_device.set_color(rgb[0], rgb[1], rgb[2], brightness)
-        self.rest_device.set_on(True)
+        if self.config_turn_on_light:
+            _LOGGER.debug(f"auto turning on the hatch power switch for the light")
+            self.rest_device.set_on(True)
 
     def turn_off(self):
         self.rest_device.set_color(self.rest_device.red, self.rest_device.green, self.rest_device.blue, 0)

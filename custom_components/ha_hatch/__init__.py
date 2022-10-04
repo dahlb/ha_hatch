@@ -24,6 +24,10 @@ from .const import (
     DATA_REST_DEVICES,
     DATA_EXPIRATION_LISTENER,
     DATA_ENTITIES_KEYS,
+    CONFIG_TURN_ON_LIGHT,
+    CONFIG_TURN_ON_MEDIA,
+    CONFIG_TURN_ON_DEFAULT,
+    DATA_CONFIG_UPDATE_LISTENER,
 )
 from .util import find_rest_device_by_thing_name
 
@@ -57,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    _LOGGER.debug(f"async setup entry: {config_entry}")
+    _LOGGER.debug(f"async setup entry: {config_entry.data}:{config_entry.options}")
     _lazy_install()
     email = config_entry.data[CONF_EMAIL]
     password = config_entry.data[CONF_PASSWORD]
@@ -116,6 +120,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
+    data[DATA_CONFIG_UPDATE_LISTENER] = config_entry.add_update_listener(
+        async_update_options
+    )
     hass.data[DOMAIN] = data
 
     return True
@@ -142,6 +149,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         except Exception as error:
             _LOGGER.debug(f"mqtt_connection disconnect failed during unload: {error}")
         hass.data[DOMAIN][DATA_EXPIRATION_LISTENER]()
+
+        config_update_listener = hass.data[DOMAIN][DATA_CONFIG_UPDATE_LISTENER]
+        config_update_listener()
 
         hass.data[DOMAIN] = None
 

@@ -13,5 +13,15 @@
     "error": {
       "auth": "Login failed into Hatch. Please use official Hatch app to logout and log back in and try again."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "turn_on_media": "Auto turn on Rest+ when media play starts",
+          "turn_on_light": "Auto turn on Rest+ when light turns on"
+        }
+      }
+    }
   }
 }
