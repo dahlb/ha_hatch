@@ -13,9 +13,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.requirements import RequirementsNotFound
-from homeassistant.util.package import install_package, is_installed
+from homeassistant.util.package import install_package, is_installed, is_virtual_env, is_docker_env
 import asyncio
 import datetime
+from subprocess import PIPE, Popen
+import os
 
 from .const import (
     DOMAIN,
@@ -46,7 +48,23 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _install_alpine_dependencies():
+    if is_docker_env() and not is_virtual_env():
+        args = ["apk", "add", "gcc", "g++", "cmake", "make"]
+        with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=os.environ.copy()) as process:
+            _, stderr = process.communicate()
+            if process.returncode != 0:
+                _LOGGER.error(
+                    "Unable to install alpine dependency",
+                    stderr.decode("utf-8").lstrip().strip(),
+                )
+                return False
+
+        return True
+
+
 def _lazy_install():
+    _install_alpine_dependencies()
     custom_required_packages = ["hatch-rest-api==1.13.2"]
     links = "https://qqaatw.github.io/aws-crt-python-musllinux/"
     for pkg in custom_required_packages:
