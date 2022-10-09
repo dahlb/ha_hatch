@@ -33,6 +33,5 @@ class RestEntity(ABC):
             self._update_local_state()
 
     def turn_on(self):
-        if isinstance(self.rest_device, RestMini):
-            raise NotImplementedError()
-        self.rest_device.set_on(True)
+        if isinstance(self.rest_device, RestPlus):
+            self.rest_device.set_on(True)
