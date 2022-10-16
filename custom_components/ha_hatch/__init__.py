@@ -54,13 +54,10 @@ def _install_alpine_dependencies():
         with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=os.environ.copy()) as process:
             _, stderr = process.communicate()
             if process.returncode != 0:
-                _LOGGER.error(
-                    "Unable to install alpine dependency",
-                    stderr.decode("utf-8").lstrip().strip(),
-                )
+                _LOGGER.error("Unable to install alpine dependency")
                 return False
 
-        return True
+    return True
 
 
 def _lazy_install():
