@@ -55,6 +55,10 @@ def _install_alpine_dependencies():
             _, stderr = process.communicate()
             if process.returncode != 0:
                 _LOGGER.error("Unable to install alpine dependency")
+                try:
+                    _LOGGER.error(stderr.decode("utf-8").lstrip().strip())
+                except Exception as error:
+                    _LOGGER.error(error)
                 return False
 
     return True
