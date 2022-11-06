@@ -6,7 +6,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
 )
-from hatch_rest_api import RestPlus
+from hatch_rest_api import RestMini
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
 from .rest_entity import RestEntity
@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
     sensor_entities = []
     for rest_device in rest_devices:
-        if isinstance(rest_device, RestPlus):
+        if not isinstance(rest_device, RestMini):
             sensor_entities.append(HatchBattery(rest_device))
     hass.data[DOMAIN][DATA_SENSORS] = sensor_entities
     async_add_entities(sensor_entities)

@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.helpers.entity import EntityDescription
-from hatch_rest_api import RestPlus, RestMini
+from hatch_rest_api import RestPlus, RestMini, RestIot
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_BINARY_SENSORS
 from .rest_entity import RestEntity
@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HatchOnlineSensor(RestEntity, BinarySensorEntity):
     _attr_icon = "mdi:wifi-check"
 
-    def __init__(self, rest_device: RestPlus | RestMini):
+    def __init__(self, rest_device: RestIot | RestMini | RestPlus):
         super().__init__(rest_device, "Wifi")
         self.entity_description = EntityDescription(
             key=f"#{self._attr_unique_id}-online",
