@@ -49,7 +49,7 @@ class HatchLightEntity(RestEntity, LightEntity):
         if self.platform is None:
             return
         _LOGGER.debug(f"updating state:{self.rest_device}")
-        self._attr_is_on = self.rest_device.is_on
+        self._attr_is_on = self.rest_device.is_on and self.rest_device.brightness > 0
         self._attr_brightness = round(self.rest_device.brightness / 100 * 255.0, 0)
         self._attr_rgb_color = (self.rest_device.red, self.rest_device.green, self.rest_device.blue)
         self.async_write_ha_state()
