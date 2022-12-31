@@ -14,9 +14,12 @@ class RestEntity(ABC):
         self._attr_unique_id = f"{rest_device.thing_name}_{entity_type.lower().replace(' ', '_')}"
         self._attr_name = f"{rest_device.device_name} {entity_type}"
         self.rest_device = rest_device
-        mac_address = rest_device.mac.lower()
+        connections = {
+            (dr.CONNECTION_NETWORK_MAC, rest_device.mac.lower()),  # api reported mac address
+            (dr.CONNECTION_NETWORK_MAC, f"{rest_device.mac[:-1].lower()}0")  # device network detected mac address
+        }
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+            connections=connections,
             identifiers={(DOMAIN, rest_device.thing_name)},
             manufacturer="Hatch",
             model=rest_device.__class__.__name__,
