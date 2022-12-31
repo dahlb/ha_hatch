@@ -33,7 +33,7 @@ async def async_setup_entry(
         map(
             lambda rest_device: RiotMediaEntity(rest_device)
             if isinstance(rest_device, RestIot)
-            else RestMediaEntity(rest_device),
+            else RestMediaEntity(rest_device, config_turn_on_media),
             rest_devices,
         )
     )
