@@ -35,11 +35,11 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
         super().__init__(rest_device, "Media Player")
         self._attr_sound_mode_list = self.rest_device.favorite_names()
         self._attr_supported_features = (
-                SUPPORT_PLAY
-                | SUPPORT_STOP
-                | SUPPORT_SELECT_SOUND_MODE
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_VOLUME_STEP
+            SUPPORT_PLAY
+            | SUPPORT_STOP
+            | SUPPORT_SELECT_SOUND_MODE
+            | SUPPORT_VOLUME_SET
+            | SUPPORT_VOLUME_STEP
         )
 
     def _update_local_state(self):
@@ -66,4 +66,3 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
 
     def media_stop(self):
         self.rest_device.turn_off()
-

@@ -18,7 +18,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data.setdefault(DOMAIN, {})
 
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
-    binary_sensor_entities = list(map(lambda rest_device: HatchOnlineSensor(rest_device), rest_devices))
+    binary_sensor_entities = list(
+        map(lambda rest_device: HatchOnlineSensor(rest_device), rest_devices)
+    )
     hass.data[DOMAIN][DATA_BINARY_SENSORS] = binary_sensor_entities
     async_add_entities(binary_sensor_entities)
 

@@ -22,7 +22,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT
     )
 
-    _LOGGER.debug(f"setting up hatch lights, auto turn on switch set to {config_turn_on_light}")
+    _LOGGER.debug(
+        f"setting up hatch lights, auto turn on switch set to {config_turn_on_light}"
+    )
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
     light_entities = []
     for rest_device in rest_devices:

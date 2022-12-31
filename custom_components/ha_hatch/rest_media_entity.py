@@ -21,7 +21,14 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_OFF,
 )
-from hatch_rest_api import RestPlus, RestPlusAudioTrack, REST_PLUS_AUDIO_TRACKS, RestMini, RestMiniAudioTrack, REST_MINI_AUDIO_TRACKS
+from hatch_rest_api import (
+    RestPlus,
+    RestPlusAudioTrack,
+    REST_PLUS_AUDIO_TRACKS,
+    RestMini,
+    RestMiniAudioTrack,
+    REST_MINI_AUDIO_TRACKS,
+)
 from .rest_entity import RestEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,12 +48,12 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
             )
             self.none_track = RestMiniAudioTrack.NONE
             self._attr_supported_features = (
-                    SUPPORT_PAUSE
-                    | SUPPORT_PLAY
-                    | SUPPORT_STOP
-                    | SUPPORT_SELECT_SOUND_MODE
-                    | SUPPORT_VOLUME_SET
-                    | SUPPORT_VOLUME_STEP
+                SUPPORT_PAUSE
+                | SUPPORT_PLAY
+                | SUPPORT_STOP
+                | SUPPORT_SELECT_SOUND_MODE
+                | SUPPORT_VOLUME_SET
+                | SUPPORT_VOLUME_STEP
             )
         else:
             self._attr_sound_mode_list = list(
@@ -54,14 +61,14 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
             )
             self.none_track = RestPlusAudioTrack.NONE
             self._attr_supported_features = (
-                    SUPPORT_PAUSE
-                    | SUPPORT_PLAY
-                    | SUPPORT_STOP
-                    | SUPPORT_SELECT_SOUND_MODE
-                    | SUPPORT_VOLUME_SET
-                    | SUPPORT_VOLUME_STEP
-                    | SUPPORT_TURN_ON
-                    | SUPPORT_TURN_OFF
+                SUPPORT_PAUSE
+                | SUPPORT_PLAY
+                | SUPPORT_STOP
+                | SUPPORT_SELECT_SOUND_MODE
+                | SUPPORT_VOLUME_SET
+                | SUPPORT_VOLUME_STEP
+                | SUPPORT_TURN_ON
+                | SUPPORT_TURN_OFF
             )
 
     def _update_local_state(self):

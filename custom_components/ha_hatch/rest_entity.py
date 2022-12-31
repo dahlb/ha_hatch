@@ -13,12 +13,20 @@ _LOGGER = logging.getLogger(__name__)
 
 class RestEntity(ABC):
     def __init__(self, rest_device: RestIot | RestMini | RestPlus, entity_type: str):
-        self._attr_unique_id = f"{rest_device.thing_name}_{entity_type.lower().replace(' ', '_')}"
+        self._attr_unique_id = (
+            f"{rest_device.thing_name}_{entity_type.lower().replace(' ', '_')}"
+        )
         self._attr_name = f"{rest_device.device_name} {entity_type}"
         self.rest_device = rest_device
         connections = {
-            (dr.CONNECTION_NETWORK_MAC, rest_device.mac.lower()),  # api reported mac address
-            (dr.CONNECTION_NETWORK_MAC, f"{rest_device.mac[:-1].lower()}0")  # device network detected mac address
+            (
+                dr.CONNECTION_NETWORK_MAC,
+                rest_device.mac.lower(),
+            ),  # api reported mac address
+            (
+                dr.CONNECTION_NETWORK_MAC,
+                f"{rest_device.mac[:-1].lower()}0",
+            ),  # device network detected mac address
         }
         self._attr_device_info = DeviceInfo(
             connections=connections,

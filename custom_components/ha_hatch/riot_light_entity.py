@@ -34,7 +34,11 @@ class RiotLightEntity(RestEntity, LightEntity):
         _LOGGER.debug(f"updating state:{self.rest_device}")
         self._attr_is_on = self.rest_device.is_light_on
         self._attr_brightness = round(self.rest_device.brightness / 100 * 255.0, 0)
-        self._attr_rgb_color = (self.rest_device.red, self.rest_device.green, self.rest_device.blue)
+        self._attr_rgb_color = (
+            self.rest_device.red,
+            self.rest_device.green,
+            self.rest_device.blue,
+        )
         if self.rest_device.is_light_on:
             self._last_light_on_colors["r"] = self.rest_device.red
             self._last_light_on_colors["g"] = self.rest_device.green
@@ -60,8 +64,13 @@ class RiotLightEntity(RestEntity, LightEntity):
             self.rest_device.set_color(rgb[0], rgb[1], rgb[2], 0, brightness)
         else:
             # Turn on the light to the last known state/default state
-            self.rest_device.set_color(self._last_light_on_colors["r"], self._last_light_on_colors["g"],
-                                       self._last_light_on_colors["b"], 0, self._last_light_on_colors["brightness"])
+            self.rest_device.set_color(
+                self._last_light_on_colors["r"],
+                self._last_light_on_colors["g"],
+                self._last_light_on_colors["b"],
+                0,
+                self._last_light_on_colors["brightness"],
+            )
 
     def turn_off(self):
         self.rest_device.turn_light_off()

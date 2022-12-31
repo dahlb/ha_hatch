@@ -27,21 +27,21 @@ class HatchOptionFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         self.config_entry = config_entry
         self.schema = vol.Schema(
-                {
-                    vol.Required(
-                        CONFIG_TURN_ON_LIGHT,
-                        default=self.config_entry.options.get(
-                            CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT
-                        ),
-                    ): bool,
-                    vol.Required(
-                        CONFIG_TURN_ON_MEDIA,
-                        default=self.config_entry.options.get(
-                            CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT
-                        ),
-                    ): bool,
-                }
-            )
+            {
+                vol.Required(
+                    CONFIG_TURN_ON_LIGHT,
+                    default=self.config_entry.options.get(
+                        CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT
+                    ),
+                ): bool,
+                vol.Required(
+                    CONFIG_TURN_ON_MEDIA,
+                    default=self.config_entry.options.get(
+                        CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT
+                    ),
+                ): bool,
+            }
+        )
 
     async def async_step_init(self, user_input: Optional[Dict[str, Any]] = None):
         if user_input is not None:
@@ -82,6 +82,7 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
             api_cloud = None
             try:
                 from hatch_rest_api import Hatch
+
                 api_cloud = Hatch()
                 await api_cloud.login(email=email, password=password)
                 self.data.update(user_input)

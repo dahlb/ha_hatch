@@ -13,7 +13,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.requirements import RequirementsNotFound
-from homeassistant.util.package import install_package, is_installed, is_virtual_env, is_docker_env
+from homeassistant.util.package import (
+    install_package,
+    is_installed,
+    is_virtual_env,
+    is_docker_env,
+)
 import asyncio
 import datetime
 from subprocess import PIPE, Popen
@@ -51,7 +56,9 @@ CONFIG_SCHEMA = vol.Schema(
 def _install_alpine_dependencies():
     if is_docker_env() and not is_virtual_env():
         args = ["apk", "add", "gcc", "g++", "cmake", "make"]
-        with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=os.environ.copy()) as process:
+        with Popen(
+            args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=os.environ.copy()
+        ) as process:
             _, stderr = process.communicate()
             if process.returncode != 0:
                 _LOGGER.error("Unable to install alpine dependency")
@@ -98,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             _LOGGER.debug(f"resumed")
 
         from awscrt.mqtt import Connection
+
         if DATA_MQTT_CONNECTION in data:
             mqtt_connection: Connection = data[DATA_MQTT_CONNECTION]
             try:
@@ -108,6 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 )
 
         from hatch_rest_api import get_rest_devices
+
         _, mqtt_connection, rest_devices, expiration_time = await get_rest_devices(
             email=email,
             password=password,
@@ -124,7 +133,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         for entity_key in DATA_ENTITIES_KEYS:
             if entity_key in data:
                 for entity in data[entity_key]:
-                    entity.replace_rest_device(find_rest_device_by_thing_name(rest_devices, entity.rest_device.thing_name))
+                    entity.replace_rest_device(
+                        find_rest_device_by_thing_name(
+                            rest_devices, entity.rest_device.thing_name
+                        )
+                    )
 
         data[DATA_EXPIRATION_LISTENER] = async_track_point_in_utc_time(
             hass,
