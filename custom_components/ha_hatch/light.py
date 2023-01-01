@@ -4,7 +4,7 @@ import logging
 from hatch_rest_api import RestPlus, RestIot
 from .rest_light_entity import RestLightEntity
 from .riot_light_entity import RiotLightEntity
-from .riot_light_entity import RiotClockEntity
+from .riot_clock_entity import RiotClockEntity
 
 from .const import (
     DOMAIN,
