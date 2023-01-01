@@ -61,7 +61,7 @@ class HatchToddlerLockSwitch(RestEntity, SwitchEntity):
         self.async_write_ha_state()
 
     def turn_on(self, **kwargs):
-        self.rest_device.set_toddler_lock(True, "never")
+        self.rest_device.set_toddler_lock(True)
 
     def turn_off(self, **kwargs):
-        self.rest_device.set_toddler_lock(False, "always")
+        self.rest_device.set_toddler_lock(False)
