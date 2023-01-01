@@ -40,8 +40,7 @@ class RiotClockEntity(RestEntity, LightEntity):
                 brightness = 0
             else:
                 brightness = self._attr_brightness
-        self.rest_device.set_clock(32768, brightness)
+        self.rest_device.set_clock(brightness)
     
     def turn_off (self):
-            _LOGGER.debug("turning off with flags = 0 and bright = 655")
-            self.rest_device.set_clock(0, 655)
+            self.rest_device.turn_clock_off()
