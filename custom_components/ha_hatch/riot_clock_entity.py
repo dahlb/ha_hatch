@@ -26,7 +26,7 @@ class RiotClockEntity(RestEntity, LightEntity):
         _LOGGER.debug(f"updating state:{self.rest_device}")
         if isinstance(self.rest_device, RestIot):
             self._attr_is_on = self.rest_device.is_clock_on
-        self._attr_brightness = (round(self.rest_device.clock / 100) * 255)
+        self._attr_brightness = round(self.rest_device.clock / 100 * 255.0, 0)
         self.async_write_ha_state()
 
     def turn_on(self, **kwargs):
@@ -34,12 +34,9 @@ class RiotClockEntity(RestEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             # Convert Home Assistant brightness (0-255) to Abode brightness (0-99)
             # If 100 is sent to Abode, response is 99 causing an error
-            brightness = (round(kwargs[ATTR_BRIGHTNESS] * 100) / 255)
+            brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
         else:
-            if isinstance(self.rest_device, RestIot):
-                brightness = 0
-            else:
-                brightness = self._attr_brightness
+            brightness = round(self._attr_brightness * 100 / 255.0)
         self.rest_device.set_clock(brightness)
     
     def turn_off (self):
