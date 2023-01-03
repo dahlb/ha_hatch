@@ -2,7 +2,7 @@ import logging
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
-    DEVICE_CLASS_SPEAKER,
+    MediaPlayerDeviceClass,
 )
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 class RiotMediaEntity(RestEntity, MediaPlayerEntity):
     _attr_should_poll = False
     _attr_media_content_type = MEDIA_TYPE_MUSIC
-    _attr_device_class = DEVICE_CLASS_SPEAKER
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(self, rest_device: RestIot):
         super().__init__(rest_device, "Media Player")

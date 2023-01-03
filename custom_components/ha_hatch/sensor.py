@@ -2,10 +2,7 @@
 from __future__ import annotations
 
 import logging
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-)
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from hatch_rest_api import RestMini
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
@@ -27,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class HatchBattery(RestEntity, SensorEntity):
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
     _attr_icon = "mdi:battery"
 
     def __init__(self, rest_device: RestPlus):
