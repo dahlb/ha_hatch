@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.const import PERCENTAGE
-from hatch_rest_api import RestMini, RestPlus
+from hatch_rest_api import RestMini, RestPlus, RestIot
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
 from .rest_entity import RestEntity
@@ -20,6 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for rest_device in rest_devices:
         if not isinstance(rest_device, RestMini):
             sensor_entities.append(HatchBattery(rest_device))
+        if isinstance(rest_device, RestIot):
             sensor_entities.append(HatchCharging(rest_device))
     hass.data[DOMAIN][DATA_SENSORS] = sensor_entities
     async_add_entities(sensor_entities)
@@ -44,7 +45,7 @@ class HatchBattery(RestEntity, SensorEntity):
 class HatchCharging(RestEntity, SensorEntity):
     _attr_icon = "mdi:power-plug"
 
-    def __init__(self, rest_device: RestPlus):
+    def __init__(self, rest_device: RestIot):
         super().__init__(rest_device, "Charging Status")
 
     def _update_local_state(self):
