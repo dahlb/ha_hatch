@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
+from homeassistant.const import PERCENTAGE
 from hatch_rest_api import RestMini, RestPlus
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
@@ -26,6 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class HatchBattery(RestEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_icon = "mdi:battery"
 
     def __init__(self, rest_device: RestPlus):
