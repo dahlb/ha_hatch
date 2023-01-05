@@ -5,7 +5,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchDeviceClass,
 )
-from hatch_rest_api import RestPlus
+from hatch_rest_api import RestPlus, RestIot 
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SWITCHES
 from .rest_entity import RestEntity
@@ -21,6 +21,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for rest_device in rest_devices:
         if isinstance(rest_device, RestPlus):
             entities.append(HatchPowerSwitch(rest_device))
+        if isinstance(rest_device, RestIot):
+            entities.append(HatchToddlerLockSwitch(rest_device))    
     hass.data[DOMAIN][DATA_SWITCHES] = entities
     async_add_entities(entities)
 
@@ -43,3 +45,23 @@ class HatchPowerSwitch(RestEntity, SwitchEntity):
 
     def turn_off(self, **kwargs):
         self.rest_device.set_on(False)
+
+class HatchToddlerLockSwitch(RestEntity, SwitchEntity):
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_icon = "mdi:human-child"
+
+    def __init__(self, rest_device: RestPlus):
+        super().__init__(rest_device, "Toddler Lock")
+
+    def _update_local_state(self):
+        if self.platform is None:
+            return
+        _LOGGER.debug(f"updating state:{self.rest_device}")
+        self._attr_is_on = self.rest_device.toddler_lock
+        self.async_write_ha_state()
+
+    def turn_on(self, **kwargs):
+        self.rest_device.set_toddler_lock(True)
+
+    def turn_off(self, **kwargs):
+        self.rest_device.set_toddler_lock(False)

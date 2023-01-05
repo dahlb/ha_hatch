@@ -73,7 +73,7 @@ def _install_alpine_dependencies():
 
 def _lazy_install():
     _install_alpine_dependencies()
-    custom_required_packages = ["hatch-rest-api==1.17.0"]
+    custom_required_packages = ["hatch-rest-api==1.19.1"]
     links = "https://qqaatw.github.io/aws-crt-python-musllinux/"
     for pkg in custom_required_packages:
         if not is_installed(pkg) and not install_package(pkg, find_links=links):
