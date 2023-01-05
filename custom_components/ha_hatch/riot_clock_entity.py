@@ -12,12 +12,13 @@ from .rest_entity import RestEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class RiotClockEntity(RestEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_icon = "mdi:clock"
 
-    def __init__(self, rest_device: RestIot ):
+    def __init__(self, rest_device: RestIot):
         super().__init__(rest_device, "Clock")
 
     def _update_local_state(self):
@@ -38,6 +39,6 @@ class RiotClockEntity(RestEntity, LightEntity):
         else:
             brightness = round(self._attr_brightness * 100 / 255.0)
         self.rest_device.set_clock(brightness)
-    
-    def turn_off (self):
-            self.rest_device.turn_clock_off()
+
+    def turn_off(self):
+        self.rest_device.turn_clock_off()

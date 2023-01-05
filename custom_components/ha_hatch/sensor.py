@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
-from hatch_rest_api import RestMini
+from hatch_rest_api import RestMini, RestPlus
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
 from .rest_entity import RestEntity
@@ -38,6 +38,7 @@ class HatchBattery(RestEntity, SensorEntity):
         self._attr_native_value = self.rest_device.battery_level
         self.async_write_ha_state()
 
+
 class HatchCharging(RestEntity, SensorEntity):
     _attr_icon = "mdi:power-plug"
 
@@ -53,7 +54,7 @@ class HatchCharging(RestEntity, SensorEntity):
         if self.rest_device.charging_status is 3:
             self._attr_native_value = "Charging, plugged in"
         if self.rest_device.charging_status is 5:
-            self._attr_native_value = "Charging, on base"                    
+            self._attr_native_value = "Charging, on base"
         self.async_write_ha_state()
 
     @property
@@ -61,4 +62,4 @@ class HatchCharging(RestEntity, SensorEntity):
         if self._attr_native_value is "Not Charging":
             return "mdi:power-plug-off"
         else:
-            return self._attr_icon  
+            return self._attr_icon

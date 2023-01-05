@@ -74,4 +74,3 @@ class RiotLightEntity(RestEntity, LightEntity):
 
     def turn_off(self):
         self.rest_device.turn_light_off()
-        

@@ -5,7 +5,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchDeviceClass,
 )
-from hatch_rest_api import RestPlus, RestIot 
+from hatch_rest_api import RestPlus, RestIot
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SWITCHES
 from .rest_entity import RestEntity
@@ -22,7 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if isinstance(rest_device, RestPlus):
             entities.append(HatchPowerSwitch(rest_device))
         if isinstance(rest_device, RestIot):
-            entities.append(HatchToddlerLockSwitch(rest_device))    
+            entities.append(HatchToddlerLockSwitch(rest_device))
     hass.data[DOMAIN][DATA_SWITCHES] = entities
     async_add_entities(entities)
 
@@ -45,6 +45,7 @@ class HatchPowerSwitch(RestEntity, SwitchEntity):
 
     def turn_off(self, **kwargs):
         self.rest_device.set_on(False)
+
 
 class HatchToddlerLockSwitch(RestEntity, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.SWITCH
