@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.helpers.entity import EntityDescription
@@ -32,7 +32,7 @@ class HatchOnlineSensor(RestEntity, BinarySensorEntity):
         super().__init__(rest_device, "Wifi")
         self.entity_description = EntityDescription(
             key=f"#{self._attr_unique_id}-online",
-            device_class=DEVICE_CLASS_CONNECTIVITY,
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
         )
 
     def _update_local_state(self):
