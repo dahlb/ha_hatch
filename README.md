@@ -10,6 +10,7 @@ A custom integration for Hatch Rest Sound Machines. This project is mostly from 
 
 Warning ahead; this is beta phase, if you notice something missing please open an issue.
 
+
 ## Feature Highlights ##
 - monitor device connectivity
 - start and stop sound machine with variety of built-in sounds (Rest mini & Rest+)
