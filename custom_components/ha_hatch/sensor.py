@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.const import PERCENTAGE
-from hatch_rest_api import RestMini, RestPlus, RestIot
+from hatch_rest_api import RestMini, RestPlus, RestIot, RestoreIot
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
 from .rest_entity import RestEntity
@@ -18,7 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
     sensor_entities = []
     for rest_device in rest_devices:
-        if not isinstance(rest_device, RestMini):
+        if not isinstance(rest_device, RestMini) and not isinstance(rest_device, RestoreIot):
             sensor_entities.append(HatchBattery(rest_device))
         if isinstance(rest_device, RestIot):
             sensor_entities.append(HatchCharging(rest_device))
