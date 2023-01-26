@@ -35,6 +35,7 @@ from .const import (
     CONFIG_TURN_ON_MEDIA,
     CONFIG_TURN_ON_DEFAULT,
     DATA_CONFIG_UPDATE_LISTENER,
+    API_VERSION,
 )
 from .util import find_rest_device_by_thing_name
 
@@ -73,7 +74,7 @@ def _install_alpine_dependencies():
 
 def _lazy_install():
     _install_alpine_dependencies()
-    custom_required_packages = ["hatch-rest-api==1.19.4"]
+    custom_required_packages = [f"hatch-rest-api=={API_VERSION}"]
     links = "https://qqaatw.github.io/aws-crt-python-musllinux/"
     for pkg in custom_required_packages:
         if not is_installed(pkg) and not install_package(pkg, find_links=links):
@@ -146,15 +147,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     await setup_connection("initial setup")
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
-
     data[DATA_CONFIG_UPDATE_LISTENER] = config_entry.add_update_listener(
         async_update_options
     )
     hass.data[DOMAIN] = data
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
 
     return True
 
