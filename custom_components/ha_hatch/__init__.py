@@ -7,7 +7,6 @@ from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
 )
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.helpers.config_validation as cv
@@ -53,8 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, "title"}
-
 
 def _install_alpine_dependencies():
     if is_docker_env() and not is_virtual_env():
@@ -90,7 +87,6 @@ async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    _LOGGER.debug(f"async setup entry: {async_redact_data(config_entry.as_dict(), TO_REDACT)}")
     _lazy_install()
     email = config_entry.data[CONF_EMAIL]
     password = config_entry.data[CONF_PASSWORD]
@@ -183,7 +179,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             mqtt_connection.disconnect().result()
         except Exception as error:
             _LOGGER.debug(f"mqtt_connection disconnect failed during unload: {error}")
-        hass.data[DOMAIN][DATA_EXPIRATION_LISTENER]()
+        config_auth_expiration_listener = hass.data[DOMAIN][DATA_EXPIRATION_LISTENER]
+        config_auth_expiration_listener()
 
         config_update_listener = hass.data[DOMAIN][DATA_CONFIG_UPDATE_LISTENER]
         config_update_listener()
