@@ -5,7 +5,7 @@
   "issue_tracker": "https://github.com/dahlb/ha_hatch/issues",
   "codeowners": ["@dahlb"],
   "requirements": [],
-  "version": "1.12.4",
+  "version": "1.12.5",
   "config_flow": true,
   "iot_class": "cloud_push"
 }
