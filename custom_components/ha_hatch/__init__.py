@@ -147,15 +147,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     await setup_connection("initial setup")
 
-    data[DATA_CONFIG_UPDATE_LISTENER] = config_entry.add_update_listener(
-        async_update_options
-    )
     hass.data[DOMAIN] = data
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    if not config_entry.update_listeners:
+        config_entry.add_update_listener(async_update_options)
 
     return True
 
@@ -166,13 +163,8 @@ async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     _LOGGER.debug(f"unload entry")
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
     if unload_ok:
         mqtt_connection = hass.data[DOMAIN][DATA_MQTT_CONNECTION]
