@@ -19,8 +19,8 @@ Warning ahead; this is beta phase, if you notice something missing please open a
 - monitor battery level (Rest+ & Rest+ 2nd gen)
 - adjust light brightness and color
 - turn rest plus on and off
-- turn clock on and off and adjust bightness (Rest+ & Rest+ 2nd gen) 
-- turn Toddler Lock on and off (Rest+ & Rest+ 2nd gen) 
+- turn clock on and off and adjust bightness (Rest+ 2nd gen) 
+- turn Toddler Lock on and off (Rest+ 2nd gen) 
 - monitor device charging status (Rest+ 2nd gen)
 
 ## Installation ##
