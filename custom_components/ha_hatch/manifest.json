@@ -1,11 +1,11 @@
 {
   "domain": "ha_hatch",
   "name": "Hatch Rest Mini/Plus",
-  "documentation": "https://github.com/dahlb/ha_hatch",
-  "issue_tracker": "https://github.com/dahlb/ha_hatch/issues",
   "codeowners": ["@dahlb"],
-  "requirements": [],
-  "version": "1.14.0",
   "config_flow": true,
-  "iot_class": "cloud_push"
+  "documentation": "https://github.com/dahlb/ha_hatch",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/dahlb/ha_hatch/issues",
+  "requirements": [],
+  "version": "1.14.0"
 }
