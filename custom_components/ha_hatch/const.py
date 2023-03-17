@@ -21,7 +21,6 @@ DATA_BINARY_SENSORS: str = "binary_sensors"
 DATA_SENSORS: str = "sensors"
 DATA_SWITCHES: str = "switches"
 DATA_EXPIRATION_LISTENER: str = "expiration_listener"
-DATA_CONFIG_UPDATE_LISTENER: str = "config_update_listener"
 
 DATA_ENTITIES_KEYS = [
     DATA_SWITCHES,

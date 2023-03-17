@@ -19,7 +19,6 @@ from homeassistant.util.package import (
     is_virtual_env,
     is_docker_env,
 )
-import asyncio
 import datetime
 from subprocess import PIPE, Popen
 import os
@@ -34,7 +33,6 @@ from .const import (
     CONFIG_TURN_ON_LIGHT,
     CONFIG_TURN_ON_MEDIA,
     CONFIG_TURN_ON_DEFAULT,
-    DATA_CONFIG_UPDATE_LISTENER,
     API_VERSION,
 )
 from .util import find_rest_device_by_thing_name
@@ -174,9 +172,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             _LOGGER.debug(f"mqtt_connection disconnect failed during unload: {error}")
         config_auth_expiration_listener = hass.data[DOMAIN][DATA_EXPIRATION_LISTENER]
         config_auth_expiration_listener()
-
-        config_update_listener = hass.data[DOMAIN][DATA_CONFIG_UPDATE_LISTENER]
-        config_update_listener()
 
         hass.data[DOMAIN] = None
 
