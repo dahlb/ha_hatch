@@ -82,7 +82,7 @@ def _install_package_dependencies():
             )
         else:
             _LOGGER.warning(
-                """ Unsupported distro: %s. If you run into issues, make sure you have
+                """Unsupported distro: %s. If you run into issues, make sure you have
                 gcc, g++, cmake, and make installed in your Home Assistant container.""",
                 distro_id,
             )
