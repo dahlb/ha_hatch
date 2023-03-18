@@ -1,5 +1,6 @@
 import logging
 
+import distro
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -52,26 +53,43 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _install_alpine_dependencies():
-    if is_docker_env() and not is_virtual_env():
-        args = ["apk", "add", "gcc", "g++", "cmake", "make"]
-        with Popen(
-            args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=os.environ.copy()
-        ) as process:
-            _, stderr = process.communicate()
-            if process.returncode != 0:
-                _LOGGER.error("Unable to install alpine dependency")
-                try:
-                    _LOGGER.error(stderr.decode("utf-8").lstrip().strip())
-                except Exception as error:
-                    _LOGGER.error(error)
-                return False
+def _install_distro_packages(args, errMsg="Unable to install package dependencies"):
+    if os.geteuid() != 0:
+        args.insert(0, "sudo")
+    with Popen(
+        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=os.environ.copy()
+    ) as process:
+        _, stderr = process.communicate()
+        if process.returncode != 0:
+            _LOGGER.error(errMsg)
+            try:
+                _LOGGER.error(stderr.decode("utf-8").lstrip().strip())
+            except Exception as error:
+                _LOGGER.error(error)
 
-    return True
+
+def _install_package_dependencies():
+    if is_docker_env() and not is_virtual_env():
+        distro_id = distro.id()
+        if distro_id == "alpine":
+            _install_distro_packages(["apk", "add", "gcc", "g++", "cmake", "make"])
+        elif distro_id == "debian" or distro_id == "ubuntu":
+            _install_distro_packages(
+                ["apt-get", "update"], "Failed to update available packages"
+            )
+            _install_distro_packages(
+                ["apt-get", "install", "build-essential", "cmake", "-y"]
+            )
+        else:
+            _LOGGER.warning(
+                """Unsupported distro: %s. If you run into issues, make sure you have
+                gcc, g++, cmake, and make installed in your Home Assistant container.""",
+                distro_id,
+            )
 
 
 def _lazy_install():
-    _install_alpine_dependencies()
+    _install_package_dependencies()
     custom_required_packages = [f"hatch-rest-api=={API_VERSION}"]
     links = "https://qqaatw.github.io/aws-crt-python-musllinux/"
     for pkg in custom_required_packages:
