@@ -1,24 +1,35 @@
-name: Validate
+name: "Validate"
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"
+    - cron:  "0 0 * * *"
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
 
 jobs:
-  validate-hassfest:
-    runs-on: ubuntu-latest
+  hassfest: # https://developers.home-assistant.io/blog/2020/04/16/hassfest
+    name: "Hassfest Validation"
+    runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v3
-      - name: Hassfest validation
-        uses: home-assistant/actions/hassfest@master
+        - name: "Checkout the repository"
+          uses: "actions/checkout@v3.3.0"
 
-  validate-hacs:
-    runs-on: ubuntu-latest
+        - name: "Run hassfest validation"
+          uses: "home-assistant/actions/hassfest@master"
+
+  hacs: # https://github.com/hacs/action
+    name: "HACS Validation"
+    runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v3
-      - name: HACS validation
-        uses: hacs/action@main
-        with:
-          category: integration
+        - name: "Checkout the repository"
+          uses: "actions/checkout@v3.3.0"
+
+        - name: "Run HACS validation"
+          uses: "hacs/action@main"
+          with:
+            category: "integration"

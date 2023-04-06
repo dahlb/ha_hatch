@@ -1,7 +1,17 @@
-.idea/
-**/__pycache__
-**.DS_Store
-**@eaDir
+# artifacts
+__pycache__
+.pytest*
+*.egg-info
+*/build/*
+*/dist/*
+
+
+# misc
+.coverage
+.vscode
+.idea
+coverage.xml
+
 
 # Home Assistant configuration
 .cloud
@@ -10,7 +20,6 @@
 automations.yaml
 blueprints
 configuration.yaml
-!/configuration.yaml
 deps
 home-assistant_v2*
 home-assistant.log*
