@@ -5,20 +5,16 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
 )
 from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_STOP,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
     MEDIA_TYPE_MUSIC,
 )
 from homeassistant.const import (
     STATE_IDLE,
     STATE_PLAYING,
-    STATE_OFF,
 )
 from hatch_rest_api import RestIot
 from .rest_entity import RestEntity

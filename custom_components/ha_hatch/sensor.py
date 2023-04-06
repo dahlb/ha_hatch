@@ -52,17 +52,17 @@ class HatchCharging(RestEntity, SensorEntity):
         if self.platform is None:
             return
         _LOGGER.debug(f"updating state:{self.rest_device}")
-        if self.rest_device.charging_status is 0:
+        if self.rest_device.charging_status == 0:
             self._attr_native_value = "Not Charging"
-        if self.rest_device.charging_status is 3:
+        if self.rest_device.charging_status == 3:
             self._attr_native_value = "Charging, plugged in"
-        if self.rest_device.charging_status is 5:
+        if self.rest_device.charging_status == 5:
             self._attr_native_value = "Charging, on base"
         self.async_write_ha_state()
 
     @property
     def icon(self) -> str | None:
-        if self._attr_native_value is "Not Charging":
+        if self._attr_native_value == "Not Charging":
             return "mdi:power-plug-off"
         else:
             return self._attr_icon

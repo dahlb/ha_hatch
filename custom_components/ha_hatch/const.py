@@ -1,4 +1,3 @@
-from enum import Enum
 
 # Configuration Constants
 DOMAIN: str = "ha_hatch"

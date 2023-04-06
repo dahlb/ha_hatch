@@ -57,10 +57,7 @@ class RestoreIotLightEntity(RestEntity, LightEntity):
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
         else:
             brightness = round(self._attr_brightness * 100 / 255.0)
-        if ATTR_RGBW_COLOR in kwargs:
-            rgbw = kwargs[ATTR_RGBW_COLOR]
-        else:
-            rgbw = self._attr_rgbw_color
+        rgbw = kwargs.get(ATTR_RGBW_COLOR, self._attr_rgbw_color)
 
         if kwargs:
             _LOGGER.debug(f"Changing light rgbw to {rgbw} and brightness to {brightness}")

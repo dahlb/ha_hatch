@@ -31,9 +31,6 @@ from .const import (
     DATA_REST_DEVICES,
     DATA_EXPIRATION_LISTENER,
     DATA_ENTITIES_KEYS,
-    CONFIG_TURN_ON_LIGHT,
-    CONFIG_TURN_ON_MEDIA,
-    CONFIG_TURN_ON_DEFAULT,
     API_VERSION,
 )
 from .util import find_rest_device_by_thing_name
@@ -99,7 +96,7 @@ def _lazy_install():
 
 async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
-    _LOGGER.debug(f"async setup")
+    _LOGGER.debug("async setup")
     return True
 
 
@@ -115,10 +112,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         client_session = async_get_clientsession(hass)
 
         def disconnect():
-            _LOGGER.debug(f"disconnected")
+            _LOGGER.debug("disconnected")
 
         def resumed():
-            _LOGGER.debug(f"resumed")
+            _LOGGER.debug("resumed")
 
         from awscrt.mqtt import Connection
 
@@ -178,7 +175,7 @@ async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    _LOGGER.debug(f"unload entry")
+    _LOGGER.debug("unload entry")
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )

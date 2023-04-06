@@ -42,15 +42,12 @@ class RestLightEntity(RestEntity, LightEntity):
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
         else:
             brightness = round(self._attr_brightness * 100 / 255.0)
-        if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs[ATTR_RGB_COLOR]
-        else:
-            rgb = self._attr_rgb_color
+        rgb = kwargs.get(ATTR_RGB_COLOR, self._attr_rgb_color)
 
         _LOGGER.debug(f"turning on light to {rgb} with {brightness}")
         self.rest_device.set_color(rgb[0], rgb[1], rgb[2], brightness)
         if self.config_turn_on_light:
-            _LOGGER.debug(f"auto turning on the hatch power switch for the light")
+            _LOGGER.debug("auto turning on the hatch power switch for the light")
             self.rest_device.set_on(True)
 
     def turn_off(self):

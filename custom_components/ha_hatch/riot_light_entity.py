@@ -54,10 +54,7 @@ class RiotLightEntity(RestEntity, LightEntity):
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
         else:
             brightness = round(self._attr_brightness * 100 / 255.0)
-        if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs[ATTR_RGB_COLOR]
-        else:
-            rgb = self._attr_rgb_color
+        rgb = kwargs.get(ATTR_RGB_COLOR, self._attr_rgb_color)
 
         if kwargs:
             _LOGGER.debug(f"Changing light rgb to {rgb} and brightness to {brightness}")

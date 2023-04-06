@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, Any
+from typing import Optional, Any
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -43,9 +43,9 @@ class HatchOptionFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-    async def async_step_init(self, user_input: Optional[Dict[str, Any]] = None):
+    async def async_step_init(self, user_input: Optional[dict[str, Any]] = None):
         if user_input is not None:
-            _LOGGER.debug(f"user input in option flow : %s", user_input)
+            _LOGGER.debug("user input in option flow : %s", user_input)
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(step_id="init", data_schema=self.schema)
@@ -57,7 +57,7 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
     VERSION = CONFIG_FLOW_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-    data: Optional[Dict[str, Any]] = {}
+    data: Optional[dict[str, Any]] = {}
 
     @staticmethod
     @callback
@@ -68,12 +68,12 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
         _lazy_install()
         pass
 
-    async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
+    async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):
         data_schema = {
             vol.Required(CONF_EMAIL): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
         }
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             email = user_input[CONF_EMAIL]

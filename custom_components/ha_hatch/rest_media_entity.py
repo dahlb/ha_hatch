@@ -43,9 +43,7 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
         super().__init__(rest_device, "Media Player")
         self.config_turn_on_media = config_turn_on_media
         if isinstance(rest_device, RestMini):
-            self._attr_sound_mode_list = list(
-                map(lambda x: x.name, REST_MINI_AUDIO_TRACKS[1:])
-            )
+            self._attr_sound_mode_list = [x.name for x in REST_MINI_AUDIO_TRACKS[1:]]
             self.none_track = RestMiniAudioTrack.NONE
             self._attr_supported_features = (
                 SUPPORT_PAUSE
@@ -56,9 +54,7 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
                 | SUPPORT_VOLUME_STEP
             )
         else:
-            self._attr_sound_mode_list = list(
-                map(lambda x: x.name, REST_PLUS_AUDIO_TRACKS[1:])
-            )
+            self._attr_sound_mode_list = [x.name for x in REST_PLUS_AUDIO_TRACKS[1:]]
             self.none_track = RestPlusAudioTrack.NONE
             self._attr_supported_features = (
                 SUPPORT_PAUSE
