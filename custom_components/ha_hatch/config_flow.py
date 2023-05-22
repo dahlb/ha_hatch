@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Any
+from typing import Any
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -43,7 +43,7 @@ class HatchOptionFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-    async def async_step_init(self, user_input: Optional[dict[str, Any]] = None):
+    async def async_step_init(self, user_input: dict[str, Any] | None = None):
         if user_input is not None:
             _LOGGER.debug("user input in option flow : %s", user_input)
             return self.async_create_entry(title="", data=user_input)
@@ -57,7 +57,7 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
     VERSION = CONFIG_FLOW_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-    data: Optional[dict[str, Any]] = {}
+    data: dict[str, Any] | None = {}
 
     @staticmethod
     @callback
@@ -68,7 +68,7 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
         _lazy_install()
         pass
 
-    async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None):
         data_schema = {
             vol.Required(CONF_EMAIL): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
