@@ -2,7 +2,7 @@
 # Configuration Constants
 DOMAIN: str = "ha_hatch"
 
-API_VERSION: str = "1.20.0"
+API_VERSION: str = "1.20.1"
 
 # Integration Setting Constants
 CONFIG_FLOW_VERSION: int = 2
