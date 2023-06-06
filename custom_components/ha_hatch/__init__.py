@@ -133,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         _, mqtt_connection, rest_devices, expiration_time = await get_rest_devices(
             email=email,
             password=password,
-            client_session=client_session,
+            client_session=None,
             on_connection_interrupted=disconnect,
             on_connection_resumed=resumed,
         )
