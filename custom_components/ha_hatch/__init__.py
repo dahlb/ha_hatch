@@ -23,6 +23,7 @@ from homeassistant.util.package import (
 import datetime
 from subprocess import PIPE, Popen
 import os
+from aiohttp import ClientSession
 
 from .const import (
     DOMAIN,
@@ -109,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     async def setup_connection(arg):
         _LOGGER.debug(f"updating credentials: {arg}")
-        # client_session = async_get_clientsession(hass)
+        client_session = async_get_clientsession(hass)
 
         def disconnect():
             _LOGGER.debug("disconnected")
@@ -133,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         _, mqtt_connection, rest_devices, expiration_time = await get_rest_devices(
             email=email,
             password=password,
-            client_session=None,
+            client_session=client_session,
             on_connection_interrupted=disconnect,
             on_connection_resumed=resumed,
         )
