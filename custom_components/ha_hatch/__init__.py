@@ -23,7 +23,6 @@ from homeassistant.util.package import (
 import datetime
 from subprocess import PIPE, Popen
 import os
-from aiohttp import ClientSession
 
 from .const import (
     DOMAIN,
