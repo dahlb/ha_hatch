@@ -11,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.requirements import RequirementsNotFound
 from homeassistant.util.package import (
@@ -109,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     async def setup_connection(arg):
         _LOGGER.debug(f"updating credentials: {arg}")
-        client_session = async_create_clientsession(hass)
+        # client_session = async_get_clientsession(hass)
 
         def disconnect():
             _LOGGER.debug("disconnected")
@@ -133,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         _, mqtt_connection, rest_devices, expiration_time = await get_rest_devices(
             email=email,
             password=password,
-            client_session=client_session,
+            client_session=None,
             on_connection_interrupted=disconnect,
             on_connection_resumed=resumed,
         )
