@@ -10,7 +10,7 @@ from homeassistant.const import CONF_UNIQUE_ID, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, DATA_REST_DEVICES, API_VERSION
+from .const import DOMAIN, DATA_REST_DEVICES
 
 TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID}
 TO_REDACT_MAPPED = {
@@ -31,7 +31,6 @@ async def async_get_config_entry_diagnostics(
     rest_devices: list = hass.data[DOMAIN][DATA_REST_DEVICES]
     data = {
         "entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "hatch-rest-api": API_VERSION,
     }
     for rest_device in rest_devices:
         data[rest_device.thing_name] = rest_device.__repr__()

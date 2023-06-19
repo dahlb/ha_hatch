@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_EMAIL,
 )
 
-from . import _lazy_install
 from .const import (
     DOMAIN,
     CONFIG_FLOW_VERSION,
@@ -63,10 +62,6 @@ class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
     @callback
     def async_get_options_flow(config_entry):
         return HatchOptionFlowHandler(config_entry)
-
-    def __init__(self):
-        _lazy_install()
-        pass
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
         data_schema = {
