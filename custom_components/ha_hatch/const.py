@@ -2,8 +2,6 @@
 # Configuration Constants
 DOMAIN: str = "ha_hatch"
 
-API_VERSION: str = "1.20.4"
-
 # Integration Setting Constants
 CONFIG_FLOW_VERSION: int = 2
 CONFIG_TURN_ON_MEDIA: str = "turn_on_media"

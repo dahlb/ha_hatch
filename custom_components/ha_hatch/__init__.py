@@ -1,6 +1,5 @@
 import logging
 
-import distro
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -13,16 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.requirements import RequirementsNotFound
-from homeassistant.util.package import (
-    install_package,
-    is_installed,
-    is_virtual_env,
-    is_docker_env,
-)
 import datetime
-from subprocess import PIPE, Popen
-import os
 
 from .const import (
     DOMAIN,
@@ -31,7 +21,6 @@ from .const import (
     DATA_REST_DEVICES,
     DATA_EXPIRATION_LISTENER,
     DATA_ENTITIES_KEYS,
-    API_VERSION,
 )
 from .util import find_rest_device_by_thing_name
 
@@ -50,50 +39,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _install_distro_packages(args, errMsg="Unable to install package dependencies"):
-    if os.geteuid() != 0:
-        args.insert(0, "sudo")
-    with Popen(
-        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=os.environ.copy()
-    ) as process:
-        _, stderr = process.communicate()
-        if process.returncode != 0:
-            _LOGGER.error(errMsg)
-            try:
-                _LOGGER.error(stderr.decode("utf-8").lstrip().strip())
-            except Exception as error:
-                _LOGGER.error(error)
-
-
-def _install_package_dependencies():
-    if is_docker_env() and not is_virtual_env():
-        distro_id = distro.id()
-        if distro_id == "alpine":
-            _install_distro_packages(["apk", "add", "gcc", "g++", "cmake", "make"])
-        elif distro_id == "debian" or distro_id == "ubuntu":
-            _install_distro_packages(
-                ["apt-get", "update"], "Failed to update available packages"
-            )
-            _install_distro_packages(
-                ["apt-get", "install", "build-essential", "cmake", "-y"]
-            )
-        else:
-            _LOGGER.warning(
-                """Unsupported distro: %s. If you run into issues, make sure you have
-                gcc, g++, cmake, and make installed in your Home Assistant container.""",
-                distro_id,
-            )
-
-
-def _lazy_install():
-    _install_package_dependencies()
-    custom_required_packages = [f"hatch-rest-api=={API_VERSION}"]
-    links = "https://qqaatw.github.io/aws-crt-python-musllinux/"
-    for pkg in custom_required_packages:
-        if not is_installed(pkg) and not install_package(pkg, find_links=links):
-            raise RequirementsNotFound(DOMAIN, [pkg])
-
-
 async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
     _LOGGER.debug("async setup")
@@ -101,7 +46,6 @@ async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    _lazy_install()
     email = config_entry.data[CONF_EMAIL]
     password = config_entry.data[CONF_PASSWORD]
 
