@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from hatch_rest_api import RestIot
+from hatch_rest_api import RestoreIot
 from .rest_entity import RestEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
     _attr_media_content_type = MEDIA_TYPE_MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-    def __init__(self, rest_device: RestIot):
+    def __init__(self, rest_device: RestIot | RestoreIot):
         super().__init__(rest_device, "Media Player")
         self._attr_sound_mode_list = self.rest_device.favorite_names()
         self._attr_supported_features = (
