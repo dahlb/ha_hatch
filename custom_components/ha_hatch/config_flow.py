@@ -51,7 +51,7 @@ class HatchOptionFlowHandler(config_entries.OptionsFlow):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class KiaUvoConfigFlowHandler(config_entries.ConfigFlow):
+class ConfigFlowHandler(config_entries.ConfigFlow):
 
     VERSION = CONFIG_FLOW_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH

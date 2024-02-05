@@ -5,12 +5,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
 )
 from homeassistant.components.media_player.const import (
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-    MEDIA_TYPE_MUSIC,
+    MediaPlayerEntityFeature,
+    MediaType
 )
 from homeassistant.const import (
     STATE_IDLE,
@@ -25,18 +21,18 @@ _LOGGER = logging.getLogger(__name__)
 
 class RiotMediaEntity(RestEntity, MediaPlayerEntity):
     _attr_should_poll = False
-    _attr_media_content_type = MEDIA_TYPE_MUSIC
+    _attr_media_content_type = MediaType.MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(self, rest_device: RestIot | RestoreIot):
         super().__init__(rest_device, "Media Player")
         self._attr_sound_mode_list = self.rest_device.favorite_names()
         self._attr_supported_features = (
-            SUPPORT_PLAY
-            | SUPPORT_STOP
-            | SUPPORT_SELECT_SOUND_MODE
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_STEP
+            MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.STOP
+            | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP
         )
 
     def _update_local_state(self):

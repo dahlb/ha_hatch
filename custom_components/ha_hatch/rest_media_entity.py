@@ -6,15 +6,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
 )
 from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
-    MEDIA_TYPE_MUSIC,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.const import (
     STATE_IDLE,
@@ -36,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class RestMediaEntity(RestEntity, MediaPlayerEntity):
     _attr_should_poll = False
-    _attr_media_content_type = MEDIA_TYPE_MUSIC
+    _attr_media_content_type = MediaType.MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(self, rest_device: RestMini | RestPlus, config_turn_on_media):
@@ -46,25 +39,25 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
             self._attr_sound_mode_list = [x.name for x in REST_MINI_AUDIO_TRACKS[1:]]
             self.none_track = RestMiniAudioTrack.NONE
             self._attr_supported_features = (
-                SUPPORT_PAUSE
-                | SUPPORT_PLAY
-                | SUPPORT_STOP
-                | SUPPORT_SELECT_SOUND_MODE
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_VOLUME_STEP
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
             )
         else:
             self._attr_sound_mode_list = [x.name for x in REST_PLUS_AUDIO_TRACKS[1:]]
             self.none_track = RestPlusAudioTrack.NONE
             self._attr_supported_features = (
-                SUPPORT_PAUSE
-                | SUPPORT_PLAY
-                | SUPPORT_STOP
-                | SUPPORT_SELECT_SOUND_MODE
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_VOLUME_STEP
-                | SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+                | MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
             )
 
     def _update_local_state(self):
