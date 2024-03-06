@@ -45,6 +45,43 @@ logger:
     hatch_rest_api: debug
 ```
 
+## Usage ##
+You can now use the following services:
+* Media player: Select sound mode
+  * Possible options here are: Stream, PinkNoise, Dryer, Ocean, Wind, Rain, Bird, Crickets, Brahms, Twinkle, RockABye
+* Media player: Set volume
+* Media player: Play
+* Media player: Stop
+* Light: Turn on
+  * Possible values to modify:
+    * brightness
+    * hs_color
+    * rgb_color
+    * xy_color
+* Light: Turn off
+
+Here are the basic colors from the app:
+* Orange
+  * hs_color: 25.767, 69.658
+  * rgb_color: 234, 141, 71
+  * xy_color: 0.547, 0.379
+* Dark blue
+  * hs_color: 212.368, 67.556
+  * rgb_color: 73, 143, 225
+  * xy_color: 0.173, 0.197
+* Light blue
+  * hs_color: 187.586, 80.93
+  * rgb_color: 41, 193, 215
+  * xy_color: 0.158, 0.301
+* Green
+  * hs_color: 153.051, 56.19
+  * rgb_color: 92, 210, 157
+  * xy_color: 0.208, 0.441
+* Pink
+  * hs_color: 330.811, 60.163
+  * rgb_color: 246, 98, 170
+  * xy_color: 0.476, 0.248
+
 ***
 
 [ha_hatch]: https://github.com/dahlb/ha_hatch
