@@ -14,7 +14,6 @@ from .const import (
 )
 from hatch_rest_api import RestIot, RestoreIot
 from .rest_media_entity import RestMediaEntity
-from .riot_media_entity import RiotMediaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,10 +25,7 @@ def choose_media_entity(
         CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT
     )
 
-    if isinstance(rest_device, RestIot | RestoreIot):
-        return RiotMediaEntity(rest_device)
-    elif not isinstance(rest_device, RestoreIot):
-        return RestMediaEntity(rest_device, config_turn_on_media)
+    return RestMediaEntity(rest_device, config_turn_on_media)
 
 
 async def async_setup_entry(
