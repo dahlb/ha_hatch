@@ -1,5 +1,5 @@
 colorlog==6.8.2
 homeassistant==2023.5.1
 pip>=8.0.3,<24.1
-ruff==0.3.3
+ruff==0.3.4
 hatch-rest-api==1.22.0
