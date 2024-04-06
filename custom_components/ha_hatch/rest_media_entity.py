@@ -134,10 +134,6 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
             if track is None:
                 track = self.none_track
             self.rest_device.set_audio_track(track)
-        # # TEST ONLY; commenting out for now...
-        # elif sound_mode == "LULZ":
-        #     _LOGGER.debug(f'Funny person, huh? Ok..')
-        #     self.rest_device.set_sound_url()
 
         if self.config_turn_on_media:
             self.turn_on()
