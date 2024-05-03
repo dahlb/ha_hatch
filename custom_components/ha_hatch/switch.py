@@ -38,7 +38,7 @@ class HatchPowerSwitch(RestEntity, SwitchEntity):
             return
         _LOGGER.debug(f"updating state:{self.rest_device}")
         self._attr_is_on = self.rest_device.is_on
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         self.rest_device.set_on(True)
@@ -59,7 +59,7 @@ class HatchToddlerLockSwitch(RestEntity, SwitchEntity):
             return
         _LOGGER.debug(f"updating state:{self.rest_device}")
         self._attr_is_on = self.rest_device.toddler_lock
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         self.rest_device.set_toddler_lock(True)

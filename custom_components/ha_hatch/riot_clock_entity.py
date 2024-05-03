@@ -29,7 +29,7 @@ class RiotClockEntity(RestEntity, LightEntity):
             self._attr_is_on = self.rest_device.is_clock_on
         clock_val = self.rest_device.clock or 0.0
         self._attr_brightness = round(clock_val / 100 * 255.0, 0)
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         _LOGGER.debug(f"args:{kwargs}")

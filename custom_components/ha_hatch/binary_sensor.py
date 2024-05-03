@@ -38,7 +38,7 @@ class HatchOnlineSensor(RestEntity, BinarySensorEntity):
             return
         _LOGGER.debug(f"updating state:{self.rest_device}")
         self._attr_is_on = self.rest_device.is_online
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def icon(self) -> str | None:

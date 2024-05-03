@@ -44,7 +44,7 @@ class RiotLightEntity(RestEntity, LightEntity):
             self._last_light_on_colors["g"] = self.rest_device.green
             self._last_light_on_colors["b"] = self.rest_device.blue
             self._last_light_on_colors["brightness"] = self.rest_device.brightness
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         _LOGGER.debug(f"args:{kwargs}")

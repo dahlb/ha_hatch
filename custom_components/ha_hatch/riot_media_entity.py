@@ -46,7 +46,7 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
         self._attr_sound_mode = self.rest_device.audio_track
         self._attr_volume_level = self.rest_device.volume / 100
         self._attr_device_info.update(sw_version=self.rest_device.firmware_version)
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):
         self.rest_device.set_volume(volume * 100)

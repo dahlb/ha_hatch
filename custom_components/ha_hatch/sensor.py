@@ -39,7 +39,7 @@ class HatchBattery(RestEntity, SensorEntity):
             return
         _LOGGER.debug(f"updating state:{self.rest_device}")
         self._attr_native_value = self.rest_device.battery_level
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
 
 class HatchCharging(RestEntity, SensorEntity):
@@ -58,7 +58,7 @@ class HatchCharging(RestEntity, SensorEntity):
             self._attr_native_value = "Charging, plugged in"
         if self.rest_device.charging_status == 5:
             self._attr_native_value = "Charging, on base"
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def icon(self) -> str | None:

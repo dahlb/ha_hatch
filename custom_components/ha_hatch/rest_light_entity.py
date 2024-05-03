@@ -32,7 +32,7 @@ class RestLightEntity(RestEntity, LightEntity):
             self.rest_device.green,
             self.rest_device.blue,
         )
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         _LOGGER.debug(f"args:{kwargs}")
