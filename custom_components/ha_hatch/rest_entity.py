@@ -50,7 +50,3 @@ class RestEntity(ABC):
     async def async_added_to_hass(self):
         if self.rest_device.is_playing is not None:
             self._update_local_state()
-
-    def turn_on(self):
-        if isinstance(self.rest_device, RestPlus):
-            self.rest_device.set_on(True)

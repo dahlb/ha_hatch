@@ -114,3 +114,7 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
 
     def turn_off(self):
         self.media_stop()
+
+    def turn_on(self):
+        if isinstance(self.rest_device, RestPlus):
+            self.rest_device.set_on(True)
