@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import asyncio
 from abc import ABC, abstractmethod
 from hatch_rest_api import RestPlus, RestMini, RestIot
 from homeassistant.helpers.entity import DeviceInfo
@@ -36,12 +37,17 @@ class RestEntity(ABC):
             name=rest_device.device_name,
             sw_version=self.rest_device.firmware_version,
         )
-        self.rest_device.register_callback(self._update_local_state)
+        self.rest_device.register_callback(self.thread_safe_update_local_state)
 
     def replace_rest_device(self, rest_device: RestIot | RestMini | RestPlus):
-        self.rest_device.remove_callback(self._update_local_state)
+        self.rest_device.remove_callback(self.thread_safe_update_local_state)
         self.rest_device = rest_device
-        self.rest_device.register_callback(self._update_local_state)
+        self.rest_device.register_callback(self.thread_safe_update_local_state)
+
+    def thread_safe_update_local_state(self):
+        asyncio.run_coroutine_threadsafe(
+            self._update_local_state(), self.hass.loop
+        ).result()
 
     @abstractmethod
     def _update_local_state(self):
