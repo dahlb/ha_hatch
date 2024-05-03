@@ -7,5 +7,5 @@
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/dahlb/ha_hatch/issues",
   "requirements": ["hatch_rest_api==1.21.0"],
-  "version": "1.17.2"
+  "version": "1.17.3"
 }
