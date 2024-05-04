@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import asyncio
 from abc import ABC, abstractmethod
 from hatch_rest_api import RestPlus, RestMini, RestIot
 from homeassistant.helpers.entity import DeviceInfo
