@@ -14,8 +14,6 @@ A custom integration for Hatch Rest Sound Machines. This project is mostly from 
 - Rest 2nd gen
 - Rest+ 2nd gen
 
-Warning ahead; this is beta phase, if you notice something missing please open an issue.
-
 
 ## Feature Highlights ##
 - monitor device connectivity
@@ -25,7 +23,7 @@ Warning ahead; this is beta phase, if you notice something missing please open a
 - monitor battery level (Rest+ & Rest+ 2nd gen)
 - adjust light brightness and color
 - turn rest plus on and off
-- turn clock on and off and adjust bightness (Rest+ 2nd gen) 
+- turn clock on and off and adjust brightness (Rest+ 2nd gen) 
 - turn Toddler Lock on and off (Rest+ 2nd gen) 
 - monitor device charging status (Rest+ 2nd gen)
 
@@ -49,6 +47,8 @@ logger:
 You can now use the following services:
 * Media player: Select sound mode
   * Possible options here are: Stream, PinkNoise, Dryer, Ocean, Wind, Rain, Bird, Crickets, Brahms, Twinkle, RockABye
+* Media player: select source (Rest+ 2nd gen)
+  * Possible options listed in entity attribute sources available in developer tools, full name with id or just name can be used
 * Media player: Set volume
 * Media player: Play
 * Media player: Stop
