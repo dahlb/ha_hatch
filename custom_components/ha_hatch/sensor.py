@@ -18,7 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
     sensor_entities = []
     for rest_device in rest_devices:
-        if not isinstance(rest_device, RestMini) and not isinstance(rest_device, RestoreIot):
+        if isinstance(rest_device, RestPlus) or isinstance(rest_device, RestIot):
             sensor_entities.append(HatchBattery(rest_device))
         if isinstance(rest_device, RestIot):
             sensor_entities.append(HatchCharging(rest_device))
