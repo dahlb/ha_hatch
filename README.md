@@ -43,6 +43,7 @@ logger:
     hatch_rest_api: debug
 ```
 
+
 ## Usage ##
 You can now use the following services:
 * Rest+ 2nd gen: activate scene to start a defined favorite
