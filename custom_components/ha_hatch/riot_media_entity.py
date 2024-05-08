@@ -25,7 +25,7 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
 
     def __init__(self, rest_device: RestIot | RestoreIot):
         super().__init__(rest_device, "Media Player")
-        self._attr_sound_mode_list = [x.name for x in REST_IOT_AUDIO_TRACKS[1:]]
+        self._attr_sound_mode_list = self.rest_device.favorite_names() + [x.name for x in REST_IOT_AUDIO_TRACKS[1:]]
         self._attr_supported_features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.STOP
