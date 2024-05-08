@@ -64,7 +64,7 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
         self.rest_device.set_volume(volume * 100)
 
     def media_play(self) -> None:
-        self.rest_device.set_favorite(self._attr_sound_mode_list[0])
+        self.select_sound_mode(self._attr_sound_mode_list[0])
 
     def _find_track(self, track_name) -> str | None:
         if track_name is None:
