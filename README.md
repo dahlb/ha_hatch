@@ -45,10 +45,10 @@ logger:
 
 ## Usage ##
 You can now use the following services:
+* Rest+ 2nd gen: activate scene to start a defined favorite
+  * if you add new favorites reload the integration to update available scenes or restart ha
 * Media player: Select sound mode
   * Possible options here are: Stream, PinkNoise, Dryer, Ocean, Wind, Rain, Bird, Crickets, Brahms, Twinkle, RockABye
-* Media player: select source (Rest+ 2nd gen)
-  * Possible options listed in entity attribute sources available in developer tools, full name with id or just name can be used
 * Media player: Set volume
 * Media player: Play
 * Media player: Stop
