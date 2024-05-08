@@ -32,7 +32,17 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
             | MediaPlayerEntityFeature.SELECT_SOUND_MODE
             | MediaPlayerEntityFeature.VOLUME_SET
             | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.SELECT_SOURCE
         )
+        sources = []
+        for favorite in self.rest_device.favorites:
+            sources.append(f"{favorite['name']}-{favorite['id']}")
+            for step in favorite['steps']:
+                sources.append(f"{step['name']}-{favorite['id']}")
+
+        self._attr_extra_state_attributes = {
+            "sources": set(sources)
+        }
 
     def _update_local_state(self):
         if self.platform is None:
@@ -53,7 +63,7 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
     def media_play(self):
         self.rest_device.set_favorite(self._attr_sound_mode_list[0])
 
-    def _find_track(self, track_name):
+    def _find_track(self, track_name) -> str | None:
         if track_name is None:
             track_name = self._attr_sound_mode
         return next(
@@ -61,11 +71,25 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
             None,
         )
 
-    def select_sound_mode(self, sound_mode: str):
+    def select_sound_mode(self, sound_mode: str) -> None:
         track = self._find_track(track_name=sound_mode)
         if track is None:
             track = RIoTAudioTrack.NONE
         self.rest_device.set_audio_track(track)
+
+    def _find_source(self, source: str) -> str:
+        for favorite in self.rest_device.favorites:
+            if favorite['name'] == source or favorite['id'] == source or favorite['steps'][0]['name'] == source:
+                return f"{favorite['name']}-{favorite['id']}"
+
+    def select_source(self, source: str) -> None:
+        if '-' not in source:
+            source = self._find_source(source)
+            _LOGGER.debug(f"source missing -, found {source}")
+        if source is not None and '-' in source:
+            _LOGGER.debug(f"setting source: {source}")
+            self.rest_device.set_favorite(source)
+        _LOGGER.debug(f"source not found for {source}")
 
     def media_stop(self):
         self.rest_device.set_audio_track(RIoTAudioTrack.NONE)
