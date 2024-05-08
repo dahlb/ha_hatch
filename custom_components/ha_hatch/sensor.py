@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.const import PERCENTAGE
-from hatch_rest_api import RestMini, RestPlus, RestIot, RestoreIot
+from hatch_rest_api import RestPlus, RestIot
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
 from .rest_entity import RestEntity
