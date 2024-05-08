@@ -12,8 +12,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PLAYING,
 )
-from hatch_rest_api import RestIot
-from hatch_rest_api import RestoreIot
+from hatch_rest_api import RestIot, RestoreIot, RIoTAudioTrack, REST_IOT_AUDIO_TRACKS
 from .rest_entity import RestEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
 
     def __init__(self, rest_device: RestIot | RestoreIot):
         super().__init__(rest_device, "Media Player")
-        self._attr_sound_mode_list = self.rest_device.favorite_names()
+        self._attr_sound_mode_list = [x.name for x in REST_IOT_AUDIO_TRACKS[1:]]
         self._attr_supported_features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.STOP
@@ -54,8 +53,19 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
     def media_play(self):
         self.rest_device.set_favorite(self._attr_sound_mode_list[0])
 
+    def _find_track(self, track_name):
+        if track_name is None:
+            track_name = self._attr_sound_mode
+        return next(
+            (track for track in REST_IOT_AUDIO_TRACKS if track.name == track_name),
+            None,
+        )
+
     def select_sound_mode(self, sound_mode: str):
-        self.rest_device.set_favorite(sound_mode)
+        track = self._find_track(track_name=sound_mode)
+        if track is None:
+            track = RIoTAudioTrack.NONE
+        self.rest_device.set_audio_track(track)
 
     def media_stop(self):
-        self.rest_device.turn_off()
+        self.rest_device.set_audio_track(RIoTAudioTrack.NONE)
