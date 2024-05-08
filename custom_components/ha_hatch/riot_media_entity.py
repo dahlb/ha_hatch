@@ -52,6 +52,9 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
             self._attr_state = STATE_PLAYING
         else:
             self._attr_state = STATE_IDLE
+        self._attr_extra_state_attributes["current"] = self.rest_device.current_playing
+        self._attr_extra_state_attributes["current_favorite"] = self.rest_device.current_id
+        self._attr_extra_state_attributes["current_step"] = self.rest_device.current_step
         self._attr_sound_mode = self.rest_device.audio_track.name
         self._attr_volume_level = self.rest_device.volume / 100
         self._attr_device_info.update(sw_version=self.rest_device.firmware_version)
@@ -60,7 +63,7 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
     def set_volume_level(self, volume):
         self.rest_device.set_volume(volume * 100)
 
-    def media_play(self):
+    def media_play(self) -> None:
         self.rest_device.set_favorite(self._attr_sound_mode_list[0])
 
     def _find_track(self, track_name) -> str | None:
