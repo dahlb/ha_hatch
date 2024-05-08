@@ -42,7 +42,7 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
             self._attr_state = STATE_PLAYING
         else:
             self._attr_state = STATE_IDLE
-        self._attr_sound_mode = self.rest_device.audio_track
+        self._attr_sound_mode = self.rest_device.audio_track.name
         self._attr_volume_level = self.rest_device.volume / 100
         self._attr_device_info.update(sw_version=self.rest_device.firmware_version)
         self.schedule_update_ha_state()
