@@ -28,6 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RiotScene(RestEntity, Scene):
     def __init__(self, rest_device: RestIot, name: str, favorite_id: int):
         super().__init__(rest_device, f"Scene-{name}-{favorite_id}")
+        _LOGGER.debug(f"unique scene id*****{self._attr_unique_id}")
         self._attr_name = name
         self.favorite_name_id = f"{name}-{favorite_id}"
 
