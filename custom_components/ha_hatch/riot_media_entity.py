@@ -47,7 +47,8 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
         self._attr_extra_state_attributes["current"] = self.rest_device.current_playing
         self._attr_extra_state_attributes["current_favorite"] = self.rest_device.current_id
         self._attr_extra_state_attributes["current_step"] = self.rest_device.current_step
-        self._attr_sound_mode = self.rest_device.audio_track.name
+        if self.rest_device.audio_track is not None:
+            self._attr_sound_mode = self.rest_device.audio_track.name
         self._attr_volume_level = self.rest_device.volume / 100
         self._attr_device_info.update(sw_version=self.rest_device.firmware_version)
         self.schedule_update_ha_state()
