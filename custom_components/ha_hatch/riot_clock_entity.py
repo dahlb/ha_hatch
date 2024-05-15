@@ -25,8 +25,7 @@ class RiotClockEntity(RestEntity, LightEntity):
         if self.platform is None:
             return
         _LOGGER.debug(f"updating state:{self.rest_device}")
-        if isinstance(self.rest_device, RestIot):
-            self._attr_is_on = self.rest_device.is_clock_on
+        self._attr_is_on = self.rest_device.is_clock_on
         clock_val = self.rest_device.clock or 0.0
         self._attr_brightness = round(clock_val / 100 * 255.0, 0)
         self.schedule_update_ha_state()

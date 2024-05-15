@@ -33,6 +33,7 @@ class RiotScene(RestEntity, Scene):
         self.favorite_name_id = f"{name}-{favorite_id}"
 
     def activate(self, **kwargs: Any) -> None:
+        _LOGGER.debug(f"activating scene:{self.unique_id}")
         self.rest_device.set_favorite(self.favorite_name_id)
 
     def _update_local_state(self):
