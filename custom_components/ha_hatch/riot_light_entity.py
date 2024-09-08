@@ -58,7 +58,10 @@ class RiotLightEntity(RestEntity, LightEntity):
 
         if kwargs:
             _LOGGER.debug(f"Changing light rgb to {rgb} and brightness to {brightness}")
-            self.rest_device.set_color(rgb[0], rgb[1], rgb[2], 0, brightness)
+            white = 0
+            if rgb[0] == 255 and rgb[1] == 255 and rgb[2] == 255:
+                white = 65535
+            self.rest_device.set_color(rgb[0], rgb[1], rgb[2], white, brightness)
         else:
             # Turn on the light to the last known state/default state
             self.rest_device.set_color(
