@@ -11,7 +11,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     STATE_IDLE,
     STATE_PLAYING,
-    STATE_OFF,
 )
 from hatch_rest_api import RestIot, RestoreIot, RIoTAudioTrack, REST_IOT_AUDIO_TRACKS
 from .rest_entity import RestEntity
@@ -44,10 +43,7 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
         if self.rest_device.is_playing:
             self._attr_state = STATE_PLAYING
         else:
-            if self.rest_device.is_on:
-                self._attr_state = STATE_IDLE
-            else:
-                self._attr_state = STATE_OFF
+            self._attr_state = STATE_IDLE
         self._attr_extra_state_attributes["current"] = self.rest_device.current_playing
         self._attr_extra_state_attributes["current_favorite"] = self.rest_device.current_id
         self._attr_extra_state_attributes["current_step"] = self.rest_device.current_step
