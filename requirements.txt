@@ -2,4 +2,4 @@ colorlog==6.8.2
 homeassistant==2024.3.3
 pip>=8.0.3,<24.3
 ruff==0.6.9
-hatch-rest-api==1.26.1
+hatch-rest-api==1.26.2
