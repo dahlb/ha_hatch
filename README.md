@@ -33,16 +33,13 @@ You can install this either manually copying files or using HACS. Configuration 
 upstream limitation https://github.com/awslabs/aws-crt-python/issues/315 is now automatically worked around thanks to code provided by https://github.com/qqaatw/
 
 ## Troubleshooting ##
-If you receive an error while trying to login, please go through these steps;
-1. You can enable logging for this integration specifically and share your logs, so I can have a deep dive investigation. To enable logging, update your `configuration.yaml` like this, we can get more information in Configuration -> Logs page
-```
-logger:
-  default: warning
-  logs:
-    custom_components.ha_hatch: debug
-    hatch_rest_api: debug
-```
-
+If you receive an error, please go through these steps;
+1. Enabled Debug Logging, at /config/integrations/integration/ha_hatch
+2. Restart you home assistant to capture initialization with debug logging, then try to do what your having trouble with
+3. Disable Debug Logging, at /config/integrations/integration/ha_hatch (which will download the logs)
+4. Click the three dots menu for your vehicle, at /config/integrations/integration/ha_hatch
+5. Click Download Diagnostics
+6. Attach both logs and diagnostics to your issue ticket.
 
 ## Usage ##
 You can now use the following services:

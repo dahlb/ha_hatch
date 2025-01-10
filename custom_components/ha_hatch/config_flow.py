@@ -24,18 +24,17 @@ _LOGGER = logging.getLogger(__name__)
 
 class HatchOptionFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
         self.schema = vol.Schema(
             {
                 vol.Required(
                     CONFIG_TURN_ON_LIGHT,
-                    default=self.config_entry.options.get(
+                    default=config_entry.options.get(
                         CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT
                     ),
                 ): bool,
                 vol.Required(
                     CONFIG_TURN_ON_MEDIA,
-                    default=self.config_entry.options.get(
+                    default=config_entry.options.get(
                         CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT
                     ),
                 ): bool,

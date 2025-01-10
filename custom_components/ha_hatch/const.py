@@ -1,3 +1,4 @@
+from homeassistant.const import Platform
 
 # Configuration Constants
 DOMAIN: str = "ha_hatch"
@@ -7,7 +8,14 @@ CONFIG_FLOW_VERSION: int = 2
 CONFIG_TURN_ON_MEDIA: str = "turn_on_media"
 CONFIG_TURN_ON_LIGHT: str = "turn_on_light"
 CONFIG_TURN_ON_DEFAULT: bool = True
-PLATFORMS = ["media_player", "light", "binary_sensor", "sensor", "switch", "scene"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 # Home Assistant Data Storage Constants
 DATA_MQTT_CONNECTION: str = "mqtt_connection"
