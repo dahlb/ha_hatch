@@ -3,10 +3,12 @@ from __future__ import annotations
 import logging
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
-    BinarySensorEntity,
+    BinarySensorEntity, BinarySensorEntityDescription,
 )
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from hatch_rest_api import RestPlus, RestMini, RestIot
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_BINARY_SENSORS
 from .rest_entity import RestEntity
@@ -14,7 +16,7 @@ from .rest_entity import RestEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     hass.data.setdefault(DOMAIN, {})
 
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
@@ -24,13 +26,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class HatchOnlineSensor(RestEntity, BinarySensorEntity):
-    _attr_icon = "mdi:wifi-check"
-
     def __init__(self, rest_device: RestIot | RestMini | RestPlus):
         super().__init__(rest_device, "Wifi")
-        self.entity_description = EntityDescription(
+        self.entity_description = BinarySensorEntityDescription(
             key=f"#{self._attr_unique_id}-online",
             device_class=BinarySensorDeviceClass.CONNECTIVITY,
+            icon="mdi:wifi-check",
         )
 
     def _update_local_state(self):
@@ -43,6 +44,6 @@ class HatchOnlineSensor(RestEntity, BinarySensorEntity):
     @property
     def icon(self) -> str | None:
         if self.is_on:
-            return self._attr_icon
+            return self.entity_description.icon
         else:
             return "mdi:wifi-strength-outline"

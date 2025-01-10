@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import logging
 from hatch_rest_api import RestPlus, RestIot, RestoreIot
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 from .rest_light_entity import RestLightEntity
 from .riot_light_entity import RiotLightEntity
 from .restoreiot_light_entity import RestoreIotLightEntity
@@ -18,7 +22,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     hass.data.setdefault(DOMAIN, {})
     config_turn_on_light = config_entry.options.get(
         CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT

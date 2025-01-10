@@ -4,6 +4,9 @@ import logging
 from homeassistant.components.scene import Scene
 from typing import Any
 from hatch_rest_api import RestIot
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
 from .rest_entity import RestEntity
@@ -11,7 +14,7 @@ from .rest_entity import RestEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     hass.data.setdefault(DOMAIN, {})
 
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]

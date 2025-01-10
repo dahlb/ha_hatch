@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import logging
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from hatch_rest_api import RestPlus, RestIot
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
 from .rest_entity import RestEntity
@@ -12,7 +15,7 @@ from .rest_entity import RestEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     hass.data.setdefault(DOMAIN, {})
 
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
@@ -27,11 +30,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class HatchBattery(RestEntity, SensorEntity):
-    _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_icon = "mdi:battery"
+    entity_description = SensorEntityDescription(
+        key="battery",
+        device_class=SensorDeviceClass.BATTERY,
+        icon="mdi:battery",
+        native_unit_of_measurement=PERCENTAGE,
+    )
 
-    def __init__(self, rest_device: RestPlus):
+    def __init__(self, rest_device: RestPlus | RestIot):
         super().__init__(rest_device, "Battery")
 
     def _update_local_state(self):
@@ -43,7 +49,10 @@ class HatchBattery(RestEntity, SensorEntity):
 
 
 class HatchCharging(RestEntity, SensorEntity):
-    _attr_icon = "mdi:power-plug"
+    entity_description = SensorEntityDescription(
+        key="charging",
+        icon="mdi:power-plug",
+    )
 
     def __init__(self, rest_device: RestIot):
         super().__init__(rest_device, "Charging Status")
@@ -65,4 +74,4 @@ class HatchCharging(RestEntity, SensorEntity):
         if self._attr_native_value == "Not Charging":
             return "mdi:power-plug-off"
         else:
-            return self._attr_icon
+            return self.entity_description.icon

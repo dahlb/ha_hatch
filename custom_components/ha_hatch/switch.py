@@ -3,9 +3,12 @@ from __future__ import annotations
 import logging
 from homeassistant.components.switch import (
     SwitchEntity,
-    SwitchDeviceClass,
+    SwitchDeviceClass, SwitchEntityDescription,
 )
 from hatch_rest_api import RestPlus, RestIot
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, DATA_REST_DEVICES, DATA_SWITCHES
 from .rest_entity import RestEntity
@@ -13,7 +16,7 @@ from .rest_entity import RestEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     hass.data.setdefault(DOMAIN, {})
 
     rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
@@ -28,7 +31,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class HatchPowerSwitch(RestEntity, SwitchEntity):
-    _attr_device_class = SwitchDeviceClass.SWITCH
+    entity_description: SwitchEntityDescription(
+        key="power-switch",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
 
     def __init__(self, rest_device: RestPlus):
         super().__init__(rest_device, "Power Switch")
@@ -48,10 +54,13 @@ class HatchPowerSwitch(RestEntity, SwitchEntity):
 
 
 class HatchToddlerLockSwitch(RestEntity, SwitchEntity):
-    _attr_device_class = SwitchDeviceClass.SWITCH
-    _attr_icon = "mdi:human-child"
+    entity_description: SwitchEntityDescription(
+        key="toddler-lock",
+        icon="mdi:human-child",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
 
-    def __init__(self, rest_device: RestPlus):
+    def __init__(self, rest_device: RestIot):
         super().__init__(rest_device, "Toddler Lock")
 
     def _update_local_state(self):

@@ -28,7 +28,7 @@ def choose_media_entity(
 
     if isinstance(rest_device, RestIot | RestoreIot):
         return RiotMediaEntity(rest_device)
-    elif not isinstance(rest_device, RestoreIot):
+    else:
         return RestMediaEntity(rest_device, config_turn_on_media)
 
 
