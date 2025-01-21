@@ -2,10 +2,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, HassJob
 from homeassistant.const import (
     CONF_EMAIL,
-    CONF_PASSWORD,
+    CONF_PASSWORD, Platform,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType
@@ -16,7 +16,6 @@ import datetime
 
 from .const import (
     DOMAIN,
-    PLATFORMS,
     DATA_MQTT_CONNECTION,
     DATA_REST_DEVICES,
     DATA_EXPIRATION_LISTENER,
@@ -38,6 +37,15 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
 
 async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
@@ -51,8 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     data = {}
 
-    async def setup_connection(arg):
-        _LOGGER.debug(f"updating credentials: {arg}")
+    async def setup_connection(time: datetime) -> None:
+        _LOGGER.debug(f"updating credentials: {time}")
         client_session = async_get_clientsession(hass)
 
         def disconnect():
@@ -82,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             on_connection_resumed=resumed,
         )
         _LOGGER.debug(
-            f"credentials expire at: {datetime.datetime.fromtimestamp(expiration_time)}"
+            f"credentials expire at: {datetime.datetime.fromtimestamp(expiration_time, datetime.UTC)}"
         )
         data[DATA_MQTT_CONNECTION] = mqtt_connection
         data[DATA_REST_DEVICES] = rest_devices
@@ -98,8 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
         data[DATA_EXPIRATION_LISTENER] = async_track_point_in_utc_time(
             hass,
-            setup_connection,
-            datetime.datetime.fromtimestamp(expiration_time - 60),
+            HassJob(target=setup_connection, name="Hatch Update Credentials", cancel_on_shutdown=True),
+            datetime.datetime.fromtimestamp(expiration_time - 60, datetime.UTC),
         )
 
     await setup_connection("initial setup")

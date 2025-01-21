@@ -31,9 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
 class RiotScene(RestEntity, Scene):
     def __init__(self, rest_device: RestIot, name: str, favorite_id: int):
         super().__init__(rest_device, f"Scene-{name}")
-        _LOGGER.debug(f"unique scene id*****{self._attr_unique_id}")
         self._attr_name = name
         self.favorite_name_id = f"{name}-{favorite_id}"
+        _LOGGER.debug(f"scene; unique_id:{self._attr_unique_id}, name:{self._attr_name}, favorite_name_id:{self.favorite_name_id}")
 
     def activate(self, **kwargs: Any) -> None:
         _LOGGER.debug(f"activating scene:{self.unique_id}")
