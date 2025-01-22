@@ -5,10 +5,10 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, HassJob
 from homeassistant.const import (
     CONF_EMAIL,
-    CONF_PASSWORD, Platform,
+    CONF_PASSWORD,
+    Platform,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import ConfigType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -37,17 +37,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.LIGHT,
-    Platform.MEDIA_PLAYER,
-    Platform.SCENE,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.LIGHT, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.SCENE]
 
 
-async def async_setup(hass: HomeAssistant, config_entry: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     _LOGGER.debug("async setup")
     return True
