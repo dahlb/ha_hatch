@@ -1,4 +1,6 @@
 # Configuration Constants
+from homeassistant.const import Platform
+
 DOMAIN: str = "ha_hatch"
 
 # Integration Setting Constants
@@ -25,4 +27,13 @@ DATA_ENTITIES_KEYS = [
     DATA_LIGHTS,
     DATA_BINARY_SENSORS,
     DATA_MEDIA_PlAYERS,
+]
+
+PLATFORMS = [
+    Platform.MEDIA_PLAYER,
+    Platform.LIGHT,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.SCENE
 ]

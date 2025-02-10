@@ -6,7 +6,6 @@ from homeassistant.core import HomeAssistant, HassJob
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
-    Platform,
 )
 from homeassistant.config_entries import ConfigEntry
 import homeassistant.helpers.config_validation as cv
@@ -20,6 +19,7 @@ from .const import (
     DATA_REST_DEVICES,
     DATA_EXPIRATION_LISTENER,
     DATA_ENTITIES_KEYS,
+    PLATFORMS,
 )
 from .util import find_rest_device_by_thing_name
 
@@ -36,8 +36,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.LIGHT, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.SCENE]
 
 
 async def async_setup(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
