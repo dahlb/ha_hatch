@@ -7,7 +7,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 import logging
-from hatch_rest_api import RestIot
+from hatch_rest_api import RestIot, RestoreIot
 
 from .rest_entity import RestEntity
 
@@ -26,7 +26,7 @@ class RestoreIotLightEntity(RestEntity, LightEntity):
         "brightness": 50,
     }
 
-    def __init__(self, rest_device: RestIot):
+    def __init__(self, rest_device: RestoreIot):
         super().__init__(rest_device, "Light")
 
     def _update_local_state(self):

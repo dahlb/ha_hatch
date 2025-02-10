@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from hatch_rest_api import RestPlus, RestMini, RestIot
+from hatch_rest_api import RestPlus, RestMini, RestIot, RestoreIot
 from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.helpers.device_registry as dr
 
@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class RestEntity(ABC):
-    def __init__(self, rest_device: RestIot | RestMini | RestPlus, entity_type: str):
+    def __init__(self, rest_device: RestIot | RestMini | RestPlus | RestoreIot, entity_type: str):
         self._attr_unique_id = (
             f"{rest_device.thing_name}_{entity_type.lower().replace(' ', '_')}"
         )

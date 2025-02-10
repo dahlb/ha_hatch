@@ -6,7 +6,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 import logging
-from hatch_rest_api import RestIot
+from hatch_rest_api import RestIot, RestoreIot
 
 from .rest_entity import RestEntity
 
@@ -18,7 +18,7 @@ class RiotClockEntity(RestEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_icon = "mdi:clock"
 
-    def __init__(self, rest_device: RestIot):
+    def __init__(self, rest_device: RestIot | RestoreIot):
         super().__init__(rest_device, "Clock")
 
     def _update_local_state(self):
