@@ -7,7 +7,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 import logging
-from hatch_rest_api import RestIot, RestoreIot
+from hatch_rest_api import RestoreIot
 
 from .rest_entity import RestEntity
 
