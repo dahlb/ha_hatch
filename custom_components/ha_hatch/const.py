@@ -30,9 +30,9 @@ DATA_ENTITIES_KEYS = [
 ]
 
 PLATFORMS = [
-    Platform.MEDIA_PLAYER,
-    Platform.LIGHT,
     Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.SCENE
