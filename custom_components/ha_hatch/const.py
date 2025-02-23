@@ -33,7 +33,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.LIGHT,
     Platform.MEDIA_PLAYER,
+    Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.SCENE
 ]
