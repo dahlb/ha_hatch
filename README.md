@@ -37,7 +37,7 @@ If you receive an error, please go through these steps;
 1. Enabled Debug Logging, at /config/integrations/integration/ha_hatch
 2. Restart you home assistant to capture initialization with debug logging, then try to do what your having trouble with
 3. Disable Debug Logging, at /config/integrations/integration/ha_hatch (which will download the logs)
-4. Click the three dots menu for your vehicle, at /config/integrations/integration/ha_hatch
+4. Click the three dots menu for your device, at /config/integrations/integration/ha_hatch
 5. Click Download Diagnostics
 6. Attach both logs and diagnostics to your issue ticket.
 
