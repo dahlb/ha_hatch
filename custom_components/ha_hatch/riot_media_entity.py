@@ -46,6 +46,11 @@ class RiotMediaEntity(RestEntity, MediaPlayerEntity):
             self._attr_state = STATE_IDLE
         self._attr_extra_state_attributes["current"] = self.rest_device.current_playing
         self._attr_extra_state_attributes["current_favorite"] = self.rest_device.current_id
+        self._attr_extra_state_attributes["current_favorite_name"] = next((
+            f["steps"][0]["name"] for f
+            in self.rest_device.favorites
+            if f["id"] == self.rest_device.current_id
+        ), None)
         self._attr_extra_state_attributes["current_step"] = self.rest_device.current_step
         if self.rest_device.audio_track is not None:
             self._attr_sound_mode = self.rest_device.audio_track.name
