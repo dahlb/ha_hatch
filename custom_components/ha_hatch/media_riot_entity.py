@@ -41,9 +41,9 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         if self.rest_device.is_playing:
-            return STATE_PLAYING
-        else:
-            return STATE_IDLE
+                return STATE_PLAYING
+            else:
+                return STATE_IDLE
 
     @property
     def sound_mode(self) -> str | None:
