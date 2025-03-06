@@ -94,4 +94,3 @@ Here are the basic colors from the app:
 [releases]: https://github.com/dahlb/ha_hatch/releases
 [buymecoffee]: https://www.buymeacoffee.com/dahlb
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-
