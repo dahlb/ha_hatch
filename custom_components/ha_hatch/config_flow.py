@@ -80,6 +80,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow):
                 api_cloud = Hatch()
                 await api_cloud.login(email=email, password=password)
                 self.data.update(user_input)
+                await self.async_set_unique_id(email)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=email,
                     data=self.data,
