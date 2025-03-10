@@ -23,8 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
     for rest_device in rest_devices:
         if isinstance(rest_device, RestPlus) or isinstance(rest_device, RestIot):
             sensor_entities.append(HatchBattery(rest_device))
-#        if isinstance(rest_device, RestIot):
-#            sensor_entities.append(HatchCharging(rest_device))
+        if isinstance(rest_device, RestIot):
+            sensor_entities.append(HatchCharging(rest_device))
     hass.data[DOMAIN][DATA_SENSORS] = sensor_entities
     async_add_entities(sensor_entities)
 
