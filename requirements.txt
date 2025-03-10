@@ -1,3 +1,7 @@
 homeassistant==2024.3.3
+<<<<<<< HEAD
 ruff==0.11.4
+=======
+ruff==0.9.10
+>>>>>>> a37441d (chore(deps): bump ruff from 0.9.9 to 0.9.10 (#205))
 hatch-rest-api==1.26.3
