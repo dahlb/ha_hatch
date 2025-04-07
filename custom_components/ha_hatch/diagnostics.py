@@ -10,7 +10,8 @@ from homeassistant.const import CONF_UNIQUE_ID, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, DATA_REST_DEVICES
+from . import HatchDataUpdateCoordinator
+from .const import DOMAIN
 
 TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID}
 TO_REDACT_MAPPED = {
@@ -28,11 +29,11 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, dict[str, Any]]:
     """Return diagnostics for a config entry."""
-    rest_devices: list = hass.data[DOMAIN][DATA_REST_DEVICES]
+    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
     data = {
         "entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
     }
-    for rest_device in rest_devices:
+    for rest_device in coordinator.rest_devices:
         data[rest_device.thing_name] = rest_device.__repr__()
 
         device_registry = dr.async_get(hass)

@@ -7,7 +7,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     MediaPlayerEntityFeature,
-    MediaType,
+    MediaType, MediaPlayerState,
 )
 from homeassistant.const import (
     STATE_IDLE,
@@ -22,20 +22,21 @@ from hatch_rest_api import (
     RestMiniAudioTrack,
     REST_MINI_AUDIO_TRACKS,
 )
-from .rest_entity import RestEntity
+
+from . import HatchDataUpdateCoordinator
+from .hatch_entity import HatchEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class RestMediaEntity(RestEntity, MediaPlayerEntity):
-    _attr_should_poll = False
+class MediaRestEntity(HatchEntity, MediaPlayerEntity):
     _attr_media_content_type = MediaType.MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-    def __init__(self, rest_device: RestMini | RestPlus, config_turn_on_media):
-        super().__init__(rest_device, "Media Player")
-        self.config_turn_on_media = config_turn_on_media
-        if isinstance(rest_device, RestMini):
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str, config_turn_on_media: bool):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Media Player")
+        self.config_turn_on_media: bool = config_turn_on_media
+        if isinstance(self.rest_device, RestMini):
             self._attr_sound_mode_list = [x.name for x in REST_MINI_AUDIO_TRACKS[1:]]
             self.none_track = RestMiniAudioTrack.NONE
             self._attr_supported_features = (
@@ -60,21 +61,23 @@ class RestMediaEntity(RestEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.TURN_OFF
             )
 
-    def _update_local_state(self):
-        if self.platform is None or self.rest_device.audio_track is None:
-            return
-        _LOGGER.debug(f"updating state:{self.rest_device}")
+    @property
+    def state(self) -> MediaPlayerState | None:
         if isinstance(self.rest_device, RestMini) or self.rest_device.is_on:
             if self.rest_device.is_playing:
-                self._attr_state = STATE_PLAYING
+                return STATE_PLAYING
             else:
-                self._attr_state = STATE_IDLE
+                return STATE_IDLE
         else:
-            self._attr_state = STATE_OFF
-        self._attr_sound_mode = self.rest_device.audio_track.name
-        self._attr_volume_level = self.rest_device.volume / 100
-        self._attr_device_info.update(sw_version=self.rest_device.firmware_version)
-        self.schedule_update_ha_state()
+            return STATE_OFF
+
+    @property
+    def sound_mode(self) -> str:
+        return self.rest_device.audio_track.name
+
+    @property
+    def volume_level(self) -> float | None:
+        return self.rest_device.volume / 100
 
     def _find_track(self, sound_mode=None):
         if sound_mode is None:
