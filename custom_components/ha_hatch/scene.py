@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
         if isinstance(rest_device, RestIot):
             for favorite in rest_device.favorites:
                 if len(favorite['steps']) > 0:
-                    scene_entities.append(RiotScene(rest_device, favorite['steps'][0]['name'], favorite['id']))
+                    scene_entities.append(RiotScene(coordinator, rest_device.thing_name, favorite['steps'][0]['name'], favorite['id']))
     async_add_entities(scene_entities)
 
 

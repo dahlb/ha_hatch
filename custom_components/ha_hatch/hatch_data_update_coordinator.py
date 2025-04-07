@@ -2,6 +2,7 @@ import datetime
 from logging import getLogger, Logger
 from typing import List
 
+from hatch_rest_api import RestMini, RestPlus, RestIot, RestoreIot
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -13,8 +14,8 @@ _LOGGER: Logger = getLogger(__name__)
 
 class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     mqtt_connection = None
-    rest_devices = None
-    expiration_time = None
+    rest_devices: List[RestMini | RestPlus | RestIot | RestoreIot] = []
+    expiration_time: float = None
 
     def __init__(
             self,
@@ -41,9 +42,8 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
                 _LOGGER.error(f"mqtt_connection disconnect failed during reconnect", exc_info=error)
 
     def _rest_device_unsub(self) -> None:
-        if self.rest_devices is not None:
-            for rest_device in self.rest_devices:
-                rest_device.remove_callback(self.async_update_listeners)
+        for rest_device in self.rest_devices:
+            rest_device.remove_callback(self.async_update_listeners)
 
     async def _async_update_data(self) -> List[dict]:
         _LOGGER.debug(f"_async_update_data: {self.email}")
@@ -80,7 +80,7 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._rest_device_unsub()
         await super().async_shutdown()
 
-    def rest_device_by_thing_name(self, thing_name: str) -> RestDevice:
+    def rest_device_by_thing_name(self, thing_name: str) -> None | RestMini | RestPlus | RestIot | RestoreIot:
         for rest_device in self.rest_devices:
             if rest_device.thing_name == thing_name:
                 return rest_device

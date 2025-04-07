@@ -12,7 +12,6 @@ from .const import (
     PLATFORMS,
 )
 from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
-from .util import find_rest_device_by_thing_name
 
 _LOGGER = logging.getLogger(__name__)
 
