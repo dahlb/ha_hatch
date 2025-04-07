@@ -42,7 +42,8 @@ class LightRiotEntity(HatchEntity, LightEntity):
         return int(round(self.rest_device.brightness / 100 * 255.0, 0))
 
     @property
-    def rgb(self) -> tuple[int, int, int] | None:
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the rgb color value [int, int, int]."""
         return (
             self.rest_device.red,
             self.rest_device.green,

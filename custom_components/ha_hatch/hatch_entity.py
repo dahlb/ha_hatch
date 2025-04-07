@@ -41,3 +41,7 @@ class HatchEntity(CoordinatorEntity[HatchDataUpdateCoordinator]):
     @property
     def rest_device(self) -> RestPlus | RestMini | RestIot | RestoreIot:
         return self.coordinator.rest_device_by_thing_name(self.coordinator_context)
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.schedule_update_ha_state()

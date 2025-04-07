@@ -32,6 +32,7 @@ class HatchOnlineSensor(HatchEntity, BinarySensorEntity):
             icon="mdi:wifi-check",
         )
 
+    @property
     def is_on(self) -> bool:
         return self.rest_device.is_online
 
