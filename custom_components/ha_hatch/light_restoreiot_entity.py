@@ -59,8 +59,8 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
             # If 100 is sent to Abode, response is 99 causing an error
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
         else:
-            brightness = round(self._attr_brightness * 100 / 255.0)
-        rgbw = kwargs.get(ATTR_RGBW_COLOR, self._attr_rgbw_color)
+            brightness = round(self.brightness * 100 / 255.0)
+        rgbw = kwargs.get(ATTR_RGBW_COLOR, self.rgbw_color)
 
         if kwargs:
             _LOGGER.debug(f"Changing light rgbw to {rgbw} and brightness to {brightness}")

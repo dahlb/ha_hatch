@@ -45,8 +45,8 @@ class LightRestEntity(HatchEntity, LightEntity):
             # If 100 is sent to Abode, response is 99 causing an error
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
         else:
-            brightness = round(self._attr_brightness * 100 / 255.0)
-        rgb = kwargs.get(ATTR_RGB_COLOR, self._attr_rgb_color)
+            brightness = round(self.brightness * 100 / 255.0)
+        rgb = kwargs.get(ATTR_RGB_COLOR, self.rgb_color)
 
         _LOGGER.debug(f"turning on light to {rgb} with {brightness}")
         self.rest_device.set_color(rgb[0], rgb[1], rgb[2], brightness)

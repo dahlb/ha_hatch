@@ -57,7 +57,7 @@ class LightRiotEntity(HatchEntity, LightEntity):
             # If 100 is sent to Abode, response is 99 causing an error
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
         else:
-            brightness = round(self._attr_brightness * 100 / 255.0)
+            brightness = round(self.brightness * 100 / 255.0)
         rgb = kwargs.get(ATTR_RGB_COLOR, self._attr_rgb_color)
 
         if kwargs:
