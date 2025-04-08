@@ -81,7 +81,7 @@ class MediaRestEntity(HatchEntity, MediaPlayerEntity):
 
     def _find_track(self, sound_mode=None):
         if sound_mode is None:
-            sound_mode = self._attr_sound_mode
+            sound_mode = self.sound_mode
         if isinstance(self.rest_device, RestMini):
             return next(
                 (track for track in REST_MINI_AUDIO_TRACKS if track.name == sound_mode),

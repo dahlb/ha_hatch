@@ -70,7 +70,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     def _find_track(self, track_name) -> str | None:
         if track_name is None:
-            track_name = self._attr_sound_mode
+            track_name = self.sound_mode
         return next(
             (track for track in REST_IOT_AUDIO_TRACKS if track.name == track_name),
             None,
