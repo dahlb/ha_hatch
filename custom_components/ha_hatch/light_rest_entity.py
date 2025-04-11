@@ -6,33 +6,37 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-import logging
-from hatch_rest_api import RestPlus
-from .rest_entity import RestEntity
+from logging import getLogger
 
-_LOGGER = logging.getLogger(__name__)
+from . import HatchDataUpdateCoordinator
+from .hatch_entity import HatchEntity
+
+_LOGGER = getLogger(__name__)
 
 
-class RestLightEntity(RestEntity, LightEntity):
+class LightRestEntity(HatchEntity, LightEntity):
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
 
-    def __init__(self, rest_device: RestPlus, config_turn_on_light: bool):
-        super().__init__(rest_device, "Light")
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str, config_turn_on_light: bool):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Light")
         self.config_turn_on_light = config_turn_on_light
 
-    def _update_local_state(self):
-        if self.platform is None:
-            return
-        _LOGGER.debug(f"updating state:{self.rest_device}")
-        self._attr_is_on = self.rest_device.is_on and self.rest_device.brightness > 0
-        self._attr_brightness = round(self.rest_device.brightness / 100 * 255.0, 0)
-        self._attr_rgb_color = (
+    @property
+    def is_on(self) -> bool | None:
+        return self.rest_device.is_on and self.rest_device.brightness > 0
+
+    @property
+    def brightness(self) -> int | None:
+        return int(round(self.rest_device.brightness / 100 * 255.0, 0))
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        return (
             self.rest_device.red,
             self.rest_device.green,
             self.rest_device.blue,
         )
-        self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         _LOGGER.debug(f"args:{kwargs}")
@@ -41,8 +45,8 @@ class RestLightEntity(RestEntity, LightEntity):
             # If 100 is sent to Abode, response is 99 causing an error
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
         else:
-            brightness = round(self._attr_brightness * 100 / 255.0)
-        rgb = kwargs.get(ATTR_RGB_COLOR, self._attr_rgb_color)
+            brightness = round(self.brightness * 100 / 255.0)
+        rgb = kwargs.get(ATTR_RGB_COLOR, self.rgb_color)
 
         _LOGGER.debug(f"turning on light to {rgb} with {brightness}")
         self.rest_device.set_color(rgb[0], rgb[1], rgb[2], brightness)

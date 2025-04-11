@@ -2,15 +2,20 @@
 from __future__ import annotations
 
 import logging
+from datetime import date, datetime
+from decimal import Decimal
+
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from hatch_rest_api import RestPlus, RestIot
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, DATA_REST_DEVICES, DATA_SENSORS
-from .rest_entity import RestEntity
+from . import HatchDataUpdateCoordinator
+from .const import DOMAIN
+from .hatch_entity import HatchEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,18 +23,17 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     hass.data.setdefault(DOMAIN, {})
 
-    rest_devices = hass.data[DOMAIN][DATA_REST_DEVICES]
+    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
     sensor_entities = []
-    for rest_device in rest_devices:
+    for rest_device in coordinator.rest_devices:
         if isinstance(rest_device, RestPlus) or isinstance(rest_device, RestIot):
-            sensor_entities.append(HatchBattery(rest_device))
+            sensor_entities.append(HatchBattery(coordinator=coordinator, thing_name=rest_device.thing_name))
         if isinstance(rest_device, RestIot):
-            sensor_entities.append(HatchCharging(rest_device))
-    hass.data[DOMAIN][DATA_SENSORS] = sensor_entities
+            sensor_entities.append(HatchCharging(coordinator=coordinator, thing_name=rest_device.thing_name))
     async_add_entities(sensor_entities)
 
 
-class HatchBattery(RestEntity, SensorEntity):
+class HatchBattery(HatchEntity, SensorEntity):
     entity_description = SensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
@@ -37,37 +41,31 @@ class HatchBattery(RestEntity, SensorEntity):
         native_unit_of_measurement=PERCENTAGE,
     )
 
-    def __init__(self, rest_device: RestPlus | RestIot):
-        super().__init__(rest_device, "Battery")
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Battery")
 
-    def _update_local_state(self):
-        if self.platform is None:
-            return
-        _LOGGER.debug(f"updating state:{self.rest_device}")
-        self._attr_native_value = self.rest_device.battery_level
-        self.schedule_update_ha_state()
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        return self.rest_device.battery_level
 
 
-class HatchCharging(RestEntity, SensorEntity):
+class HatchCharging(HatchEntity, SensorEntity):
     entity_description = SensorEntityDescription(
         key="charging",
         icon="mdi:power-plug",
     )
 
-    def __init__(self, rest_device: RestIot):
-        super().__init__(rest_device, "Charging Status")
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Charging Status")
 
-    def _update_local_state(self):
-        if self.platform is None:
-            return
-        _LOGGER.debug(f"updating state:{self.rest_device}")
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
         if self.rest_device.charging_status == 0:
-            self._attr_native_value = "Not Charging"
+            return "Not Charging"
         if self.rest_device.charging_status == 3:
-            self._attr_native_value = "Charging, plugged in"
+            return "Charging, plugged in"
         if self.rest_device.charging_status == 5:
-            self._attr_native_value = "Charging, on base"
-        self.schedule_update_ha_state()
+            return "Charging, on base"
 
     @property
     def icon(self) -> str | None:

@@ -5,30 +5,30 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-import logging
-from hatch_rest_api import RestIot, RestoreIot
+from logging import getLogger
 
-from .rest_entity import RestEntity
+from . import HatchDataUpdateCoordinator
+from .hatch_entity import HatchEntity
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 
-class RiotClockEntity(RestEntity, LightEntity):
+class LightRiotClockEntity(HatchEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_icon = "mdi:clock"
 
-    def __init__(self, rest_device: RestIot | RestoreIot):
-        super().__init__(rest_device, "Clock")
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Clock")
 
-    def _update_local_state(self):
-        if self.platform is None:
-            return
-        _LOGGER.debug(f"updating state:{self.rest_device}")
-        self._attr_is_on = self.rest_device.is_clock_on
+    @property
+    def is_on(self) -> bool | None:
+        return self.rest_device.is_clock_on
+
+    @property
+    def brightness(self) -> int | None:
         clock_val = self.rest_device.clock or 0.0
-        self._attr_brightness = round(clock_val / 100 * 255.0, 0)
-        self.schedule_update_ha_state()
+        return int(round(clock_val / 100 * 255.0, 0))
 
     def turn_on(self, **kwargs):
         _LOGGER.debug(f"args:{kwargs}")
@@ -37,7 +37,7 @@ class RiotClockEntity(RestEntity, LightEntity):
             # If 100 is sent to Abode, response is 99 causing an error
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
         else:
-            brightness = round(self._attr_brightness * 100 / 255.0)
+            brightness = round(self.brightness * 100 / 255.0)
         self.rest_device.set_clock(brightness)
 
     def turn_off(self):
