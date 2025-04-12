@@ -1,5 +1,6 @@
 import logging
-from typing import Mapping, Any
+from typing import Any
+from collections.abc import Mapping
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,

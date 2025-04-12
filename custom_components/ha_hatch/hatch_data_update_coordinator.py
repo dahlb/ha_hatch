@@ -1,6 +1,5 @@
 from datetime import timedelta, UTC, datetime
 from logging import getLogger, Logger
-from typing import List
 
 from hatch_rest_api import RestMini, RestPlus, RestIot, RestoreIot
 from homeassistant.core import HomeAssistant
@@ -14,7 +13,7 @@ _LOGGER: Logger = getLogger(__name__)
 
 class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     mqtt_connection = None
-    rest_devices: List[RestMini | RestPlus | RestIot | RestoreIot] = []
+    rest_devices: list[RestMini | RestPlus | RestIot | RestoreIot] = []
     expiration_time: float = None
 
     def __init__(
@@ -39,13 +38,13 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             try:
                 self.mqtt_connection.disconnect().result()
             except Exception as error:
-                _LOGGER.error(f"mqtt_connection disconnect failed during reconnect", exc_info=error)
+                _LOGGER.error("mqtt_connection disconnect failed during reconnect", exc_info=error)
 
     def _rest_device_unsub(self) -> None:
         for rest_device in self.rest_devices:
             rest_device.remove_callback(self.async_update_listeners)
 
-    async def _async_update_data(self) -> List[dict]:
+    async def _async_update_data(self) -> list[dict]:
         try:
             _LOGGER.debug(f"_async_update_data: {self.email}")
             self._disconnect_mqtt()
