@@ -1,7 +1,7 @@
 from datetime import timedelta, UTC, datetime
 from logging import getLogger, Logger
 
-from hatch_rest_api import RestMini, RestPlus, RestIot, RestoreIot
+from hatch_rest_api import RestDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -13,7 +13,7 @@ _LOGGER: Logger = getLogger(__name__)
 
 class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     mqtt_connection = None
-    rest_devices: list[RestMini | RestPlus | RestIot | RestoreIot] = []
+    rest_devices: list[RestDevice] = []
     expiration_time: float = None
 
     def __init__(
@@ -84,7 +84,8 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._rest_device_unsub()
         await super().async_shutdown()
 
-    def rest_device_by_thing_name(self, thing_name: str) -> None | RestMini | RestPlus | RestIot | RestoreIot:
-        for rest_device in self.rest_devices:
-            if rest_device.thing_name == thing_name:
-                return rest_device
+    def rest_device_by_thing_name(self, thing_name: str) -> RestDevice | None:
+        return next(
+            (rest_device for rest_device in self.rest_devices if rest_device.thing_name == thing_name),
+            None
+        )
