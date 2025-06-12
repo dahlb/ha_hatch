@@ -54,18 +54,7 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
 
     def turn_on(self, **kwargs):
         _LOGGER.debug(f"args:{kwargs}")
-        if ATTR_BRIGHTNESS in kwargs:
-            # Convert Home Assistant brightness (0-255) to Abode brightness (0-99)
-            # If 100 is sent to Abode, response is 99 causing an error
-            brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255.0)
-        else:
-            brightness = round(self.brightness * 100 / 255.0)
-        rgbw = kwargs.get(ATTR_RGBW_COLOR, self.rgbw_color)
-
-        if kwargs:
-            _LOGGER.debug(f"Changing light rgbw to {rgbw} and brightness to {brightness}")
-            self.rest_device.set_color(rgbw[0], rgbw[1], rgbw[2], rgbw[3], brightness)
-        else:
+        if not kwargs:
             # Turn on the light to the last known state/default state
             self.rest_device.set_color(
                 self._last_light_on_colors["r"],
@@ -74,6 +63,23 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
                 self._last_light_on_colors["w"],
                 self._last_light_on_colors["brightness"],
             )
+            return
+
+        # Convert Home Assistant brightness (0-255) to percent (0-100)
+        brightness = round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100)
+        red, green, blue, white = kwargs.get(ATTR_RGBW_COLOR, self.rgbw_color)
+
+        # Add white offset to RGB values to prevent black display in the Hatch
+        # app when setting white values. Matches Android app behavior.
+        if white and white > 0:
+            max_value = max(red, green, blue)
+            offset = max(0, min(min(white, 255 - max_value), 255))
+            red += offset
+            green += offset
+            blue += offset
+
+        _LOGGER.debug(f"Changing light rgbw to ({red},{green},{blue},{white}) and brightness to {brightness}")
+        self.rest_device.set_color(red, green, blue, white, brightness)
 
     def turn_off(self):
         self.rest_device.turn_light_off()
