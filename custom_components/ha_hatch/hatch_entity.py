@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from hatch_rest_api import RestPlus, RestMini, RestIot, RestoreIot
+from hatch_rest_api import RestDevice
 from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,7 +39,7 @@ class HatchEntity(CoordinatorEntity[HatchDataUpdateCoordinator]):
         )
 
     @property
-    def rest_device(self) -> RestPlus | RestMini | RestIot | RestoreIot:
+    def rest_device(self) -> RestDevice | None:
         return self.coordinator.rest_device_by_thing_name(self.coordinator_context)
 
     def _handle_coordinator_update(self) -> None:

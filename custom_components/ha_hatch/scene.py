@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from homeassistant.components.scene import Scene
 from typing import Any
-from hatch_rest_api import RestIot
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,10 +18,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
     scene_entities = []
     for rest_device in coordinator.rest_devices:
-        if isinstance(rest_device, RestIot):
+        if hasattr(rest_device, "favorites") and isinstance(rest_device.favorites, list):
             for favorite in rest_device.favorites:
-                if len(favorite['steps']) > 0:
-                    scene_entities.append(RiotScene(coordinator, rest_device.thing_name, favorite['steps'][0]['name'], favorite['id']))
+                try:
+                    favorite_name, favorite_id = favorite['steps'][0]['name'], favorite['id']
+                except (TypeError, KeyError, IndexError):
+                    _LOGGER.error(f"Error creating scene for {rest_device.thing_name} with favorite {favorite}. Skipping this favorite.")
+                    continue
+                scene_entities.append(RiotScene(coordinator, rest_device.thing_name, favorite_name, favorite_id))
     async_add_entities(scene_entities)
 
 
