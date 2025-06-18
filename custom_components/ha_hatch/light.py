@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from logging import getLogger
-from hatch_rest_api import RestPlus, RestIot, RestoreIot
+from hatch_rest_api import RestPlus, RestIot, RestoreIot, RestoreV5
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
     for rest_device in coordinator.rest_devices:
         if isinstance(rest_device, RestPlus):
             light_entities.append(LightRestEntity(coordinator=coordinator, thing_name=rest_device.thing_name, config_turn_on_light=config_turn_on_light))
-        elif isinstance(rest_device, RestoreIot):
+        elif isinstance(rest_device, RestoreIot | RestoreV5):
             light_entities.append(LightRestoreIotEntity(coordinator=coordinator, thing_name=rest_device.thing_name))
             light_entities.append(LightRiotClockEntity(coordinator=coordinator, thing_name=rest_device.thing_name))
         elif isinstance(rest_device, RestIot):
