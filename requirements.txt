@@ -1,3 +1,3 @@
 homeassistant==2024.3.3
-ruff==0.12.0
+ruff==0.12.1
 hatch-rest-api==1.27.0
