@@ -28,7 +28,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
         super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Media Player")
-        self._attr_sound_mode_list = sorted([x.name for x in REST_IOT_AUDIO_TRACKS[1:]] + self.rest_device.sounds_by_name.keys())
+        self._attr_sound_mode_list = sorted([x.name for x in REST_IOT_AUDIO_TRACKS[1:]] + list(self.rest_device.sounds_by_name.keys()))
         self._attr_supported_features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.STOP
