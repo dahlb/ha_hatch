@@ -17,6 +17,7 @@ from homeassistant.const import (
 
 from . import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
+from hatch_rest_api import REST_IOT_AUDIO_TRACKS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
         super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Media Player")
-        self._attr_sound_mode_list = sorted(self.rest_device.sounds_by_name.keys())
+        self._attr_sound_mode_list = sorted([x.name for x in REST_IOT_AUDIO_TRACKS[1:]] + self.rest_device.sounds_by_name.keys())
         self._attr_supported_features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.STOP
@@ -47,8 +48,11 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     @property
     def sound_mode(self) -> str | None:
-        sound = self.rest_device.sounds_by_id.get(self.rest_device.sound_id) or {}
-        return sound.get('title') or None
+        if self.rest_device.audio_track is not None:
+            return self.rest_device.audio_track.name
+        else:
+            sound = self.rest_device.sounds_by_id.get(self.rest_device.sound_id) or {}
+            return sound.get('title') or None
 
     @property
     def volume_level(self) -> float | None:
@@ -71,16 +75,22 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
         self.rest_device.set_volume(volume * 100)
 
     def media_play(self) -> None:
-        try:
-            # Attempt to default the sound using the first favorite step
-            sound_id = self.rest_device.favorites[0]["steps"][0]["sound"]["id"]
-        except (TypeError, IndexError, KeyError):
-            # Default to the first sound mode
-            sound_id = self._attr_sound_mode_list[0]
-        self.rest_device.set_sound(sound_id)
+        self.select_sound_mode(self._attr_sound_mode_list[0])
+
+    def _find_track(self, track_name) -> str | None:
+        if track_name is None:
+            track_name = self.sound_mode
+        return next(
+            (track for track in REST_IOT_AUDIO_TRACKS if track.name == track_name),
+            None,
+        )
 
     def select_sound_mode(self, sound_mode: str) -> None:
-        self.rest_device.set_sound(sound_mode)
+        track = self._find_track(track_name=sound_mode)
+        if track is None:
+            self.rest_device.set_sound(sound_mode)
+        else:
+            self.rest_device.set_audio_track(track)
 
     def media_stop(self):
-        self.rest_device.set_sound(None)
+        self.rest_device.turn_off()
