@@ -48,7 +48,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     @property
     def sound_mode(self) -> str | None:
-        if self.rest_device.audio_track is not None:
+        if hasattr(self.rest_device, "audio_track") and self.rest_device.audio_track is not None:
             return self.rest_device.audio_track.name
         else:
             sound = self.rest_device.sounds_by_id.get(self.rest_device.sound_id) or {}
