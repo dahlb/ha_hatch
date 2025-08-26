@@ -22,6 +22,13 @@ from hatch_rest_api import REST_IOT_AUDIO_TRACKS
 _LOGGER = logging.getLogger(__name__)
 
 
+def _find_track(track_name) -> str | None:
+    return next(
+        (track for track in REST_IOT_AUDIO_TRACKS if track.name == track_name),
+        None,
+    )
+
+
 class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     _attr_media_content_type = MediaType.MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
@@ -77,16 +84,8 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     def media_play(self) -> None:
         self.select_sound_mode(self._attr_sound_mode_list[0])
 
-    def _find_track(self, track_name) -> str | None:
-        if track_name is None:
-            track_name = self.sound_mode
-        return next(
-            (track for track in REST_IOT_AUDIO_TRACKS if track.name == track_name),
-            None,
-        )
-
     def select_sound_mode(self, sound_mode: str) -> None:
-        track = self._find_track(track_name=sound_mode)
+        track = _find_track(track_name=sound_mode)
         if track is None:
             self.rest_device.set_sound(sound_mode)
         else:
