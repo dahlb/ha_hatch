@@ -56,6 +56,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     @property
     def sound_mode(self) -> str | None:
         if hasattr(self.rest_device, "audio_track") and self.rest_device.audio_track is not None:
+            _LOGGER.debug("Audio track found: %s", self.rest_device.audio_track)
             return self.rest_device.audio_track.name
         else:
             sound = self.rest_device.sounds_by_id.get(self.rest_device.sound_id) or {}
@@ -85,10 +86,13 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
         self.select_sound_mode(self._attr_sound_mode_list[0])
 
     def select_sound_mode(self, sound_mode: str) -> None:
+        _LOGGER.debug("Select sound mode: %s", sound_mode)
         track = _find_track(track_name=sound_mode)
         if track is None:
+            _LOGGER.debug("No track found")
             self.rest_device.set_sound(sound_mode)
         else:
+            _LOGGER.debug("set audio track: %s", track)
             self.rest_device.set_audio_track(track)
 
     def media_stop(self):
