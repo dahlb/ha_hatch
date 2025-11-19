@@ -6,24 +6,24 @@
 ![Project Maintenance][maintenance-shield]
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-A custom integration for Hatch Rest Sound Machines. This project is mostly from looking at other core integrations
+A custom integration for Hatch Rest/Restore Sound Machines. This project is mostly from looking at other core integrations
 
 ## Tested Devices ##
 - Rest Mini
 - Rest+
 - Rest 2nd gen
 - Rest+ 2nd gen
-
+- Restore 3
 
 ## Feature Highlights ##
 - monitor device connectivity
 - start and stop sound machine with variety of built-in sounds (Rest mini & Rest+)
-- play favorites set in the Hatch app (Rest 2nd gen & Rest+ 2nd gen)
+- play favorites set in the Hatch app (Rest 2nd gen, Rest+ 2nd gen, Restore 3)
 - adjust the volume
 - monitor battery level (Rest+ & Rest+ 2nd gen)
 - adjust light brightness and color
 - turn rest plus on and off
-- turn clock on and off and adjust brightness (Rest+ 2nd gen) 
+- turn clock on and off and adjust brightness (Rest+ 2nd gen/Restore 3) 
 - turn Toddler Lock on and off (Rest+ 2nd gen) 
 - monitor device charging status (Rest+ 2nd gen)
 
