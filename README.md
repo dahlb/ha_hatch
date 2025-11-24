@@ -13,6 +13,7 @@ A custom integration for Hatch Rest/Restore Sound Machines. This project is most
 - Rest+
 - Rest 2nd gen
 - Rest+ 2nd gen
+- Restore 2
 - Restore 3
 
 ## Feature Highlights ##
