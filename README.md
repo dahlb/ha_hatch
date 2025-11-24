@@ -83,6 +83,7 @@ Here are the basic colors from the app:
 
 ***
 
+
 [ha_hatch]: https://github.com/dahlb/ha_hatch
 [commits-shield]: https://img.shields.io/github/commit-activity/y/dahlb/ha_hatch.svg?style=for-the-badge
 [commits]: https://github.com/dahlb/ha_hatch/commits/main
