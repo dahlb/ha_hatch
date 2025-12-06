@@ -5,7 +5,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchDeviceClass, SwitchEntityDescription,
 )
-from hatch_rest_api import RestPlus, RestIot
+from hatch_rest_api import RestPlus, RestIot, RestBaby
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,7 +24,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
         if isinstance(rest_device, RestPlus):
             entities.append(HatchPowerSwitch(coordinator=coordinator, thing_name=rest_device.thing_name))
         if isinstance(rest_device, RestIot):
-            entities.append(HatchToddlerLockSwitch(coordinator=coordinator, thing_name=rest_device.thing_name))
+            entities.append(
+                HatchToddlerLockSwitch(
+                    coordinator=coordinator, thing_name=rest_device.thing_name
+                )
+            )
+        if isinstance(rest_device, RestBaby):
+            entities.append(
+                HatchToddlerLockSwitch(
+                    coordinator=coordinator, thing_name=rest_device.thing_name
+                )
+            )
+            entities.append(
+                HatchPowerSwitch(
+                    coordinator=coordinator, thing_name=rest_device.thing_name
+                )
+            )
+
     async_add_entities(entities)
 
 
