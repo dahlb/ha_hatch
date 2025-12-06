@@ -34,18 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
         elif isinstance(rest_device, RestoreIot | RestoreV5):
             light_entities.append(LightRestoreIotEntity(coordinator=coordinator, thing_name=rest_device.thing_name))
             light_entities.append(LightRiotClockEntity(coordinator=coordinator, thing_name=rest_device.thing_name))
-        elif isinstance(rest_device, RestIot):
-            light_entities.append(
-                LightRiotEntity(
-                    coordinator=coordinator, thing_name=rest_device.thing_name
-                )
-            )
-            light_entities.append(
-                LightRiotClockEntity(
-                    coordinator=coordinator, thing_name=rest_device.thing_name
-                )
-            )
-        elif isinstance(rest_device, RestBaby):
+        elif isinstance(rest_device, RestIot | RestBaby):
             light_entities.append(
                 LightRiotEntity(
                     coordinator=coordinator, thing_name=rest_device.thing_name
