@@ -8,5 +8,5 @@
   "issue_tracker": "https://github.com/dahlb/ha_hatch/issues",
   "loggers": ["ha_hatch", "hatch_rest_api"],
   "requirements": ["hatch_rest_api==1.32.0"],
-  "version": "1.27.0"
+  "version": "1.28.0"
 }
