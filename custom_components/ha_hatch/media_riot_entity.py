@@ -4,7 +4,8 @@ from collections.abc import Mapping
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
-    MediaPlayerDeviceClass, MediaPlayerState,
+    MediaPlayerDeviceClass,
+    MediaPlayerState,
 )
 from homeassistant.components.media_player.const import (
     MediaPlayerEntityFeature,
@@ -17,7 +18,13 @@ from homeassistant.const import (
 
 from . import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
-from hatch_rest_api import REST_IOT_AUDIO_TRACKS, RIoTAudioTrack
+from hatch_rest_api import (
+    REST_IOT_AUDIO_TRACKS,
+    RIoTAudioTrack,
+    RestBabyAudioTrack,
+    REST_BABY_AUDIO_TRACKS,
+    RestBaby,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,13 +36,32 @@ def _find_track(track_name) -> RIoTAudioTrack | None:
     )
 
 
+def _find_rest_baby_track(track_name) -> RestBabyAudioTrack | None:
+    return next(
+        (track for track in REST_BABY_AUDIO_TRACKS if track.name == track_name),
+        None,
+    )
+
+
 class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     _attr_media_content_type = MediaType.MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
-        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Media Player")
-        self._attr_sound_mode_list = sorted(set([x.name for x in REST_IOT_AUDIO_TRACKS[1:]] + list(self.rest_device.sounds_by_name.keys())))
+        super().__init__(
+            coordinator=coordinator, thing_name=thing_name, entity_type="Media Player"
+        )
+        audio_data = (
+            REST_IOT_AUDIO_TRACKS[1:]
+            if not isinstance(self.rest_device, RestBaby)
+            else REST_BABY_AUDIO_TRACKS[1:]
+        )
+        self._attr_sound_mode_list = sorted(
+            set(
+                [x.name for x in audio_data]
+                + list(self.rest_device.sounds_by_name.keys())
+            )
+        )
         self._attr_supported_features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.STOP
@@ -96,7 +122,10 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     def select_sound_mode(self, sound_mode: str) -> None:
         _LOGGER.debug("Select sound mode: %s", sound_mode)
-        track = _find_track(track_name=sound_mode)
+        if isinstance(self.rest_device, RestBaby):
+            track = _find_rest_baby_track(track_name=sound_mode)
+        else:
+            track = _find_track(track_name=sound_mode)
         if track is None:
             _LOGGER.debug("No track found")
             self.rest_device.set_sound(sound_mode)
