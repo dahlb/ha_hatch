@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
 
 class RiotScene(HatchEntity, Scene):
     def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str, name: str, favorite_id: int):
-        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type=f"Scene-{name}")
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type=f"Scene-{name}-{favorite_id}")
         self._attr_name = name
         self.favorite_name_id = f"{name}-{favorite_id}"
         _LOGGER.debug(f"scene; unique_id:{self._attr_unique_id}, name:{self._attr_name}, favorite_name_id:{self.favorite_name_id}")
