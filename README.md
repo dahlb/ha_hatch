@@ -27,7 +27,7 @@ A custom integration for Hatch Rest/Restore Sound Machines. This project is most
 - adjust light brightness and color
 - turn rest plus on and off
 - turn clock on and off and adjust brightness (Rest+ 2nd gen/Restore 3) 
-- enable and disable existing alarms (Restore 3)
+- enable and disable existing alarms (Restore, Restore 2, Restore 3)
 - turn Toddler Lock on and off (Rest+ 2nd gen) 
 - monitor device charging status (Rest+ 2nd gen)
 
@@ -49,7 +49,7 @@ If you receive an error, please go through these steps;
 You can now use the following services:
 * Rest+ 2nd gen: activate scene to start a defined favorite
   * if you add new favorites reload the integration to update available scenes or restart ha
-* Restore 3: use the alarm switch to enable or disable an existing alarm
+* Restore/Restore 2/Restore 3: use the alarm switch to enable or disable an existing alarm
   * if you add or delete alarms in the Hatch app, reload the integration to update available switches or restart ha
   * alarm time editing and alarm creation are not supported
 * Media player: Select sound mode
