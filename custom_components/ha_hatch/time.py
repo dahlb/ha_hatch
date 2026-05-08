@@ -1,0 +1,113 @@
+from __future__ import annotations
+
+import logging
+from datetime import time
+from typing import Any
+
+from homeassistant.components.time import TimeEntity, TimeEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import HatchDataUpdateCoordinator
+from .alarm import (
+    alarm_base_names,
+    alarm_by_id,
+    alarm_unique_id,
+    alarm_unique_id_prefix,
+    alarm_wake_time,
+    remove_stale_alarm_entities,
+)
+from .const import DOMAIN
+from .hatch_entity import HatchEntity
+
+_LOGGER = logging.getLogger(__name__)
+ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX = "_wake_time"
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    entities = []
+    current_alarm_unique_ids = set()
+    authoritative_alarm_unique_id_prefixes = set()
+    for rest_device in coordinator.rest_devices:
+        if getattr(rest_device, "alarms_loaded", False):
+            authoritative_alarm_unique_id_prefixes.add(
+                alarm_unique_id_prefix(rest_device.thing_name)
+            )
+        for alarm_id, alarm_name in alarm_base_names(getattr(rest_device, "alarms", [])):
+            unique_id = alarm_unique_id(
+                rest_device.thing_name,
+                alarm_id,
+                ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX,
+            )
+            current_alarm_unique_ids.add(unique_id)
+            entities.append(
+                HatchAlarmWakeTime(
+                    coordinator=coordinator,
+                    thing_name=rest_device.thing_name,
+                    alarm_id=alarm_id,
+                    alarm_name=f"{alarm_name} Wake Time",
+                    unique_id=unique_id,
+                )
+            )
+
+    remove_stale_alarm_entities(
+        hass=hass,
+        config_entry=config_entry,
+        domain="time",
+        current_alarm_unique_ids=current_alarm_unique_ids,
+        authoritative_alarm_unique_id_prefixes=authoritative_alarm_unique_id_prefixes,
+        unique_id_suffix=ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX,
+    )
+    async_add_entities(entities)
+
+
+class HatchAlarmWakeTime(HatchEntity, TimeEntity):
+    entity_description = TimeEntityDescription(
+        key="alarm-wake-time",
+        icon="mdi:alarm",
+    )
+
+    def __init__(
+        self,
+        coordinator: HatchDataUpdateCoordinator,
+        thing_name: str,
+        alarm_id: int | str,
+        alarm_name: str,
+        unique_id: str,
+    ):
+        self._alarm_id = alarm_id
+        super().__init__(
+            coordinator=coordinator,
+            thing_name=thing_name,
+            entity_type="Alarm",
+        )
+        self._attr_unique_id = unique_id
+        self._attr_has_entity_name = True
+        self._attr_name = alarm_name
+
+    @property
+    def available(self) -> bool:
+        return self.native_value is not None
+
+    @property
+    def native_value(self) -> time | None:
+        return alarm_wake_time(self._alarm)
+
+    async def async_set_value(self, value: time) -> None:
+        set_alarm_wake_time = getattr(self.rest_device, "set_alarm_wake_time", None)
+        if not callable(set_alarm_wake_time):
+            raise TypeError(
+                f"{self.rest_device.device_name} does not support alarm wake times"
+            )
+        await set_alarm_wake_time(self._alarm_id, value)
+        self.async_write_ha_state()
+
+    @property
+    def _alarm(self) -> dict[str, Any] | None:
+        return alarm_by_id(self.rest_device, self._alarm_id)

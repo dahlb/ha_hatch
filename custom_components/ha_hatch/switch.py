@@ -10,16 +10,20 @@ from homeassistant.components.switch import (
 from hatch_rest_api import RestPlus, RestIot, RestBaby
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HatchDataUpdateCoordinator
+from .alarm import (
+    alarm_base_names,
+    alarm_by_id,
+    alarm_unique_id,
+    alarm_unique_id_prefix,
+    remove_stale_alarm_entities,
+)
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_ALARM_NAME = "alarm default name"
-ALARM_UNIQUE_ID_MARKER = "_alarm_"
 ALARM_UNIQUE_ID_SUFFIX = "_switch"
 
 
@@ -50,10 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             )
         if getattr(rest_device, "alarms_loaded", False):
             authoritative_alarm_unique_id_prefixes.add(
-                _alarm_unique_id_prefix(rest_device.thing_name)
+                alarm_unique_id_prefix(rest_device.thing_name)
             )
-        for alarm_id, alarm_name in _alarm_switch_names(getattr(rest_device, "alarms", [])):
-            unique_id = _alarm_unique_id(rest_device.thing_name, alarm_id)
+        for alarm_id, alarm_name in alarm_base_names(getattr(rest_device, "alarms", [])):
+            unique_id = alarm_unique_id(
+                rest_device.thing_name,
+                alarm_id,
+                ALARM_UNIQUE_ID_SUFFIX,
+            )
             current_alarm_unique_ids.add(unique_id)
             entities.append(
                 HatchAlarmSwitch(
@@ -65,11 +73,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
                 )
             )
 
-    _remove_stale_alarm_switch_entities(
+    remove_stale_alarm_entities(
         hass=hass,
         config_entry=config_entry,
+        domain="switch",
         current_alarm_unique_ids=current_alarm_unique_ids,
         authoritative_alarm_unique_id_prefixes=authoritative_alarm_unique_id_prefixes,
+        unique_id_suffix=ALARM_UNIQUE_ID_SUFFIX,
     )
     async_add_entities(entities)
 
@@ -169,83 +179,4 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
 
     @property
     def _alarm(self) -> dict[str, Any] | None:
-        alarm_by_id = getattr(self.rest_device, "alarm_by_id", None)
-        if callable(alarm_by_id):
-            return alarm_by_id(self._alarm_id)
-        alarm_id_string = str(self._alarm_id)
-        return next(
-            (
-                alarm
-                for alarm in getattr(self.rest_device, "alarms", [])
-                if str(alarm.get("id")) == alarm_id_string
-            ),
-            None,
-        )
-
-
-def _alarm_switch_names(alarms: list[dict[str, Any]]):
-    default_alarm_count = 0
-    for alarm in alarms:
-        alarm_id = alarm.get("id")
-        if alarm_id is None:
-            continue
-
-        alarm_name = _clean_alarm_name(alarm.get("name"))
-        if _is_default_alarm_name(alarm_name):
-            default_alarm_count += 1
-            alarm_name = "Default" if default_alarm_count == 1 else str(default_alarm_count)
-
-        yield alarm_id, f"Alarm - {alarm_name}"
-
-
-def _clean_alarm_name(alarm_name: Any) -> str:
-    if alarm_name is None:
-        return ""
-    return " ".join(str(alarm_name).replace("_", " ").split())
-
-
-def _is_default_alarm_name(alarm_name: str) -> bool:
-    return alarm_name.lower() in {"", "default", DEFAULT_ALARM_NAME}
-
-
-def _alarm_unique_id(thing_name: str, alarm_id: int | str) -> str:
-    return f"{_alarm_unique_id_prefix(thing_name)}{alarm_id}{ALARM_UNIQUE_ID_SUFFIX}"
-
-
-def _alarm_unique_id_prefix(thing_name: str) -> str:
-    return f"{thing_name}{ALARM_UNIQUE_ID_MARKER}"
-
-
-def _remove_stale_alarm_switch_entities(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    current_alarm_unique_ids: set[str],
-    authoritative_alarm_unique_id_prefixes: set[str],
-) -> None:
-    if not authoritative_alarm_unique_id_prefixes:
-        return
-
-    entity_registry = er.async_get(hass)
-    for entry in er.async_entries_for_config_entry(
-        entity_registry,
-        config_entry.entry_id,
-    ):
-        if entry.domain != "switch":
-            continue
-        if entry.unique_id in current_alarm_unique_ids:
-            continue
-        if _is_alarm_unique_id_for_authoritative_device(
-            entry.unique_id,
-            authoritative_alarm_unique_id_prefixes,
-        ):
-            entity_registry.async_remove(entry.entity_id)
-
-
-def _is_alarm_unique_id_for_authoritative_device(
-    unique_id: str,
-    authoritative_alarm_unique_id_prefixes: set[str],
-) -> bool:
-    return unique_id.endswith(ALARM_UNIQUE_ID_SUFFIX) and any(
-        unique_id.startswith(prefix)
-        for prefix in authoritative_alarm_unique_id_prefixes
-    )
+        return alarm_by_id(self.rest_device, self._alarm_id)
