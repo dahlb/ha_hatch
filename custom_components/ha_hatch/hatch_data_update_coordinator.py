@@ -1,4 +1,7 @@
+import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import timedelta, UTC, datetime
+from inspect import isawaitable
 from logging import getLogger, Logger
 import traceback
 from typing import Final
@@ -9,12 +12,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from custom_components.ha_hatch import DOMAIN
 
 _LOGGER: Logger = getLogger(__name__)
 
+ALARM_REFRESH_INTERVAL: Final = timedelta(minutes=10)
 DEFAULT_RETRY_INTERVAL: Final = timedelta(minutes=1)
 RATE_LIMIT_RETRY_INTERVAL: Final = timedelta(minutes=15)
 MAX_RATE_LIMIT_RETRY_INTERVAL: Final = timedelta(hours=6)
@@ -22,6 +27,7 @@ AWSCRT_MISMATCH_RETRY_INTERVAL: Final = timedelta(hours=1)
 MAX_AWSCRT_MISMATCH_RETRY_INTERVAL: Final = timedelta(hours=12)
 AWSCRT_MISMATCH_TRACE_FILE: Final = "awscrt/mqtt.py"
 AWSCRT_MISMATCH_TRACE_NAME: Final = "connect"
+AlarmRefreshCallback = Callable[[], Awaitable[None] | None]
 
 
 class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
@@ -42,6 +48,9 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         """Initialize the device."""
         self.email: str = email
         self.password: str = password
+        self._alarm_refresh_callbacks: set[AlarmRefreshCallback] = set()
+        self._alarm_refresh_lock = asyncio.Lock()
+        self._alarm_refresh_unsub: Callable[[], None] | None = None
 
         super().__init__(
             hass,
@@ -61,6 +70,66 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     def _rest_device_unsub(self) -> None:
         for rest_device in self.rest_devices:
             rest_device.remove_callback(self.async_update_listeners)
+
+    def async_start_alarm_refresh(self) -> None:
+        if self._alarm_refresh_unsub is not None:
+            return
+
+        self._alarm_refresh_unsub = async_track_time_interval(
+            self.hass,
+            self._async_handle_alarm_refresh_interval,
+            ALARM_REFRESH_INTERVAL,
+        )
+
+    def async_add_alarm_refresh_callback(
+        self,
+        callback: AlarmRefreshCallback,
+    ) -> Callable[[], None]:
+        self._alarm_refresh_callbacks.add(callback)
+
+        def remove_callback() -> None:
+            self._alarm_refresh_callbacks.discard(callback)
+
+        return remove_callback
+
+    async def _async_handle_alarm_refresh_interval(self, now: datetime) -> None:
+        await self.async_refresh_alarms()
+
+    async def async_refresh_alarms(self) -> None:
+        alarm_devices = [
+            rest_device
+            for rest_device in self.rest_devices
+            if getattr(rest_device, "alarms_loaded", False)
+            and callable(getattr(rest_device, "refresh_alarms", None))
+        ]
+        if not alarm_devices:
+            return
+
+        async with self._alarm_refresh_lock:
+            refresh_results = await asyncio.gather(
+                *(rest_device.refresh_alarms() for rest_device in alarm_devices),
+                return_exceptions=True,
+            )
+
+        refreshed = False
+        for rest_device, result in zip(alarm_devices, refresh_results, strict=True):
+            if isinstance(result, Exception):
+                _LOGGER.warning(
+                    "Failed to refresh Hatch alarms for %s",
+                    rest_device.device_name,
+                    exc_info=result,
+                )
+                continue
+            refreshed = True
+
+        if refreshed:
+            await self._async_notify_alarm_refresh_callbacks()
+
+    async def _async_notify_alarm_refresh_callbacks(self) -> None:
+        for callback in tuple(self._alarm_refresh_callbacks):
+            result = callback()
+            if isawaitable(result):
+                await result
 
     def _clear_retry_backoff(self) -> None:
         self._retry_backoff_until.pop(self.email, None)
@@ -157,6 +226,7 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             self._clear_retry_backoff()
             for rest_device in self.rest_devices:
                 rest_device.register_callback(self.async_update_listeners)
+            await self._async_notify_alarm_refresh_callbacks()
             return [rest_device.__repr__() for rest_device in self.rest_devices]
         except AuthError as error:
             self._clear_retry_backoff()
@@ -195,6 +265,10 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
+        if self._alarm_refresh_unsub is not None:
+            self._alarm_refresh_unsub()
+            self._alarm_refresh_unsub = None
+        self._alarm_refresh_callbacks.clear()
         self._disconnect_mqtt()
         self._rest_device_unsub()
         await super().async_shutdown()

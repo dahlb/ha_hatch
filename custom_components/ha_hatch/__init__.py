@@ -33,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    coordinator.async_start_alarm_refresh()
 
     if not config_entry.update_listeners:
         config_entry.add_update_listener(async_update_options)
