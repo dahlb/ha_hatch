@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .alarm import (
     alarm_reference_from_unique_id,
@@ -81,36 +82,62 @@ def _alarm_targets_from_service_call(
     entity_registry = er.async_get(hass)
     targets: dict[tuple[str, str], tuple[Any, str]] = {}
 
-    for entity_id in _service_call_entity_ids(call):
-        entry = entity_registry.async_get(entity_id)
-        if entry is None or entry.platform != DOMAIN:
-            raise ServiceValidationError(f"{entity_id} is not a Hatch alarm entity")
+    selected = async_extract_referenced_entity_ids(hass, call, expand_group=True)
 
-        alarm_reference = alarm_reference_from_unique_id(
-            entry.unique_id,
-            ALARM_SERVICE_UNIQUE_ID_SUFFIXES,
+    for entity_id in selected.referenced:
+        target = _alarm_target_from_entity_id(
+            entity_registry,
+            coordinator,
+            entity_id,
+            raise_if_not_alarm=True,
         )
-        if alarm_reference is None:
-            raise ServiceValidationError(f"{entity_id} is not a Hatch alarm entity")
+        if target is not None:
+            key, value = target
+            targets[key] = value
 
-        thing_name, alarm_id = alarm_reference
-        rest_device = coordinator.rest_device_by_thing_name(thing_name)
-        if rest_device is None:
-            raise ServiceValidationError(
-                f"{entity_id} belongs to a Hatch device that is not loaded"
-            )
-        targets[(thing_name, alarm_id)] = (rest_device, alarm_id)
+    for entity_id in selected.indirectly_referenced:
+        target = _alarm_target_from_entity_id(
+            entity_registry,
+            coordinator,
+            entity_id,
+            raise_if_not_alarm=False,
+        )
+        if target is not None:
+            key, value = target
+            targets[key] = value
 
     return targets
 
 
-def _service_call_entity_ids(call: ServiceCall) -> set[str]:
-    entity_ids: set[str] = set()
-    if entity_id := call.data.get(ATTR_ENTITY_ID):
-        entity_ids.update(cv.entity_ids(entity_id))
+def _alarm_target_from_entity_id(
+    entity_registry: er.EntityRegistry,
+    coordinator: HatchDataUpdateCoordinator,
+    entity_id: str,
+    *,
+    raise_if_not_alarm: bool,
+) -> tuple[tuple[str, str], tuple[Any, str]] | None:
+    entry = entity_registry.async_get(entity_id)
+    if entry is None or entry.platform != DOMAIN:
+        if raise_if_not_alarm:
+            raise ServiceValidationError(f"{entity_id} is not a Hatch alarm entity")
+        return None
 
-    target = getattr(call, "target", None)
-    if isinstance(target, dict) and (target_entity_id := target.get(ATTR_ENTITY_ID)):
-        entity_ids.update(cv.entity_ids(target_entity_id))
+    alarm_reference = alarm_reference_from_unique_id(
+        entry.unique_id,
+        ALARM_SERVICE_UNIQUE_ID_SUFFIXES,
+    )
+    if alarm_reference is None:
+        if raise_if_not_alarm:
+            raise ServiceValidationError(f"{entity_id} is not a Hatch alarm entity")
+        return None
 
-    return entity_ids
+    thing_name, alarm_id = alarm_reference
+    rest_device = coordinator.rest_device_by_thing_name(thing_name)
+    if rest_device is None:
+        if raise_if_not_alarm:
+            raise ServiceValidationError(
+                f"{entity_id} belongs to a Hatch device that is not loaded"
+            )
+        return None
+
+    return (thing_name, alarm_id), (rest_device, alarm_id)
