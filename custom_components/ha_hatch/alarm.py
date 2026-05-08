@@ -21,8 +21,10 @@ def alarm_base_names(alarms: list[dict[str, Any]]):
                 yield alarm_id, "Default Alarm"
                 continue
             alarm_name = str(default_alarm_count)
+            yield alarm_id, f"Alarm - {alarm_name}"
+            continue
 
-        yield alarm_id, f"Alarm - {alarm_name}"
+        yield alarm_id, f"{alarm_name} Alarm"
 
 
 def alarm_by_id(rest_device, alarm_id: int | str) -> dict[str, Any] | None:

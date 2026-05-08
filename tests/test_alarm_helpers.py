@@ -27,7 +27,7 @@ class AlarmHelperTest(unittest.TestCase):
             [
                 (1, "Default Alarm"),
                 (2, "Alarm - 2"),
-                (3, "Alarm - Weekend Wake"),
+                (3, "Weekend Wake Alarm"),
             ],
         )
 
