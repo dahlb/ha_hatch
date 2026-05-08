@@ -4,9 +4,7 @@ set_alarm_weekdays:
   target:
     entity:
       integration: ha_hatch
-      domain:
-        - switch
-        - time
+      domain: switch
   fields:
     weekdays:
       name: Weekdays
@@ -15,10 +13,9 @@ set_alarm_weekdays:
       selector:
         select:
           multiple: true
-          mode: dropdown
+          mode: list
+          sort: false
           options:
-            - label: Sunday
-              value: sunday
             - label: Monday
               value: monday
             - label: Tuesday
@@ -31,3 +28,5 @@ set_alarm_weekdays:
               value: friday
             - label: Saturday
               value: saturday
+            - label: Sunday
+              value: sunday

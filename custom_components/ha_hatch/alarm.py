@@ -6,22 +6,22 @@ from typing import Any
 DEFAULT_ALARM_NAME = "alarm default name"
 ALARM_UNIQUE_ID_MARKER = "_alarm_"
 ALARM_WEEKDAY_BITS: dict[str, int] = {
-    "sunday": 1,
     "monday": 2,
     "tuesday": 4,
     "wednesday": 8,
     "thursday": 16,
     "friday": 32,
     "saturday": 64,
+    "sunday": 1,
 }
 ALARM_WEEKDAY_LABELS: dict[str, str] = {
-    "sunday": "Sun",
     "monday": "Mon",
     "tuesday": "Tue",
     "wednesday": "Wed",
     "thursday": "Thu",
     "friday": "Fri",
     "saturday": "Sat",
+    "sunday": "Sun",
 }
 ALARM_WEEKDAYS_MASK = sum(ALARM_WEEKDAY_BITS.values())
 ALARM_WEEKDAYS_ONLY_MASK = (

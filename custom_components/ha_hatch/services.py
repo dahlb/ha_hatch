@@ -5,7 +5,7 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 
@@ -18,7 +18,7 @@ from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 
 ATTR_WEEKDAYS = "weekdays"
 SERVICE_SET_ALARM_WEEKDAYS = "set_alarm_weekdays"
-ALARM_SERVICE_UNIQUE_ID_SUFFIXES = {"_switch", "_wake_time"}
+ALARM_SERVICE_UNIQUE_ID_SUFFIXES = {"_switch"}
 
 
 def async_register_services(hass: HomeAssistant) -> None:
@@ -35,7 +35,10 @@ def async_register_services(hass: HomeAssistant) -> None:
         schema=vol.Schema(
             {
                 vol.Required(ATTR_WEEKDAYS): _validate_weekdays,
-                vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                vol.Optional(ATTR_ENTITY_ID): vol.All(
+                    cv.entity_ids,
+                    [cv.entity_domain("switch")],
+                ),
             }
         ),
     )
@@ -58,13 +61,13 @@ async def _async_set_alarm_weekdays(
 
     alarm_targets = _alarm_targets_from_service_call(hass, coordinator, call)
     if not alarm_targets:
-        raise HomeAssistantError("Target at least one Hatch alarm entity")
+        raise ServiceValidationError("Target at least one Hatch alarm entity")
 
     weekdays = call.data[ATTR_WEEKDAYS]
     for rest_device, alarm_id in alarm_targets.values():
         set_alarm_weekdays = getattr(rest_device, "set_alarm_weekdays", None)
         if not callable(set_alarm_weekdays):
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 f"{rest_device.device_name} does not support alarm weekdays"
             )
         await set_alarm_weekdays(alarm_id, weekdays)
@@ -81,19 +84,19 @@ def _alarm_targets_from_service_call(
     for entity_id in _service_call_entity_ids(call):
         entry = entity_registry.async_get(entity_id)
         if entry is None or entry.platform != DOMAIN:
-            raise HomeAssistantError(f"{entity_id} is not a Hatch alarm entity")
+            raise ServiceValidationError(f"{entity_id} is not a Hatch alarm entity")
 
         alarm_reference = alarm_reference_from_unique_id(
             entry.unique_id,
             ALARM_SERVICE_UNIQUE_ID_SUFFIXES,
         )
         if alarm_reference is None:
-            raise HomeAssistantError(f"{entity_id} is not a Hatch alarm entity")
+            raise ServiceValidationError(f"{entity_id} is not a Hatch alarm entity")
 
         thing_name, alarm_id = alarm_reference
         rest_device = coordinator.rest_device_by_thing_name(thing_name)
         if rest_device is None:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 f"{entity_id} belongs to a Hatch device that is not loaded"
             )
         targets[(thing_name, alarm_id)] = (rest_device, alarm_id)

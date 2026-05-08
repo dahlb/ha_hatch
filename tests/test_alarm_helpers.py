@@ -99,6 +99,18 @@ class AlarmHelperTest(unittest.TestCase):
             },
         )
         self.assertEqual(
+            alarm_helpers.alarm_repeat_attributes({"daysOfWeek": 127})["weekdays"],
+            [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday",
+            ],
+        )
+        self.assertEqual(
             alarm_helpers.alarm_repeat_attributes({"daysOfWeek": "bad"}),
             {
                 "repeat": "Unknown",
