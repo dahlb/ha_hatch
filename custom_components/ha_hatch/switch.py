@@ -190,7 +190,7 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
             return
         self._attr_name = alarm_name
         if getattr(self, "hass", None) is not None:
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
     @property
     def available(self) -> bool:
@@ -220,7 +220,7 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
                 f"{self.rest_device.device_name} does not support alarm switches"
             )
         await set_alarm_enabled(self._alarm_id, enabled)
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def _alarm(self) -> dict[str, Any] | None:

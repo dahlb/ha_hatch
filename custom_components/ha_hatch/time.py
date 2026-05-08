@@ -126,7 +126,7 @@ class HatchAlarmWakeTime(HatchEntity, TimeEntity):
             return
         self._attr_name = alarm_name
         if getattr(self, "hass", None) is not None:
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
     @property
     def available(self) -> bool:
@@ -147,7 +147,7 @@ class HatchAlarmWakeTime(HatchEntity, TimeEntity):
                 f"{self.rest_device.device_name} does not support alarm wake times"
             )
         await set_alarm_wake_time(self._alarm_id, value)
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def _alarm(self) -> dict[str, Any] | None:

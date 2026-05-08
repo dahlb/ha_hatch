@@ -179,7 +179,7 @@ class HatchAlarmRepeat(HatchEntity, SensorEntity):
             return
         self._attr_name = alarm_name
         if getattr(self, "hass", None) is not None:
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
     @property
     def available(self) -> bool:
