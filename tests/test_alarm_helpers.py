@@ -25,7 +25,7 @@ class AlarmHelperTest(unittest.TestCase):
         self.assertEqual(
             list(alarm_helpers.alarm_base_names(alarms)),
             [
-                (1, "Alarm - Default"),
+                (1, "Default Alarm"),
                 (2, "Alarm - 2"),
                 (3, "Alarm - Weekend Wake"),
             ],

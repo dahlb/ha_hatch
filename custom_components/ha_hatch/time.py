@@ -17,6 +17,7 @@ from .alarm import (
     alarm_unique_id_prefix,
     alarm_wake_time,
     remove_stale_alarm_entities,
+    update_alarm_entity_names,
 )
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
@@ -33,6 +34,7 @@ async def async_setup_entry(
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
     entities = []
     current_alarm_unique_ids = set()
+    current_alarm_names = {}
     authoritative_alarm_unique_id_prefixes = set()
     for rest_device in coordinator.rest_devices:
         if getattr(rest_device, "alarms_loaded", False):
@@ -45,13 +47,15 @@ async def async_setup_entry(
                 alarm_id,
                 ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX,
             )
+            wake_time_name = f"{alarm_name} Wake Time"
             current_alarm_unique_ids.add(unique_id)
+            current_alarm_names[unique_id] = wake_time_name
             entities.append(
                 HatchAlarmWakeTime(
                     coordinator=coordinator,
                     thing_name=rest_device.thing_name,
                     alarm_id=alarm_id,
-                    alarm_name=f"{alarm_name} Wake Time",
+                    alarm_name=wake_time_name,
                     unique_id=unique_id,
                 )
             )
@@ -63,6 +67,12 @@ async def async_setup_entry(
         current_alarm_unique_ids=current_alarm_unique_ids,
         authoritative_alarm_unique_id_prefixes=authoritative_alarm_unique_id_prefixes,
         unique_id_suffix=ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX,
+    )
+    update_alarm_entity_names(
+        hass=hass,
+        config_entry=config_entry,
+        domain="time",
+        current_alarm_names=current_alarm_names,
     )
     async_add_entities(entities)
 

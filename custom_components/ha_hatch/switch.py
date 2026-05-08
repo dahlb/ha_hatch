@@ -19,6 +19,7 @@ from .alarm import (
     alarm_unique_id,
     alarm_unique_id_prefix,
     remove_stale_alarm_entities,
+    update_alarm_entity_names,
 )
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
@@ -31,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
     entities = []
     current_alarm_unique_ids = set()
+    current_alarm_names = {}
     authoritative_alarm_unique_id_prefixes = set()
     for rest_device in coordinator.rest_devices:
         if isinstance(rest_device, RestPlus):
@@ -63,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
                 ALARM_UNIQUE_ID_SUFFIX,
             )
             current_alarm_unique_ids.add(unique_id)
+            current_alarm_names[unique_id] = alarm_name
             entities.append(
                 HatchAlarmSwitch(
                     coordinator=coordinator,
@@ -80,6 +83,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
         current_alarm_unique_ids=current_alarm_unique_ids,
         authoritative_alarm_unique_id_prefixes=authoritative_alarm_unique_id_prefixes,
         unique_id_suffix=ALARM_UNIQUE_ID_SUFFIX,
+    )
+    update_alarm_entity_names(
+        hass=hass,
+        config_entry=config_entry,
+        domain="switch",
+        current_alarm_names=current_alarm_names,
     )
     async_add_entities(entities)
 

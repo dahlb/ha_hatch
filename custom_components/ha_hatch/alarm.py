@@ -17,7 +17,10 @@ def alarm_base_names(alarms: list[dict[str, Any]]):
         alarm_name = _clean_alarm_name(alarm.get("name"))
         if _is_default_alarm_name(alarm_name):
             default_alarm_count += 1
-            alarm_name = "Default" if default_alarm_count == 1 else str(default_alarm_count)
+            if default_alarm_count == 1:
+                yield alarm_id, "Default Alarm"
+                continue
+            alarm_name = str(default_alarm_count)
 
         yield alarm_id, f"Alarm - {alarm_name}"
 
@@ -98,6 +101,32 @@ def remove_stale_alarm_entities(
             unique_id_suffix,
         ):
             entity_registry.async_remove(entry.entity_id)
+
+
+def update_alarm_entity_names(
+    hass,
+    config_entry,
+    domain: str,
+    current_alarm_names: dict[str, str],
+) -> None:
+    if not current_alarm_names:
+        return
+
+    from homeassistant.helpers import entity_registry as er
+
+    entity_registry = er.async_get(hass)
+    for entry in er.async_entries_for_config_entry(
+        entity_registry,
+        config_entry.entry_id,
+    ):
+        alarm_name = current_alarm_names.get(entry.unique_id)
+        if entry.domain != domain or alarm_name is None:
+            continue
+        if entry.original_name != alarm_name:
+            entity_registry.async_update_entity(
+                entry.entity_id,
+                original_name=alarm_name,
+            )
 
 
 def _clean_alarm_name(alarm_name: Any) -> str:
