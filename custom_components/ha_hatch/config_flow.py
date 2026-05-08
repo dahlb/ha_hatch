@@ -1,9 +1,9 @@
 import logging
 from typing import Any
 
+from hatch_rest_api.errors import AuthError, RateError
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import (
@@ -87,8 +87,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow):
                     title=email,
                     data=self.data,
                 )
-            except ConfigEntryAuthFailed:
+            except AuthError:
                 errors["base"] = "auth"
+            except RateError:
+                errors["base"] = "rate_limited"
             finally:
                 if api_cloud is not None:
                     await api_cloud.cleanup_client_session()

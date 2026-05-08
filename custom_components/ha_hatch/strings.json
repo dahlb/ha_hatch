@@ -11,7 +11,8 @@
       }
     },
     "error": {
-      "auth": "Login failed into Hatch. Please use official Hatch app to logout and log back in and try again."
+      "auth": "Login failed into Hatch. Please use official Hatch app to logout and log back in and try again.",
+      "rate_limited": "Hatch rate-limited this account. Wait for the cooldown to clear before trying again."
     }
   },
   "options": {
