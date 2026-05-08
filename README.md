@@ -53,8 +53,9 @@ You can now use the following services:
   * use the alarm wake time entity to change when the alarm sound starts; the sunrise light start shifts with it
   * when Hatch omits an alarm `endTime`, wake time is derived from `startTime` plus the alarm sunrise duration
   * automations can set wake time with the built-in `time.set_value` action, for example `time: "06:45:00"`
+  * automations and Developer Tools can set repeat days with the `ha_hatch.set_alarm_weekdays` action
   * alarm changes made in the Hatch app are refreshed automatically every 10 minutes; reload the integration to see them immediately
-  * alarm creation, alarm deletion, and alarm sound/day editing are not supported
+  * alarm creation, alarm deletion, and alarm sound/light editing are not supported
 * Media player: Select sound mode
   * Possible options here are: Stream, PinkNoise, Dryer, Ocean, Wind, Rain, Bird, Crickets, Brahms, Twinkle, RockABye
 * Media player: Set volume

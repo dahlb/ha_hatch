@@ -99,7 +99,10 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         alarm_devices = [
             rest_device
             for rest_device in self.rest_devices
-            if getattr(rest_device, "alarms_loaded", False)
+            if (
+                getattr(rest_device, "alarm_capable", False)
+                or getattr(rest_device, "alarms_loaded", False)
+            )
             and callable(getattr(rest_device, "refresh_alarms", None))
         ]
         if not alarm_devices:
