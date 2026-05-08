@@ -5,6 +5,33 @@ from typing import Any
 
 DEFAULT_ALARM_NAME = "alarm default name"
 ALARM_UNIQUE_ID_MARKER = "_alarm_"
+ALARM_WEEKDAY_BITS: dict[str, int] = {
+    "sunday": 1,
+    "monday": 2,
+    "tuesday": 4,
+    "wednesday": 8,
+    "thursday": 16,
+    "friday": 32,
+    "saturday": 64,
+}
+ALARM_WEEKDAY_LABELS: dict[str, str] = {
+    "sunday": "Sun",
+    "monday": "Mon",
+    "tuesday": "Tue",
+    "wednesday": "Wed",
+    "thursday": "Thu",
+    "friday": "Fri",
+    "saturday": "Sat",
+}
+ALARM_WEEKDAYS_MASK = sum(ALARM_WEEKDAY_BITS.values())
+ALARM_WEEKDAYS_ONLY_MASK = (
+    ALARM_WEEKDAY_BITS["monday"]
+    | ALARM_WEEKDAY_BITS["tuesday"]
+    | ALARM_WEEKDAY_BITS["wednesday"]
+    | ALARM_WEEKDAY_BITS["thursday"]
+    | ALARM_WEEKDAY_BITS["friday"]
+)
+ALARM_WEEKENDS_MASK = ALARM_WEEKDAY_BITS["sunday"] | ALARM_WEEKDAY_BITS["saturday"]
 
 
 def alarm_base_names(alarms: list[dict[str, Any]]):
@@ -75,6 +102,88 @@ def alarm_unique_id_prefix(thing_name: str) -> str:
     return f"{thing_name}{ALARM_UNIQUE_ID_MARKER}"
 
 
+def alarm_reference_from_unique_id(
+    unique_id: str | None,
+    suffixes: set[str],
+) -> tuple[str, str] | None:
+    if not unique_id:
+        return None
+
+    for suffix in suffixes:
+        if not unique_id.endswith(suffix):
+            continue
+        unique_id_without_suffix = unique_id[: -len(suffix)]
+        thing_name, marker, alarm_id = unique_id_without_suffix.rpartition(
+            ALARM_UNIQUE_ID_MARKER
+        )
+        if marker and thing_name and alarm_id:
+            return thing_name, alarm_id
+
+    return None
+
+
+def alarm_repeat_attributes(alarm: dict[str, Any] | None) -> dict[str, Any]:
+    if alarm is None:
+        return {}
+
+    days_of_week = alarm.get("daysOfWeek")
+    return {
+        "repeat": alarm_repeat_label(days_of_week),
+        "weekdays": alarm_weekdays(days_of_week),
+        "days_of_week": days_of_week,
+    }
+
+
+def alarm_weekdays(days_of_week: Any) -> list[str]:
+    normalized_days_of_week = _normalize_days_of_week(days_of_week)
+    if normalized_days_of_week is None:
+        return []
+    return [
+        weekday
+        for weekday, bit in ALARM_WEEKDAY_BITS.items()
+        if normalized_days_of_week & bit
+    ]
+
+
+def alarm_repeat_label(days_of_week: Any) -> str:
+    normalized_days_of_week = _normalize_days_of_week(days_of_week)
+    if normalized_days_of_week is None:
+        return "Unknown"
+    if normalized_days_of_week == 0:
+        return "Once"
+    if normalized_days_of_week == ALARM_WEEKDAYS_ONLY_MASK:
+        return "Weekdays"
+    if normalized_days_of_week == ALARM_WEEKENDS_MASK:
+        return "Weekends"
+    if normalized_days_of_week == ALARM_WEEKDAYS_MASK:
+        return "Every day"
+    return ", ".join(
+        ALARM_WEEKDAY_LABELS[weekday]
+        for weekday in alarm_weekdays(normalized_days_of_week)
+    )
+
+
+def normalize_alarm_weekdays(weekdays: Any) -> list[str]:
+    if weekdays is None:
+        return []
+    if isinstance(weekdays, str):
+        weekdays = [weekdays]
+
+    normalized_weekdays = []
+    try:
+        weekday_values = iter(weekdays)
+    except TypeError as error:
+        raise ValueError("Alarm weekdays must be a list of weekday names") from error
+
+    for weekday in weekday_values:
+        normalized_weekday = str(weekday).strip().lower()
+        if normalized_weekday not in ALARM_WEEKDAY_BITS:
+            raise ValueError(f"Unsupported alarm weekday: {weekday}")
+        normalized_weekdays.append(normalized_weekday)
+
+    return normalized_weekdays
+
+
 def remove_stale_alarm_entities(
     hass,
     config_entry,
@@ -139,6 +248,16 @@ def _clean_alarm_name(alarm_name: Any) -> str:
 
 def _is_default_alarm_name(alarm_name: str) -> bool:
     return alarm_name.lower() in {"", "default", DEFAULT_ALARM_NAME}
+
+
+def _normalize_days_of_week(days_of_week: Any) -> int | None:
+    if days_of_week is None:
+        return 0
+    if isinstance(days_of_week, bool) or not isinstance(days_of_week, int):
+        return None
+    if days_of_week < 0 or days_of_week > ALARM_WEEKDAYS_MASK:
+        return None
+    return days_of_week
 
 
 def _parse_alarm_datetime(value: Any) -> datetime | None:

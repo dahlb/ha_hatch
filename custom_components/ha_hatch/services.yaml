@@ -1,0 +1,33 @@
+set_alarm_weekdays:
+  name: Set alarm weekdays
+  description: Set which weekdays a Hatch alarm repeats on. Use an empty weekday list for a one-time alarm.
+  target:
+    entity:
+      integration: ha_hatch
+      domain:
+        - switch
+        - time
+  fields:
+    weekdays:
+      name: Weekdays
+      description: Weekdays when the alarm should repeat.
+      required: true
+      selector:
+        select:
+          multiple: true
+          mode: dropdown
+          options:
+            - label: Sunday
+              value: sunday
+            - label: Monday
+              value: monday
+            - label: Tuesday
+              value: tuesday
+            - label: Wednesday
+              value: wednesday
+            - label: Thursday
+              value: thursday
+            - label: Friday
+              value: friday
+            - label: Saturday
+              value: saturday

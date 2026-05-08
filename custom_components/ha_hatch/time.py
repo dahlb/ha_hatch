@@ -13,6 +13,7 @@ from . import HatchDataUpdateCoordinator
 from .alarm import (
     alarm_base_names,
     alarm_by_id,
+    alarm_repeat_attributes,
     alarm_unique_id,
     alarm_unique_id_prefix,
     alarm_wake_time,
@@ -134,6 +135,10 @@ class HatchAlarmWakeTime(HatchEntity, TimeEntity):
     @property
     def native_value(self) -> time | None:
         return alarm_wake_time(self._alarm)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return alarm_repeat_attributes(self._alarm)
 
     async def async_set_value(self, value: time) -> None:
         set_alarm_wake_time = getattr(self.rest_device, "set_alarm_wake_time", None)

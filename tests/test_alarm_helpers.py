@@ -37,6 +37,87 @@ class AlarmHelperTest(unittest.TestCase):
             "thing-name_alarm_42_wake_time",
         )
 
+    def test_alarm_reference_from_unique_id_accepts_alarm_entity_suffixes(self):
+        self.assertEqual(
+            alarm_helpers.alarm_reference_from_unique_id(
+                "thing-name_alarm_42_wake_time",
+                {"_switch", "_wake_time"},
+            ),
+            ("thing-name", "42"),
+        )
+        self.assertEqual(
+            alarm_helpers.alarm_reference_from_unique_id(
+                "thing-name_alarm_42_switch",
+                {"_switch", "_wake_time"},
+            ),
+            ("thing-name", "42"),
+        )
+        self.assertIsNone(
+            alarm_helpers.alarm_reference_from_unique_id(
+                "thing-name_power_switch",
+                {"_switch", "_wake_time"},
+            )
+        )
+
+    def test_alarm_repeat_attributes_describe_days_of_week(self):
+        self.assertEqual(
+            alarm_helpers.alarm_repeat_attributes({"daysOfWeek": 62}),
+            {
+                "repeat": "Weekdays",
+                "weekdays": [
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                ],
+                "days_of_week": 62,
+            },
+        )
+        self.assertEqual(
+            alarm_helpers.alarm_repeat_attributes({"daysOfWeek": 65})["repeat"],
+            "Weekends",
+        )
+        self.assertEqual(
+            alarm_helpers.alarm_repeat_attributes({"daysOfWeek": 127})["repeat"],
+            "Every day",
+        )
+        self.assertEqual(
+            alarm_helpers.alarm_repeat_attributes({"daysOfWeek": 42}),
+            {
+                "repeat": "Mon, Wed, Fri",
+                "weekdays": ["monday", "wednesday", "friday"],
+                "days_of_week": 42,
+            },
+        )
+        self.assertEqual(
+            alarm_helpers.alarm_repeat_attributes({"daysOfWeek": 0}),
+            {
+                "repeat": "Once",
+                "weekdays": [],
+                "days_of_week": 0,
+            },
+        )
+        self.assertEqual(
+            alarm_helpers.alarm_repeat_attributes({"daysOfWeek": "bad"}),
+            {
+                "repeat": "Unknown",
+                "weekdays": [],
+                "days_of_week": "bad",
+            },
+        )
+
+    def test_normalize_alarm_weekdays_accepts_ui_values(self):
+        self.assertEqual(
+            alarm_helpers.normalize_alarm_weekdays([" Monday ", "FRIDAY"]),
+            ["monday", "friday"],
+        )
+        self.assertEqual(alarm_helpers.normalize_alarm_weekdays([]), [])
+        with self.assertRaisesRegex(ValueError, "Unsupported alarm weekday"):
+            alarm_helpers.normalize_alarm_weekdays(["funday"])
+        with self.assertRaisesRegex(ValueError, "must be a list"):
+            alarm_helpers.normalize_alarm_weekdays(62)
+
     def test_alarm_wake_time_reads_end_time_and_derives_missing_end_time(self):
         self.assertEqual(
             alarm_helpers.alarm_wake_time(

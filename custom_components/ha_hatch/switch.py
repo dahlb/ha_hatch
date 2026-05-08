@@ -16,6 +16,7 @@ from . import HatchDataUpdateCoordinator
 from .alarm import (
     alarm_base_names,
     alarm_by_id,
+    alarm_repeat_attributes,
     alarm_unique_id,
     alarm_unique_id_prefix,
     remove_stale_alarm_entities,
@@ -201,6 +202,10 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
         if alarm is None:
             return None
         return bool(alarm.get("enabled"))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return alarm_repeat_attributes(self._alarm)
 
     async def async_turn_on(self, **kwargs):
         await self._async_set_enabled(True)
