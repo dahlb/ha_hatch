@@ -9,7 +9,7 @@ set_alarm_weekdays:
     weekdays:
       name: Weekdays
       description: Weekdays when the alarm should repeat.
-      required: true
+      required: false
       selector:
         select:
           multiple: true

@@ -93,7 +93,13 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         return remove_callback
 
     async def _async_handle_alarm_refresh_interval(self, now: datetime) -> None:
-        await self.async_refresh_alarms()
+        try:
+            await self.async_refresh_alarms()
+        except Exception as error:
+            _LOGGER.exception(
+                "Unhandled error during scheduled Hatch alarm refresh",
+                exc_info=error,
+            )
 
     async def async_refresh_alarms(self) -> None:
         alarm_devices = [
@@ -130,9 +136,15 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
 
     async def _async_notify_alarm_refresh_callbacks(self) -> None:
         for callback in tuple(self._alarm_refresh_callbacks):
-            result = callback()
-            if isawaitable(result):
-                await result
+            try:
+                result = callback()
+                if isawaitable(result):
+                    await result
+            except Exception as error:
+                _LOGGER.exception(
+                    "Hatch alarm refresh callback failed",
+                    exc_info=error,
+                )
 
     def _clear_retry_backoff(self) -> None:
         self._retry_backoff_until.pop(self.email, None)
@@ -229,6 +241,8 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             self._clear_retry_backoff()
             for rest_device in self.rest_devices:
                 rest_device.register_callback(self.async_update_listeners)
+            # Re-login replaces every RestDevice instance, so alarm-derived entities
+            # must reconcile against the new objects to keep references current.
             await self._async_notify_alarm_refresh_callbacks()
             return [rest_device.__repr__() for rest_device in self.rest_devices]
         except AuthError as error:

@@ -130,7 +130,7 @@ class HatchAlarmWakeTime(HatchEntity, TimeEntity):
 
     @property
     def available(self) -> bool:
-        return self.native_value is not None
+        return self._alarm is not None
 
     @property
     def native_value(self) -> time | None:

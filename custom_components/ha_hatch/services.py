@@ -3,12 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.target import (
+    TargetSelection,
+    async_extract_referenced_entity_ids,
+)
 
 from .alarm import (
     alarm_reference_from_unique_id,
@@ -33,14 +35,8 @@ def async_register_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_ALARM_WEEKDAYS,
         async_set_alarm_weekdays,
-        schema=vol.Schema(
-            {
-                vol.Required(ATTR_WEEKDAYS): _validate_weekdays,
-                vol.Optional(ATTR_ENTITY_ID): vol.All(
-                    cv.entity_ids,
-                    [cv.entity_domain("switch")],
-                ),
-            }
+        schema=cv.make_entity_service_schema(
+            {vol.Optional(ATTR_WEEKDAYS, default=list): _validate_weekdays}
         ),
     )
 
@@ -64,14 +60,15 @@ async def _async_set_alarm_weekdays(
     if not alarm_targets:
         raise ServiceValidationError("Target at least one Hatch alarm entity")
 
-    weekdays = call.data[ATTR_WEEKDAYS]
-    for rest_device, alarm_id in alarm_targets.values():
-        set_alarm_weekdays = getattr(rest_device, "set_alarm_weekdays", None)
-        if not callable(set_alarm_weekdays):
+    for rest_device, _alarm_id in alarm_targets.values():
+        if not callable(getattr(rest_device, "set_alarm_weekdays", None)):
             raise ServiceValidationError(
                 f"{rest_device.device_name} does not support alarm weekdays"
             )
-        await set_alarm_weekdays(alarm_id, weekdays)
+
+    weekdays = call.data[ATTR_WEEKDAYS]
+    for rest_device, alarm_id in alarm_targets.values():
+        await rest_device.set_alarm_weekdays(alarm_id, weekdays)
 
 
 def _alarm_targets_from_service_call(
@@ -82,7 +79,9 @@ def _alarm_targets_from_service_call(
     entity_registry = er.async_get(hass)
     targets: dict[tuple[str, str], tuple[Any, str]] = {}
 
-    selected = async_extract_referenced_entity_ids(hass, call, expand_group=True)
+    selected = async_extract_referenced_entity_ids(
+        hass, TargetSelection(call.data), expand_group=True
+    )
 
     for entity_id in selected.referenced:
         target = _alarm_target_from_entity_id(

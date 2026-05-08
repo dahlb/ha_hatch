@@ -109,7 +109,7 @@ def alarm_reference_from_unique_id(
     if not unique_id:
         return None
 
-    for suffix in suffixes:
+    for suffix in sorted(suffixes, key=len, reverse=True):
         if not unique_id.endswith(suffix):
             continue
         unique_id_without_suffix = unique_id[: -len(suffix)]
@@ -252,7 +252,7 @@ def _is_default_alarm_name(alarm_name: str) -> bool:
 
 def _normalize_days_of_week(days_of_week: Any) -> int | None:
     if days_of_week is None:
-        return 0
+        return None
     if isinstance(days_of_week, bool) or not isinstance(days_of_week, int):
         return None
     if days_of_week < 0 or days_of_week > ALARM_WEEKDAYS_MASK:
@@ -268,7 +268,7 @@ def _parse_alarm_datetime(value: Any) -> datetime | None:
     except ValueError:
         return None
     if parsed.tzinfo is not None:
-        return parsed.replace(tzinfo=None)
+        return parsed.astimezone().replace(tzinfo=None)
     return parsed
 
 
