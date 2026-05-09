@@ -11,6 +11,7 @@ CONFIG_TURN_ON_DEFAULT: bool = True
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.LIGHT,
     Platform.MEDIA_PLAYER,
     Platform.SCENE,

@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     STATE_IDLE,
+    STATE_PAUSED,
     STATE_PLAYING,
 )
 
@@ -24,6 +25,7 @@ from hatch_rest_api import (
     RestBabyAudioTrack,
     REST_BABY_AUDIO_TRACKS,
     RestBaby,
+    RestoreV5,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +64,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
                 + list(self.rest_device.sounds_by_name.keys())
             )
         )
-        self._attr_supported_features = (
+        features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.STOP
             | MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -70,10 +72,15 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             | MediaPlayerEntityFeature.VOLUME_STEP
             | MediaPlayerEntityFeature.SELECT_SOURCE
         )
+        if isinstance(self.rest_device, RestoreV5):
+            features |= MediaPlayerEntityFeature.PAUSE
+        self._attr_supported_features = features
         self._attr_extra_state_attributes = {}
 
     @property
     def state(self) -> MediaPlayerState | None:
+        if isinstance(self.rest_device, RestoreV5) and self.rest_device.paused:
+            return STATE_PAUSED
         if self.rest_device.is_playing:
             return STATE_PLAYING
         else:
@@ -113,12 +120,20 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     def media_play(self) -> None:
         _LOGGER.debug("media play")
+        if isinstance(self.rest_device, RestoreV5) and self.rest_device.paused:
+            self.rest_device.resume_routine()
+            return
         if self.rest_device.is_playing:
             _LOGGER.debug("media player already playing")
             return
         new_sound_mode = self.sound_mode or self._attr_sound_mode_list[0]
         _LOGGER.debug("selecting sound mode of %s", new_sound_mode)
         self.select_sound_mode(new_sound_mode)
+
+    def media_pause(self) -> None:
+        _LOGGER.debug("media pause")
+        if isinstance(self.rest_device, RestoreV5):
+            self.rest_device.pause_routine()
 
     def select_sound_mode(self, sound_mode: str) -> None:
         _LOGGER.debug("Select sound mode: %s", sound_mode)

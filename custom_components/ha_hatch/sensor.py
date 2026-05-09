@@ -8,8 +8,8 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
-from hatch_rest_api import RestPlus, RestIot
+from homeassistant.const import EntityCategory, PERCENTAGE
+from hatch_rest_api import RestPlus, RestIot, RestoreV5
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -42,6 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             sensor_entities.append(HatchBattery(coordinator=coordinator, thing_name=rest_device.thing_name))
         if isinstance(rest_device, RestIot):
             sensor_entities.append(HatchCharging(coordinator=coordinator, thing_name=rest_device.thing_name))
+        if isinstance(rest_device, RestoreV5):
+            sensor_entities.append(HatchRoutine(coordinator=coordinator, thing_name=rest_device.thing_name))
+            sensor_entities.append(HatchRoutineStep(coordinator=coordinator, thing_name=rest_device.thing_name))
+            sensor_entities.append(HatchPlaybackState(coordinator=coordinator, thing_name=rest_device.thing_name))
     async_add_entities(sensor_entities)
 
     alarm_entities_by_unique_id: dict[str, HatchAlarmRepeat] = {}
@@ -199,3 +203,66 @@ class HatchAlarmRepeat(HatchEntity, SensorEntity):
     @property
     def _alarm(self) -> dict[str, Any] | None:
         return alarm_by_id(self.rest_device, self._alarm_id)
+
+
+class HatchRoutine(HatchEntity, SensorEntity):
+    entity_description = SensorEntityDescription(
+        key="routine",
+        icon="mdi:playlist-music",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Routine")
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        device = self.rest_device
+        if device is None or not device.current_id:
+            return None
+        favorite = next(
+            (f for f in device.favorites if f.get("id") == device.current_id),
+            None,
+        )
+        if favorite is None:
+            return str(device.current_id)
+        steps = favorite.get("steps") or []
+        if steps and steps[0].get("name"):
+            return steps[0]["name"]
+        return favorite.get("name") or str(device.current_id)
+
+
+class HatchRoutineStep(HatchEntity, SensorEntity):
+    entity_description = SensorEntityDescription(
+        key="routine_step",
+        icon="mdi:counter",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Routine Step")
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        device = self.rest_device
+        if device is None:
+            return None
+        return device.current_step
+
+
+class HatchPlaybackState(HatchEntity, SensorEntity):
+    entity_description = SensorEntityDescription(
+        key="playback_state",
+        icon="mdi:play-circle-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Playback State")
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        device = self.rest_device
+        if device is None:
+            return None
+        return device.current_playing
