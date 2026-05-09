@@ -20,7 +20,8 @@
       "init": {
         "data": {
           "turn_on_media": "Auto turn on Rest+ when media play starts",
-          "turn_on_light": "Auto turn on Rest+ when light turns on"
+          "turn_on_light": "Auto turn on Rest+ when light turns on",
+          "numbered_preset_scenes": "Show preset numbers in favorite scene names"
         }
       }
     }

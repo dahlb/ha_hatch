@@ -17,6 +17,8 @@ from .const import (
     CONFIG_TURN_ON_MEDIA,
     CONFIG_TURN_ON_LIGHT,
     CONFIG_TURN_ON_DEFAULT,
+    CONFIG_NUMBERED_PRESET_SCENES,
+    CONFIG_NUMBERED_PRESET_SCENES_DEFAULT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +38,13 @@ class HatchOptionFlowHandler(config_entries.OptionsFlow):
                     CONFIG_TURN_ON_MEDIA,
                     default=config_entry.options.get(
                         CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT
+                    ),
+                ): bool,
+                vol.Required(
+                    CONFIG_NUMBERED_PRESET_SCENES,
+                    default=config_entry.options.get(
+                        CONFIG_NUMBERED_PRESET_SCENES,
+                        CONFIG_NUMBERED_PRESET_SCENES_DEFAULT,
                     ),
                 ): bool,
             }
