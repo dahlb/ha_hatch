@@ -4,6 +4,7 @@ import logging
 from datetime import time
 from typing import Any
 
+from hatch_rest_api import RestoreV5
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,6 +27,29 @@ from .hatch_entity import HatchEntity
 _LOGGER = logging.getLogger(__name__)
 ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX = "_wake_time"
 
+# The Hatch app exposes a single clock start time and a single end time, but the
+# device shadow stores each as a pair (display on/off + brightness bright/dim).
+# Mirror the app: one entity per pair, writing both shadow keys together.
+# (entity type, instance attribute to read, shadow keys to write, icon)
+CLOCK_SCHEDULE_TIMES = (
+    ("Clock Turn On At", "clock_turn_on_at", ("turnOnAt", "turnBrightAt"), "mdi:clock-start"),
+    ("Clock Turn Off At", "clock_turn_off_at", ("turnOffAt", "turnDimAt"), "mdi:clock-end"),
+)
+
+
+def _parse_clock_time(value: str | None) -> time | None:
+    """Parse a shadow clock time string ("HH:MM" or "HH:MM:SS") to a time."""
+    if not value:
+        return None
+    parts = value.split(":")
+    try:
+        hour = int(parts[0])
+        minute = int(parts[1]) if len(parts) > 1 else 0
+        second = int(parts[2]) if len(parts) > 2 else 0
+        return time(hour, minute, second)
+    except (ValueError, IndexError):
+        return None
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -33,6 +57,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+
+    clock_entities = []
+    for rest_device in coordinator.rest_devices:
+        # RestoreV4 subclasses RestoreV5, so this covers both.
+        if isinstance(rest_device, RestoreV5):
+            for entity_type, attr, shadow_keys, icon in CLOCK_SCHEDULE_TIMES:
+                clock_entities.append(
+                    HatchClockScheduleTime(
+                        coordinator=coordinator,
+                        thing_name=rest_device.thing_name,
+                        entity_type=entity_type,
+                        attr=attr,
+                        shadow_keys=shadow_keys,
+                        icon=icon,
+                    )
+                )
+    if clock_entities:
+        async_add_entities(clock_entities)
+
     alarm_entities_by_unique_id: dict[str, HatchAlarmWakeTime] = {}
 
     async def async_reconcile_alarm_entities() -> None:
@@ -95,6 +138,36 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         coordinator.async_add_alarm_refresh_callback(async_reconcile_alarm_entities)
     )
+
+
+class HatchClockScheduleTime(HatchEntity, TimeEntity):
+    def __init__(
+        self,
+        coordinator: HatchDataUpdateCoordinator,
+        thing_name: str,
+        entity_type: str,
+        attr: str,
+        shadow_keys: tuple[str, ...],
+        icon: str,
+    ):
+        self._attr = attr
+        self._shadow_keys = shadow_keys
+        self._attr_icon = icon
+        super().__init__(
+            coordinator=coordinator,
+            thing_name=thing_name,
+            entity_type=entity_type,
+        )
+
+    @property
+    def native_value(self) -> time | None:
+        return _parse_clock_time(getattr(self.rest_device, self._attr, None))
+
+    def set_value(self, value: time) -> None:
+        time_str = value.strftime("%H:%M:%S")
+        self.rest_device._update(
+            {"clock": dict.fromkeys(self._shadow_keys, time_str)}
+        )
 
 
 class HatchAlarmWakeTime(HatchEntity, TimeEntity):
