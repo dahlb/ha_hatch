@@ -17,6 +17,7 @@ A custom integration for Hatch Rest/Restore Sound Machines. This project is most
 - Rest+ 2nd gen
 - Restore 2
 - Restore 3
+- Restore 5
 
 ## Feature Highlights ##
 - monitor device connectivity
@@ -27,6 +28,7 @@ A custom integration for Hatch Rest/Restore Sound Machines. This project is most
 - adjust light brightness and color
 - turn rest plus on and off
 - turn clock on and off and adjust brightness (Rest+ 2nd gen/Restore 3) 
+- full clock display control - separate day/night brightness, clock mode (Always On / Off at Night / Always Off), on/off schedule times, and tap-to-show (Restore 5)
 - enable, disable, and edit wake times for existing alarms (Restore, Restore 2, Restore 3)
 - turn Toddler Lock on and off (Rest+ 2nd gen) 
 - monitor device charging status (Rest+ 2nd gen)
