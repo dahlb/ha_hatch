@@ -166,7 +166,7 @@ class HatchClockScheduleTime(HatchEntity, TimeEntity):
     def set_value(self, value: time) -> None:
         time_str = value.strftime("%H:%M:%S")
         self.rest_device._update(
-            {"clock": {shadow_key: time_str for shadow_key in self._shadow_keys}}
+            {"clock": dict.fromkeys(self._shadow_keys, time_str)}
         )
 
 
