@@ -7,7 +7,8 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchDeviceClass, SwitchEntityDescription,
 )
-from hatch_rest_api import RestPlus, RestIot, RestBaby
+from hatch_rest_api import RestPlus, RestIot, RestBaby, RestoreV5
+from hatch_rest_api.const import RIOT_FLAGS_CLOCK_IGNORE_TAP
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -49,6 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             )
             entities.append(
                 HatchPowerSwitch(
+                    coordinator=coordinator, thing_name=rest_device.thing_name
+                )
+            )
+        # RestoreV4 subclasses RestoreV5, so this covers both.
+        if isinstance(rest_device, RestoreV5):
+            entities.append(
+                HatchClockTapSwitch(
                     coordinator=coordinator, thing_name=rest_device.thing_name
                 )
             )
@@ -157,6 +165,32 @@ class HatchToddlerLockSwitch(HatchEntity, SwitchEntity):
 
     def turn_off(self, **kwargs):
         self.rest_device.set_toddler_lock(False)
+
+
+class HatchClockTapSwitch(HatchEntity, SwitchEntity):
+    _attr_icon = "mdi:gesture-tap"
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(
+            coordinator=coordinator,
+            thing_name=thing_name,
+            entity_type="Clock Tap to Show",
+        )
+
+    @property
+    def is_on(self) -> bool | None:
+        flags = self.rest_device.flags
+        if flags is None:
+            return None
+        return not (flags & RIOT_FLAGS_CLOCK_IGNORE_TAP)
+
+    def turn_on(self, **kwargs):
+        dev = self.rest_device
+        dev._update({"clock": {"flags": dev.flags & ~RIOT_FLAGS_CLOCK_IGNORE_TAP}})
+
+    def turn_off(self, **kwargs):
+        dev = self.rest_device
+        dev._update({"clock": {"flags": dev.flags | RIOT_FLAGS_CLOCK_IGNORE_TAP}})
 
 
 class HatchAlarmSwitch(HatchEntity, SwitchEntity):
