@@ -33,12 +33,11 @@ def _parse_clock_time(value: str | None) -> dt_time | None:
 def _clock_active_is_daytime(dev) -> bool:
     """Return True when the device is currently showing its daytime brightness.
 
-    Only the "custom" (Off at Night) schedule splits day/night; the daytime
-    channel is active between turnBrightAt and turnDimAt. In every other mode the
-    hardware displays the nighttime channel.
+    The daytime channel is active between turnBrightAt and turnDimAt, the
+    nighttime channel otherwise. This applies whenever the clock is on (Always
+    On and Off at Night) - the mode only controls when the display turns fully
+    off, not which brightness is shown.
     """
-    if getattr(dev, "clock_turn_off_mode", None) != "custom":
-        return False
     bright_at = _parse_clock_time(getattr(dev, "clock_turn_bright_at", None))
     dim_at = _parse_clock_time(getattr(dev, "clock_turn_dim_at", None))
     if bright_at is None or dim_at is None:
