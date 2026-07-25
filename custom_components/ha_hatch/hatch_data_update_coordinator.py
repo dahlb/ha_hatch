@@ -20,6 +20,7 @@ from custom_components.ha_hatch import DOMAIN
 _LOGGER: Logger = getLogger(__name__)
 
 ALARM_REFRESH_INTERVAL: Final = timedelta(minutes=10)
+MQTT_DISCONNECT_TIMEOUT: Final = 10
 DEFAULT_RETRY_INTERVAL: Final = timedelta(minutes=1)
 RATE_LIMIT_RETRY_INTERVAL: Final = timedelta(minutes=15)
 MAX_RATE_LIMIT_RETRY_INTERVAL: Final = timedelta(hours=6)
@@ -60,12 +61,25 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             always_update=False,
         )
 
-    def _disconnect_mqtt(self) -> None:
-        if self.mqtt_connection is not None:
-            try:
-                self.mqtt_connection.disconnect().result()
-            except Exception as error:
-                _LOGGER.error("mqtt_connection disconnect failed during reconnect", exc_info=error)
+    async def _async_disconnect_mqtt(self) -> None:
+        # disconnect() returns a future that never resolves if the connection
+        # is already broken; waiting on it without a timeout on the event loop
+        # freezes all of Home Assistant.
+        if self.mqtt_connection is None:
+            return
+        mqtt_connection = self.mqtt_connection
+        self.mqtt_connection = None
+
+        def _disconnect() -> None:
+            mqtt_connection.disconnect().result(timeout=MQTT_DISCONNECT_TIMEOUT)
+
+        try:
+            await asyncio.wait_for(
+                self.hass.async_add_executor_job(_disconnect),
+                timeout=MQTT_DISCONNECT_TIMEOUT * 2,
+            )
+        except Exception as error:
+            _LOGGER.error("mqtt_connection disconnect failed during reconnect", exc_info=error)
 
     def _rest_device_unsub(self) -> None:
         for rest_device in self.rest_devices:
@@ -215,7 +229,7 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._raise_if_retry_backoff_active()
         try:
             _LOGGER.debug(f"_async_update_data: {self.email}")
-            self._disconnect_mqtt()
+            await self._async_disconnect_mqtt()
             self._rest_device_unsub()
 
             from hatch_rest_api import get_rest_devices
@@ -286,7 +300,7 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             self._alarm_refresh_unsub()
             self._alarm_refresh_unsub = None
         self._alarm_refresh_callbacks.clear()
-        self._disconnect_mqtt()
+        await self._async_disconnect_mqtt()
         self._rest_device_unsub()
         await super().async_shutdown()
 
