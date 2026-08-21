@@ -11,6 +11,7 @@ from .const import (
     CONFIG_TURN_ON_MEDIA,
     CONFIG_TURN_ON_DEFAULT,
 )
+from .custom_sounds import CustomSound, async_load_custom_sounds
 from hatch_rest_api import RestBaby, RestIot, RestoreIot, RestoreV4, RestoreV5
 from .media_rest_entity import MediaRestEntity
 from .media_riot_entity import MediaRiotEntity
@@ -22,10 +23,13 @@ def choose_media_entity(
     rest_device,
     config_turn_on_media,
     coordinator,
+    custom_sounds: dict[str, CustomSound],
 ):
     if isinstance(rest_device, RestIot | RestoreIot | RestoreV4 | RestoreV5 | RestBaby):
         return MediaRiotEntity(
-            coordinator=coordinator, thing_name=rest_device.thing_name
+            coordinator=coordinator,
+            thing_name=rest_device.thing_name,
+            custom_sounds=custom_sounds,
         )
     else:
         return MediaRestEntity(
@@ -44,6 +48,7 @@ async def async_setup_entry(
     config_turn_on_media = config_entry.options.get(
         CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT
     )
+    custom_sounds = await async_load_custom_sounds(hass)
     media_player_entities = list(
         filter(
             lambda media_entity: media_entity is not None,
@@ -52,6 +57,7 @@ async def async_setup_entry(
                     choose_media_entity,
                     config_turn_on_media=config_turn_on_media,
                     coordinator=coordinator,
+                    custom_sounds=custom_sounds,
                 ),
                 coordinator.rest_devices,
             ),
