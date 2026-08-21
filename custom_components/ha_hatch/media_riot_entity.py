@@ -9,7 +9,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     MediaPlayerEntityFeature,
-    MediaType
+    MediaType,
 )
 from homeassistant.const import (
     STATE_IDLE,
@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 
 from . import HatchDataUpdateCoordinator
+from .custom_sounds import CUSTOM_SOUNDS, sound_details, sound_for_mode
 from .hatch_entity import HatchEntity
 from hatch_rest_api import (
     REST_IOT_AUDIO_TRACKS,
@@ -24,6 +25,7 @@ from hatch_rest_api import (
     RestBabyAudioTrack,
     REST_BABY_AUDIO_TRACKS,
     RestBaby,
+    RestIot,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +62,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             set(
                 [x.name for x in audio_data]
                 + list(self.rest_device.sounds_by_name.keys())
+                + list(CUSTOM_SOUNDS)
             )
         )
         self._attr_supported_features = (
@@ -82,12 +85,17 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     @property
     def sound_mode(self) -> str | None:
         _LOGGER.debug("looking up sound mode")
-        if hasattr(self.rest_device, "audio_track") and self.rest_device.audio_track is not None:
+        if (
+            hasattr(self.rest_device, "audio_track")
+            and self.rest_device.audio_track is not None
+        ):
             _LOGGER.debug("Audio track found: %s", self.rest_device.audio_track)
             sound_mode = self.rest_device.audio_track.name
         else:
-            sound = self.rest_device.sounds_by_id.get(self.rest_device.sound_id) or {}
-            sound_mode = sound.get('title') or None
+            details = sound_details(
+                self.rest_device.sound_id, self.rest_device.sounds_by_id
+            )
+            sound_mode = details["current_sound_title"]
         _LOGGER.debug("sound mode: %s", sound_mode)
         return sound_mode
 
@@ -101,11 +109,15 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             "current": self.rest_device.current_playing,
             "current_step": self.rest_device.current_step,
             "current_favorite": self.rest_device.current_id,
-            "current_favorite_name": next((
-                f["steps"][0]["name"] for f
-                in self.rest_device.favorites
-                if f["id"] == self.rest_device.current_id
-            ), None),
+            "current_favorite_name": next(
+                (
+                    f["steps"][0]["name"]
+                    for f in self.rest_device.favorites
+                    if f["id"] == self.rest_device.current_id
+                ),
+                None,
+            ),
+            **sound_details(self.rest_device.sound_id, self.rest_device.sounds_by_id),
         }
 
     def set_volume_level(self, volume):
@@ -122,13 +134,17 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     def select_sound_mode(self, sound_mode: str) -> None:
         _LOGGER.debug("Select sound mode: %s", sound_mode)
-        if isinstance(self.rest_device, RestBaby):
+        if sound_mode in CUSTOM_SOUNDS:
+            track = None
+        elif isinstance(self.rest_device, RestBaby):
             track = _find_rest_baby_track(track_name=sound_mode)
-        else:
+        elif isinstance(self.rest_device, RestIot):
             track = _find_track(track_name=sound_mode)
+        else:
+            track = None
         if track is None:
             _LOGGER.debug("No track found")
-            self.rest_device.set_sound(sound_mode)
+            self.rest_device.set_sound(sound_for_mode(sound_mode))
         else:
             _LOGGER.debug("set audio track: %s", track)
             self.rest_device.set_audio_track(track)
