@@ -63,6 +63,23 @@ You can now use the following services:
 * Media player: Set volume
 * Media player: Play
 * Media player: Stop
+
+### Custom sounds
+
+Additional sounds can be defined outside the integration in
+`/config/hatch_custom_sounds.yaml`. The YAML key becomes the sound-mode name.
+Each sound needs a positive integer `id` and either a WAV or MP3 URL. Both
+camel-case and snake-case URL keys are supported.
+
+```yaml
+ClassicOcean:
+  id: 10165
+  wav_url: "https://downloads.ctfassets.net/hlsdh3zwyrtx/2L4XgH93PtqfypPvORIFxo/9d5eb4d5f18d182a8277a8589b27aaee/RV4_Sleep_ClassicOcean_CGMasterV5_20221020.wav"
+```
+
+Reload the `ha_hatch` integration or restart Home Assistant after changing the
+file. Invalid entries are ignored and described in the Home Assistant log.
+
 * Light: Turn on
   * Possible values to modify:
     * brightness

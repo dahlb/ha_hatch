@@ -1,0 +1,4 @@
+# Copy this file to /config/hatch_custom_sounds.yaml in Home Assistant.
+ClassicOcean:
+  id: 10165
+  wav_url: "https://downloads.ctfassets.net/hlsdh3zwyrtx/2L4XgH93PtqfypPvORIFxo/9d5eb4d5f18d182a8277a8589b27aaee/RV4_Sleep_ClassicOcean_CGMasterV5_20221020.wav"
