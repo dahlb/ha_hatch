@@ -21,6 +21,7 @@ _LOGGER: Logger = getLogger(__name__)
 
 ALARM_REFRESH_INTERVAL: Final = timedelta(minutes=10)
 MQTT_DISCONNECT_TIMEOUT: Final = 10
+MQTT_UNSUBSCRIBE_TIMEOUT: Final = 10
 DEFAULT_RETRY_INTERVAL: Final = timedelta(minutes=1)
 RATE_LIMIT_RETRY_INTERVAL: Final = timedelta(minutes=15)
 MAX_RATE_LIMIT_RETRY_INTERVAL: Final = timedelta(hours=6)
@@ -60,6 +61,37 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             name=f"{DOMAIN}-{self.email}",
             always_update=False,
         )
+
+    async def _async_unsubscribe_shadows(self) -> None:
+        # Every device holds two AWS IoT shadow subscriptions, and awscrt keeps
+        # a native reference to each subscription callback. Those references are
+        # invisible to Python's garbage collector, so dropping our own reference
+        # to the device is not enough to reclaim it -- the device, its shadow
+        # client and the TLS context underneath survive until the subscriptions
+        # go away. Skipping this stranded one connection graph per reconnect,
+        # which is hourly, for as long as the process ran.
+        #
+        # Has to happen before the disconnect below, while the connection can
+        # still carry the UNSUBSCRIBE, and off the event loop because the
+        # library call blocks waiting for each UNSUBACK.
+        if not self.rest_devices:
+            return
+
+        rest_devices = self.rest_devices
+
+        def _unsubscribe() -> None:
+            for rest_device in rest_devices:
+                rest_device.unsubscribe()
+
+        try:
+            await asyncio.wait_for(
+                self.hass.async_add_executor_job(_unsubscribe),
+                timeout=MQTT_UNSUBSCRIBE_TIMEOUT * 2,
+            )
+        except Exception as error:
+            # Best effort: a failure here costs memory, not correctness, and the
+            # reconnect matters more than the cleanup.
+            _LOGGER.error("shadow unsubscribe failed during teardown", exc_info=error)
 
     async def _async_disconnect_mqtt(self) -> None:
         # disconnect() returns a future that never resolves if the connection
@@ -229,6 +261,7 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._raise_if_retry_backoff_active()
         try:
             _LOGGER.debug(f"_async_update_data: {self.email}")
+            await self._async_unsubscribe_shadows()
             await self._async_disconnect_mqtt()
             self._rest_device_unsub()
 
@@ -300,6 +333,7 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             self._alarm_refresh_unsub()
             self._alarm_refresh_unsub = None
         self._alarm_refresh_callbacks.clear()
+        await self._async_unsubscribe_shadows()
         await self._async_disconnect_mqtt()
         self._rest_device_unsub()
         await super().async_shutdown()
