@@ -97,14 +97,16 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        # current_step / current_id only exist on RestIot; RestoreIot and others lack them
+        current_id = getattr(self.rest_device, "current_id", None)
         return {
             "current": self.rest_device.current_playing,
-            "current_step": self.rest_device.current_step,
-            "current_favorite": self.rest_device.current_id,
+            "current_step": getattr(self.rest_device, "current_step", None),
+            "current_favorite": current_id,
             "current_favorite_name": next((
                 f["steps"][0]["name"] for f
                 in self.rest_device.favorites
-                if f["id"] == self.rest_device.current_id
+                if f["id"] == current_id
             ), None),
         }
 
