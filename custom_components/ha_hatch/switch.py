@@ -20,6 +20,9 @@ from .alarm import (
     alarm_repeat_attributes,
     alarm_unique_id,
     alarm_unique_id_prefix,
+    cue_base_names,
+    cue_unique_id,
+    cue_unique_id_prefix,
     remove_stale_alarm_entities,
     update_alarm_entity_names,
 )
@@ -70,34 +73,58 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
         current_alarm_unique_ids = set()
         current_alarm_names = {}
         authoritative_alarm_unique_id_prefixes = set()
+
+        def track_alarm_entity(
+            entity_class: type[HatchAlarmSwitch],
+            thing_name: str,
+            alarm_id: int | str,
+            alarm_name: str,
+            unique_id: str,
+        ) -> None:
+            current_alarm_unique_ids.add(unique_id)
+            current_alarm_names[unique_id] = alarm_name
+            if alarm_entity := alarm_entities_by_unique_id.get(unique_id):
+                alarm_entity.update_alarm_name(alarm_name)
+                return
+
+            alarm_entity = entity_class(
+                coordinator=coordinator,
+                thing_name=thing_name,
+                alarm_id=alarm_id,
+                alarm_name=alarm_name,
+                unique_id=unique_id,
+            )
+            alarm_entities_by_unique_id[unique_id] = alarm_entity
+            new_alarm_entities.append(alarm_entity)
+
         for rest_device in coordinator.rest_devices:
+            thing_name = rest_device.thing_name
             if getattr(rest_device, "alarms_loaded", False):
                 authoritative_alarm_unique_id_prefixes.add(
-                    alarm_unique_id_prefix(rest_device.thing_name)
+                    alarm_unique_id_prefix(thing_name)
+                )
+            if getattr(rest_device, "cues_loaded", False):
+                authoritative_alarm_unique_id_prefixes.add(
+                    cue_unique_id_prefix(thing_name)
                 )
             for alarm_id, alarm_name in alarm_base_names(
                 getattr(rest_device, "alarms", [])
             ):
-                unique_id = alarm_unique_id(
-                    rest_device.thing_name,
+                track_alarm_entity(
+                    HatchAlarmSwitch,
+                    thing_name,
                     alarm_id,
-                    ALARM_UNIQUE_ID_SUFFIX,
+                    alarm_name,
+                    alarm_unique_id(thing_name, alarm_id, ALARM_UNIQUE_ID_SUFFIX),
                 )
-                current_alarm_unique_ids.add(unique_id)
-                current_alarm_names[unique_id] = alarm_name
-                if alarm_entity := alarm_entities_by_unique_id.get(unique_id):
-                    alarm_entity.update_alarm_name(alarm_name)
-                    continue
-
-                alarm_entity = HatchAlarmSwitch(
-                    coordinator=coordinator,
-                    thing_name=rest_device.thing_name,
-                    alarm_id=alarm_id,
-                    alarm_name=alarm_name,
-                    unique_id=unique_id,
+            for cue_id, cue_name in cue_base_names(getattr(rest_device, "cues", [])):
+                track_alarm_entity(
+                    HatchCueSwitch,
+                    thing_name,
+                    cue_id,
+                    cue_name,
+                    cue_unique_id(thing_name, cue_id, ALARM_UNIQUE_ID_SUFFIX),
                 )
-                alarm_entities_by_unique_id[unique_id] = alarm_entity
-                new_alarm_entities.append(alarm_entity)
 
         for unique_id in set(alarm_entities_by_unique_id) - current_alarm_unique_ids:
             alarm_entity = alarm_entities_by_unique_id.pop(unique_id)
@@ -259,3 +286,27 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
     @property
     def _alarm(self) -> dict[str, Any] | None:
         return alarm_by_id(self.rest_device, self._alarm_id)
+
+
+class HatchCueSwitch(HatchAlarmSwitch):
+    """Enables or disables a scheduled bedtime cue."""
+
+    entity_description = SwitchEntityDescription(
+        key="cue-switch",
+        icon="mdi:bell-sleep",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+
+    async def _async_set_enabled(self, enabled: bool) -> None:
+        set_cue_enabled = getattr(self.rest_device, "set_cue_enabled", None)
+        if not callable(set_cue_enabled):
+            raise TypeError(
+                f"{self.rest_device.device_name} does not support cue switches"
+            )
+        await set_cue_enabled(self._alarm_id, enabled)
+        self.schedule_update_ha_state()
+
+    @property
+    def _alarm(self) -> dict[str, Any] | None:
+        cue_by_id = getattr(self.rest_device, "cue_by_id", None)
+        return cue_by_id(self._alarm_id) if callable(cue_by_id) else None

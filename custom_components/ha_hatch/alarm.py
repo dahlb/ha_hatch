@@ -5,6 +5,7 @@ from typing import Any
 
 DEFAULT_ALARM_NAME = "alarm default name"
 ALARM_UNIQUE_ID_MARKER = "_alarm_"
+CUE_UNIQUE_ID_MARKER = "_cue_"
 ALARM_WEEKDAY_BITS: dict[str, int] = {
     "monday": 2,
     "tuesday": 4,
@@ -100,6 +101,28 @@ def alarm_unique_id(thing_name: str, alarm_id: int | str, suffix: str) -> str:
 
 def alarm_unique_id_prefix(thing_name: str) -> str:
     return f"{thing_name}{ALARM_UNIQUE_ID_MARKER}"
+
+
+def cue_base_names(cues: list[dict[str, Any]]):
+    for cue in cues:
+        cue_id = cue.get("id")
+        if cue_id is None:
+            continue
+
+        cue_name = _clean_alarm_name(cue.get("name"))
+        if cue_name.lower() in {"", "cue"}:
+            yield cue_id, "Cue"
+            continue
+
+        yield cue_id, f"{cue_name} Cue"
+
+
+def cue_unique_id(thing_name: str, cue_id: int | str, suffix: str) -> str:
+    return f"{cue_unique_id_prefix(thing_name)}{cue_id}{suffix}"
+
+
+def cue_unique_id_prefix(thing_name: str) -> str:
+    return f"{thing_name}{CUE_UNIQUE_ID_MARKER}"
 
 
 def alarm_reference_from_unique_id(

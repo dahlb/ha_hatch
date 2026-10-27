@@ -31,6 +31,7 @@ A custom integration for Hatch Rest/Restore Sound Machines. This project is most
 - turn clock on and off and adjust brightness (Rest+ 2nd gen/Restore 3) 
 - full clock display control - separate day/night brightness, clock mode (Always On / Off at Night / Always Off), on/off schedule times, and tap-to-show (Restore 5)
 - enable, disable, and edit wake times for existing alarms (Restore, Restore 2, Restore 3)
+- enable and disable the scheduled bedtime cue (Restore, Restore 2, Restore 3)
 - turn Toddler Lock on and off (Rest+ 2nd gen) 
 - monitor device charging status (Rest+ 2nd gen)
 
@@ -59,6 +60,8 @@ You can now use the following services:
   * automations and Developer Tools can set repeat days with the `ha_hatch.set_alarm_weekdays` action
   * alarm changes made in the Hatch app are refreshed automatically every 10 minutes; reload the integration to see them immediately
   * alarm creation, alarm deletion, and alarm sound/light editing are not supported
+* Restore/Restore 2/Restore 3: use the cue switch to enable or disable the scheduled bedtime cue
+  * cue changes made in the Hatch app are refreshed with alarms every 10 minutes
 * Media player: Select sound mode
   * Possible options here are: Stream, PinkNoise, Dryer, Ocean, Wind, Rain, Bird, Crickets, Brahms, Twinkle, RockABye
 * Media player: Set volume

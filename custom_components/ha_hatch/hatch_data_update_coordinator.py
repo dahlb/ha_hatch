@@ -160,17 +160,30 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         if not alarm_devices:
             return
 
+        # Cues are refreshed separately so a cue failure never drops alarms.
+        refreshes = [
+            (rest_device, refresh)
+            for rest_device in alarm_devices
+            for refresh in (
+                rest_device.refresh_alarms,
+                getattr(rest_device, "refresh_cues", None),
+            )
+            if callable(refresh)
+        ]
         async with self._alarm_refresh_lock:
             refresh_results = await asyncio.gather(
-                *(rest_device.refresh_alarms() for rest_device in alarm_devices),
+                *(refresh() for _, refresh in refreshes),
                 return_exceptions=True,
             )
 
         refreshed = False
-        for rest_device, result in zip(alarm_devices, refresh_results, strict=True):
+        for (rest_device, refresh), result in zip(
+            refreshes, refresh_results, strict=True
+        ):
             if isinstance(result, Exception):
                 _LOGGER.warning(
-                    "Failed to refresh Hatch alarms for %s",
+                    "Hatch %s failed for %s",
+                    refresh.__name__,
                     rest_device.device_name,
                     exc_info=result,
                 )

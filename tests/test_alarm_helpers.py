@@ -15,6 +15,28 @@ SPEC.loader.exec_module(alarm_helpers)
 
 
 class AlarmHelperTest(unittest.TestCase):
+    def test_cue_names_and_unique_ids_stay_separate_from_alarms(self):
+        cues = [
+            {"id": 181140094, "name": "Cue"},
+            {"id": None, "name": "Ignored"},
+            {"id": 7, "name": "Wind_Down"},
+        ]
+
+        self.assertEqual(
+            list(alarm_helpers.cue_base_names(cues)),
+            [(181140094, "Cue"), (7, "Wind Down Cue")],
+        )
+        self.assertEqual(
+            alarm_helpers.cue_unique_id("thing", 181140094, "_switch"),
+            "thing_cue_181140094_switch",
+        )
+        self.assertIsNone(
+            alarm_helpers.alarm_reference_from_unique_id(
+                "thing_cue_181140094_switch",
+                {"_switch"},
+            )
+        )
+
     def test_alarm_base_names_handles_default_and_named_alarms(self):
         alarms = [
             {"id": 1, "name": "Alarm_Default_Name"},
