@@ -136,4 +136,9 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             self.rest_device.set_audio_track(track)
 
     def media_stop(self):
-        self.rest_device.turn_off()
+        # Stop only the sound when the library can (hatch_rest_api stop_sound); a light that's on stays on.
+        stop_sound = getattr(self.rest_device, "stop_sound", None)
+        if stop_sound is not None:
+            stop_sound()
+        else:
+            self.rest_device.turn_off()
