@@ -18,12 +18,14 @@ from homeassistant.const import (
 
 from . import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
+from .riot_tracks import PROGRAM_SOUNDS, program_sound_name
 from hatch_rest_api import (
     REST_IOT_AUDIO_TRACKS,
     RIoTAudioTrack,
     RestBabyAudioTrack,
     REST_BABY_AUDIO_TRACKS,
     RestBaby,
+    RestIot,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +58,9 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             if not isinstance(self.rest_device, RestBaby)
             else REST_BABY_AUDIO_TRACKS[1:]
         )
+        self._program_sounds = (
+            PROGRAM_SOUNDS if isinstance(self.rest_device, RestIot) else {}
+        )
         self._attr_sound_mode_list = sorted(
             set(
                 [x.name for x in audio_data]
@@ -82,7 +87,10 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     @property
     def sound_mode(self) -> str | None:
         _LOGGER.debug("looking up sound mode")
-        if hasattr(self.rest_device, "audio_track") and self.rest_device.audio_track is not None:
+        program_sound = program_sound_name(self.rest_device.sound_id)
+        if program_sound in self._program_sounds:
+            sound_mode = program_sound
+        elif hasattr(self.rest_device, "audio_track") and self.rest_device.audio_track is not None:
             _LOGGER.debug("Audio track found: %s", self.rest_device.audio_track)
             sound_mode = self.rest_device.audio_track.name
         else:
