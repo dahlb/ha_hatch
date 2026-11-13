@@ -7,7 +7,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchDeviceClass, SwitchEntityDescription,
 )
-from hatch_rest_api import RestPlus, RestIot, RestBaby, RestoreV5
+from hatch_rest_api import RestPlus, RestIot, RestBaby, Restore, RestoreV5
 from hatch_rest_api.const import RIOT_FLAGS_CLOCK_IGNORE_TAP
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,6 +25,12 @@ from .alarm import (
 )
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
+from .restore_entities import (
+    RestoreAlarmsSwitch,
+    RestoreAlarmSwitch,
+    RestoreClock24Hour,
+    async_setup_restore_alarm_entities,
+)
 
 _LOGGER = logging.getLogger(__name__)
 ALARM_UNIQUE_ID_SUFFIX = "_switch"
@@ -60,8 +66,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
                     coordinator=coordinator, thing_name=rest_device.thing_name
                 )
             )
+        if isinstance(rest_device, Restore):
+            entities.append(
+                HatchRestoreRoutineSwitch(
+                    coordinator=coordinator, thing_name=rest_device.thing_name
+                )
+            )
+            entities.append(RestoreAlarmsSwitch(coordinator=coordinator, thing_name=rest_device.thing_name))
+            entities.append(RestoreClock24Hour(coordinator=coordinator, thing_name=rest_device.thing_name))
 
     async_add_entities(entities)
+    await async_setup_restore_alarm_entities(
+        hass, config_entry, coordinator, async_add_entities, RestoreAlarmSwitch, "switch"
+    )
 
     alarm_entities_by_unique_id: dict[str, HatchAlarmSwitch] = {}
 
@@ -191,6 +208,33 @@ class HatchClockTapSwitch(HatchEntity, SwitchEntity):
     def turn_off(self, **kwargs):
         dev = self.rest_device
         dev._update({"clock": {"flags": dev.flags | RIOT_FLAGS_CLOCK_IGNORE_TAP}})
+
+
+class HatchRestoreRoutineSwitch(HatchEntity, SwitchEntity):
+    """Starts and stops the original Restore's bedtime routine.
+
+    On while the Restore plays anything, including content started from the
+    Hatch app, so turning it off always stops the device.
+    """
+
+    _attr_icon = "mdi:power-sleep"
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(
+            coordinator=coordinator,
+            thing_name=thing_name,
+            entity_type="Bedtime Routine",
+        )
+
+    @property
+    def is_on(self) -> bool | None:
+        return self.rest_device.is_on
+
+    def turn_on(self, **kwargs):
+        self.rest_device.turn_on_routine()
+
+    def turn_off(self, **kwargs):
+        self.rest_device.turn_off()
 
 
 class HatchAlarmSwitch(HatchEntity, SwitchEntity):

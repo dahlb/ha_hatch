@@ -21,6 +21,13 @@ TO_REDACT_MAPPED = {
 }
 TO_REDACT_DEVICE = {}
 TO_REDACT_ENTITIES = {}
+# Raw shadow keys (the original Restore reports its whole shadow): the paired
+# Bluetooth headphones' PIN and addresses.
+TO_REDACT_SHADOW = {
+    "requestedPin",
+    "requestedMacAddress",
+    "connectedMacAddress",
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +41,9 @@ async def async_get_config_entry_diagnostics(
         "entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
     }
     for rest_device in coordinator.rest_devices:
-        data[rest_device.thing_name] = rest_device.__repr__()
+        data[rest_device.thing_name] = async_redact_data(
+            rest_device.__repr__(), TO_REDACT_SHADOW
+        )
 
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)

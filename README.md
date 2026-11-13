@@ -15,7 +15,8 @@ A custom integration for Hatch Rest/Restore Sound Machines. This project is most
 - Rest+
 - Rest 2nd gen
 - Rest+ 2nd gen
-- Restore
+- Restore (1st gen, product `restoreIot`)
+- Restore (1st gen original, product `restore`) - experimental, see [Original Restore](#original-restore)
 - Restore 2
 - Restore 3
 - Restore 5
@@ -30,7 +31,8 @@ A custom integration for Hatch Rest/Restore Sound Machines. This project is most
 - turn rest plus on and off
 - turn clock on and off and adjust brightness (Rest+ 2nd gen/Restore 3) 
 - full clock display control - separate day/night brightness, clock mode (Always On / Off at Night / Always Off), on/off schedule times, and tap-to-show (Restore 5)
-- enable, disable, and edit wake times for existing alarms (Restore, Restore 2, Restore 3)
+- enable, disable, and edit wake times for existing alarms (Restore `restoreIot`, Restore 2, Restore 3)
+- light, sound, routine step, clock, alarms on/off, and each alarm's time, days and on/off (original Restore `restore`)
 - turn Toddler Lock on and off (Rest+ 2nd gen) 
 - monitor device charging status (Rest+ 2nd gen)
 
@@ -48,11 +50,40 @@ If you receive an error, please go through these steps;
 5. Click Download Diagnostics
 6. Attach both logs and diagnostics to your issue ticket.
 
+## Original Restore ##
+Hatch sold two first generation Restores, and they report different product codes to the Hatch cloud: `restoreIot` and the older `restore`. Both are supported, but differently. Once set up, the device page shows model `RestoreIot` or `Restore` respectively. The model label underneath an original reads RESTORE01 or RESTORE02.
+
+Every control below was checked on a real original Restore before it was added.
+
+| Entity | What it does |
+|---|---|
+| light `Light` | On/off, brightness, and the 22 colors from the Hatch app as effects |
+| media player `Sound` | Play/stop, volume, and the 31 sounds as sound modes |
+| switch `Bedtime Routine` | On starts the bedtime routine set up in the Hatch app; off stops whatever is playing |
+| select `Routine Step` | Start the routine at a chosen step; shows the step playing |
+| sensor `Playing` | `none`, `routine` or `remote`, with the routine step as an attribute |
+| light `Clock` | Clock display on/off and brightness |
+| switch `Clock 24-Hour`, select `Clock Mode`, time `Clock Turn On At` / `Clock Turn Off At` | 12/24-hour, and whether the clock turns off at night between those times |
+| switch `Alarms` | All alarms on or off, like the crossed-bell button underneath |
+| switch `Alarm 1`, time `Alarm 1 Wake Time`, sensor `Alarm 1 Repeat` (one set per alarm) | Turn an alarm on or off, change its wake time, and see its repeat days. Its sound, volume and sunrise settings are attributes |
+| sensors `Firmware Version`, `Wifi Signal`, binary sensor `Wifi` | Diagnostics |
+
+How it behaves:
+* **Light and sound:** the Restore only lights up or plays while it is in a playback mode. Turning the light or sound on while nothing plays starts it, and turning off the last one stops it.
+* **Volume:** the Restore resets its volume to 0 whenever playback stops. The `Sound` player remembers the last volume and starts the next sound at it, and shows that volume while idle.
+* **Alarm edits:** changing an alarm's time or days saves it as a new alarm, exactly as the Hatch app does, because the Restore only reloads an alarm whose id changed. The `Alarm N` entities keep their names and entity ids through this, including after edits made in the Hatch app. Alarms are numbered by time of day when first seen.
+* **Repeat days:** change them with the `ha_hatch.set_alarm_weekdays` action, targeting any of the alarm's entities, for example `weekdays: [monday, wednesday]`, or an empty list for a one-time alarm.
+* **Alarm changes made in the Hatch app** show up within 10 minutes, or straight away after reloading the integration.
+
+Not available yet: changing an alarm's sound, volume or sunrise color, and creating or deleting alarms. The clock's "always off" mode does nothing on this model; turn the `Clock` light off instead.
+
+If something does not work, Download Diagnostics: it includes the device's full state under `shadow_state` and its alarms under `restore_alarms`, with headphone pairing details redacted. The protocol behind all of this is written up in [hatch_rest_api docs/restore.md](https://github.com/dahlb/hatch_rest_api/blob/main/docs/restore.md).
+
 ## Usage ##
 You can now use the following services:
 * Rest+ 2nd gen: activate scene to start a defined favorite
   * if you add new favorites reload the integration to update available scenes or restart ha
-* Restore/Restore 2/Restore 3: use the alarm switch to enable or disable an existing alarm
+* Restore (`restoreIot`)/Restore 2/Restore 3: use the alarm switch to enable or disable an existing alarm (for the original Restore, see [Original Restore](#original-restore))
   * use the alarm wake time entity to change when the alarm sound starts; the sunrise light start shifts with it
   * when Hatch omits an alarm `endTime`, wake time is derived from `startTime` plus the alarm sunrise duration
   * automations can set wake time with the built-in `time.set_value` action, for example `time: "06:45:00"`

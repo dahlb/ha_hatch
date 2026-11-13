@@ -4,18 +4,22 @@ from datetime import timedelta, UTC, datetime
 from inspect import isawaitable
 from logging import getLogger, Logger
 import traceback
-from typing import Final
+from collections.abc import Iterable
+from datetime import time
+from typing import Any, Final
 
-from hatch_rest_api import RestDevice
+from hatch_rest_api import RestDevice, Restore
 from hatch_rest_api.errors import AuthError, RateError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from custom_components.ha_hatch import DOMAIN
+from custom_components.ha_hatch.restore_alarm_slots import RestoreAlarmSlots
 
 _LOGGER: Logger = getLogger(__name__)
 
@@ -30,6 +34,12 @@ MAX_AWSCRT_MISMATCH_RETRY_INTERVAL: Final = timedelta(hours=12)
 AWSCRT_MISMATCH_TRACE_FILE: Final = "awscrt/mqtt.py"
 AWSCRT_MISMATCH_TRACE_NAME: Final = "connect"
 AlarmRefreshCallback = Callable[[], Awaitable[None] | None]
+RESTORE_ALARM_SLOTS_STORAGE_VERSION: Final = 1
+RESTORE_ALARM_SLOTS_SAVE_DELAY: Final = 5
+
+
+def restore_alarm_slots_store_key(entry_id: str) -> str:
+    return f"{DOMAIN}.restore_alarm_slots.{entry_id}"
 
 
 class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
@@ -53,6 +63,11 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._alarm_refresh_callbacks: set[AlarmRefreshCallback] = set()
         self._alarm_refresh_lock = asyncio.Lock()
         self._alarm_refresh_unsub: Callable[[], None] | None = None
+        # The original Restore's alarms change id on every edit; slots keep
+        # their entities stable. Persisted once async_load_restore_alarm_slots
+        # has run.
+        self.restore_alarm_slots = RestoreAlarmSlots()
+        self._restore_alarm_slots_store: Store | None = None
 
         super().__init__(
             hass,
@@ -337,6 +352,65 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         await self._async_disconnect_mqtt()
         self._rest_device_unsub()
         await super().async_shutdown()
+
+    async def async_load_restore_alarm_slots(self) -> None:
+        self._restore_alarm_slots_store = Store(
+            self.hass,
+            RESTORE_ALARM_SLOTS_STORAGE_VERSION,
+            restore_alarm_slots_store_key(self.config_entry.entry_id),
+        )
+        self.restore_alarm_slots = RestoreAlarmSlots(
+            await self._restore_alarm_slots_store.async_load()
+        )
+
+    def _save_restore_alarm_slots(self) -> None:
+        if self._restore_alarm_slots_store is not None:
+            self._restore_alarm_slots_store.async_delay_save(
+                self.restore_alarm_slots.as_dict, RESTORE_ALARM_SLOTS_SAVE_DELAY
+            )
+
+    def restore_alarms_by_slot(self, rest_device: Restore) -> dict[str, dict[str, Any]]:
+        """The device's alarms by slot key; empty until its alarms have loaded."""
+        if not getattr(rest_device, "restore_alarms_loaded", False):
+            return {}
+        alarms, changed = self.restore_alarm_slots.reconcile(
+            rest_device.thing_name, rest_device.restore_alarms
+        )
+        if changed:
+            self._save_restore_alarm_slots()
+        return alarms
+
+    def restore_alarm(self, rest_device: Restore | None, slot_key: str) -> dict[str, Any] | None:
+        if rest_device is None:
+            return None
+        return self.restore_alarms_by_slot(rest_device).get(slot_key)
+
+    def _restore_alarm_id(self, rest_device: Restore, slot_key: str) -> int:
+        alarm = self.restore_alarm(rest_device, slot_key)
+        if alarm is None:
+            raise ValueError(f"{rest_device.device_name} has no alarm in slot {slot_key}")
+        return int(alarm["id"])
+
+    async def async_set_restore_alarm_enabled(
+        self, rest_device: Restore, slot_key: str, enabled: bool
+    ) -> None:
+        await rest_device.set_restore_alarm_enabled(
+            self._restore_alarm_id(rest_device, slot_key), enabled
+        )
+
+    async def async_set_restore_alarm_schedule(
+        self,
+        rest_device: Restore,
+        slot_key: str,
+        wake_time: time | None = None,
+        weekdays: Iterable[str] | None = None,
+    ) -> None:
+        old_alarm_id = self._restore_alarm_id(rest_device, slot_key)
+        new_alarm_id = await rest_device.set_restore_alarm_schedule(
+            old_alarm_id, wake_time=wake_time, weekdays=weekdays
+        )
+        if self.restore_alarm_slots.replace(rest_device.thing_name, old_alarm_id, new_alarm_id):
+            self._save_restore_alarm_slots()
 
     def rest_device_by_thing_name(self, thing_name: str) -> RestDevice | None:
         return next(

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
+from hatch_rest_api import Restore
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -18,10 +19,13 @@ from .alarm import (
 )
 from .const import DOMAIN
 from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .restore_entities import restore_alarm_reference_from_unique_id
 
 ATTR_WEEKDAYS = "weekdays"
 SERVICE_SET_ALARM_WEEKDAYS = "set_alarm_weekdays"
 ALARM_SERVICE_UNIQUE_ID_SUFFIXES = {"_switch"}
+# Any of an original Restore alarm's entities identifies it.
+RESTORE_ALARM_SERVICE_UNIQUE_ID_SUFFIXES = {"_switch", "_time", "_repeat"}
 
 
 def async_register_services(hass: HomeAssistant) -> None:
@@ -68,7 +72,13 @@ async def _async_set_alarm_weekdays(
 
     weekdays = call.data[ATTR_WEEKDAYS]
     for rest_device, alarm_id in alarm_targets.values():
-        await rest_device.set_alarm_weekdays(alarm_id, weekdays)
+        if isinstance(rest_device, Restore):
+            # An edit gives the alarm a new id; the coordinator keeps its slot.
+            await coordinator.async_set_restore_alarm_schedule(
+                rest_device, alarm_id, weekdays=weekdays
+            )
+        else:
+            await rest_device.set_alarm_weekdays(alarm_id, weekdays)
 
 
 def _alarm_targets_from_service_call(
@@ -121,7 +131,12 @@ def _alarm_target_from_entity_id(
             raise ServiceValidationError(f"{entity_id} is not a Hatch alarm entity")
         return None
 
-    alarm_reference = alarm_reference_from_unique_id(
+    # Checked first: an original Restore alarm's unique id also contains the
+    # scheduled-routine alarm marker, and would be misread as one.
+    alarm_reference = restore_alarm_reference_from_unique_id(
+        entry.unique_id,
+        RESTORE_ALARM_SERVICE_UNIQUE_ID_SUFFIXES,
+    ) or alarm_reference_from_unique_id(
         entry.unique_id,
         ALARM_SERVICE_UNIQUE_ID_SUFFIXES,
     )
