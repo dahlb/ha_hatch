@@ -61,6 +61,7 @@ You can now use the following services:
   * alarm creation, alarm deletion, and alarm sound/light editing are not supported
 * Media player: Select sound mode
   * Possible options here are: Stream, PinkNoise, Dryer, Ocean, Wind, Rain, Bird, Crickets, Brahms, Twinkle, RockABye
+  * Rest 2nd gen and Rest+ 2nd gen also offer the Time to Rise and Time for Bed tracks as `TimeToRise.<Name>` and `TimeForBed.<Name>` (for example `TimeToRise.YukiSaysGoodMorning`), and show these names as the sound mode while a Hatch app routine plays them
 * Media player: Set volume
 * Media player: Play
 * Media player: Stop
