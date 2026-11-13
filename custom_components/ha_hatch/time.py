@@ -4,7 +4,7 @@ import logging
 from datetime import time
 from typing import Any
 
-from hatch_rest_api import RestoreV5
+from hatch_rest_api import Restore, RestoreV5
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,6 +23,11 @@ from .alarm import (
 )
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
+from .restore_entities import (
+    RestoreAlarmTime,
+    RestoreClockTime,
+    async_setup_restore_alarm_entities,
+)
 
 _LOGGER = logging.getLogger(__name__)
 ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX = "_wake_time"
@@ -73,8 +78,20 @@ async def async_setup_entry(
                         icon=icon,
                     )
                 )
+        if isinstance(rest_device, Restore):
+            for turn_on in (True, False):
+                clock_entities.append(
+                    RestoreClockTime(
+                        coordinator=coordinator,
+                        thing_name=rest_device.thing_name,
+                        turn_on=turn_on,
+                    )
+                )
     if clock_entities:
         async_add_entities(clock_entities)
+    await async_setup_restore_alarm_entities(
+        hass, config_entry, coordinator, async_add_entities, RestoreAlarmTime, "time"
+    )
 
     alarm_entities_by_unique_id: dict[str, HatchAlarmWakeTime] = {}
 

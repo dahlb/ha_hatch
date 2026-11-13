@@ -6,11 +6,21 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
-from hatch_rest_api import RestPlus, RestIot
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+)
+from hatch_rest_api import RestPlus, RestIot, Restore
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -27,6 +37,7 @@ from .alarm import (
 )
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
+from .restore_entities import RestoreAlarmRepeat, async_setup_restore_alarm_entities
 
 _LOGGER = logging.getLogger(__name__)
 ALARM_REPEAT_UNIQUE_ID_SUFFIX = "_repeat"
@@ -42,7 +53,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             sensor_entities.append(HatchBattery(coordinator=coordinator, thing_name=rest_device.thing_name))
         if isinstance(rest_device, RestIot):
             sensor_entities.append(HatchCharging(coordinator=coordinator, thing_name=rest_device.thing_name))
+        if isinstance(rest_device, Restore):
+            sensor_entities.extend(
+                sensor_class(coordinator=coordinator, thing_name=rest_device.thing_name)
+                for sensor_class in (
+                    HatchRestorePlaying,
+                    HatchFirmwareVersion,
+                    HatchSignalStrength,
+                )
+            )
     async_add_entities(sensor_entities)
+    await async_setup_restore_alarm_entities(
+        hass, config_entry, coordinator, async_add_entities, RestoreAlarmRepeat, "sensor"
+    )
 
     alarm_entities_by_unique_id: dict[str, HatchAlarmRepeat] = {}
 
@@ -148,6 +171,72 @@ class HatchCharging(HatchEntity, SensorEntity):
             return "mdi:power-plug-off"
         else:
             return self.entity_description.icon
+
+
+class HatchRestorePlaying(HatchEntity, SensorEntity):
+    """What the original Restore is playing: none, routine or remote.
+
+    Plain text rather than an enum: the full set of values this model reports
+    is not confirmed, and an enum sensor rejects one it was not told about.
+    """
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Playing")
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        return self.rest_device.current_playing
+
+    @property
+    def icon(self) -> str | None:
+        if self.rest_device.is_playing:
+            return "mdi:play-circle-outline"
+        return "mdi:stop-circle-outline"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        rest_device = self.rest_device
+        return {
+            "step": rest_device.current_step,
+            "routine_id": rest_device.routine_id,
+            "paused": rest_device.paused,
+        }
+
+
+class HatchFirmwareVersion(HatchEntity, SensorEntity):
+    _attr_icon = "mdi:chip"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Firmware Version")
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        return self.rest_device.firmware_version
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        # The device card's firmware is fixed when the entities are created,
+        # usually before the device's first report has arrived; follow it here.
+        firmware = self.rest_device.firmware_version if self.rest_device else None
+        if firmware and self.hass is not None and self.device_entry is not None:
+            if self.device_entry.sw_version != firmware:
+                dr.async_get(self.hass).async_update_device(self.device_entry.id, sw_version=firmware)
+        super().async_write_ha_state()
+
+
+class HatchSignalStrength(HatchEntity, SensorEntity):
+    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+        super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Wifi Signal")
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        return self.rest_device.rssi
 
 
 class HatchAlarmRepeat(HatchEntity, SensorEntity):

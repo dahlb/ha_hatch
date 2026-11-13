@@ -11,7 +11,10 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .hatch_data_update_coordinator import (
+    HatchDataUpdateCoordinator,
+    restore_alarm_slots_store_key,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     )
 
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    await coordinator.async_load_restore_alarm_slots()
     await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -64,3 +68,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         hass.data[DOMAIN] = None
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Drop the original Restore alarm slots stored for this entry."""
+    from homeassistant.helpers.storage import Store
+
+    await Store(hass, 1, restore_alarm_slots_store_key(config_entry.entry_id)).async_remove()

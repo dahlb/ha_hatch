@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from hatch_rest_api import RestoreV5
+from hatch_rest_api import Restore, RestoreV5
 from hatch_rest_api.const import RIOT_FLAGS_CLOCK_ON
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HatchDataUpdateCoordinator
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
+from .restore_entities import RestoreClockMode, RestoreRoutineStep
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +37,9 @@ async def async_setup_entry(
                     thing_name=rest_device.thing_name,
                 )
             )
+        if isinstance(rest_device, Restore):
+            entities.append(RestoreRoutineStep(coordinator=coordinator, thing_name=rest_device.thing_name))
+            entities.append(RestoreClockMode(coordinator=coordinator, thing_name=rest_device.thing_name))
     async_add_entities(entities)
 
 
