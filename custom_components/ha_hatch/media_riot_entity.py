@@ -65,6 +65,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             set(
                 [x.name for x in audio_data]
                 + list(self.rest_device.sounds_by_name.keys())
+                + list(self._program_sounds)
             )
         )
         self._attr_supported_features = (
@@ -132,6 +133,10 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
 
     def select_sound_mode(self, sound_mode: str) -> None:
         _LOGGER.debug("Select sound mode: %s", sound_mode)
+        if sound_mode in self._program_sounds:
+            _LOGGER.debug("set program sound: %s", sound_mode)
+            self.rest_device.set_sound(self._program_sounds[sound_mode])
+            return
         if isinstance(self.rest_device, RestBaby):
             track = _find_rest_baby_track(track_name=sound_mode)
         else:
