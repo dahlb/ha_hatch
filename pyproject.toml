@@ -22,7 +22,7 @@ version = { attr = "custom_components.ha_hatch.const.VERSION" }
 
 [dependency-groups]
 ha = [
-    "hatch-rest-api==1.38.0",
+    "hatch-rest-api==1.39.0",
     "homeassistant==2026.11.0",
 ]
 lint = [
