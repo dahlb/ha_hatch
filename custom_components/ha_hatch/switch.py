@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from hatch_rest_api import RestBaby, RestIot, RestoreV5, RestPlus
-from hatch_rest_api.const import RIOT_FLAGS_CLOCK_IGNORE_TAP
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -189,22 +188,15 @@ class HatchClockTapSwitch(HatchEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return whether the entity is on."""
-        flags = self.rest_device.flags
-        if flags is None:
-            return None
-        return not (flags & RIOT_FLAGS_CLOCK_IGNORE_TAP)
+        return self.rest_device.is_clock_tap_on
 
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        dev = self.rest_device
-        # hatch_rest_api has no public API for writing these shadow fields.
-        dev._update({"clock": {"flags": dev.flags & ~RIOT_FLAGS_CLOCK_IGNORE_TAP}})  # noqa: SLF001
+        self.rest_device.clock_tap_on()
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        dev = self.rest_device
-        # hatch_rest_api has no public API for writing these shadow fields.
-        dev._update({"clock": {"flags": dev.flags | RIOT_FLAGS_CLOCK_IGNORE_TAP}})  # noqa: SLF001
+        self.rest_device.clock_tap_off()
 
 
 class HatchAlarmSwitch(HatchEntity, SwitchEntity):
