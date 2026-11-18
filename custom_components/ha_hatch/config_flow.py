@@ -1,44 +1,44 @@
+"""Config flow for the Hatch integration."""
+
 import logging
 from typing import Any
 
+from hatch_rest_api import Hatch
 from hatch_rest_api.errors import AuthError, RateError
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_EMAIL,
-)
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 from .const import (
-    DOMAIN,
     CONFIG_FLOW_VERSION,
-    CONFIG_TURN_ON_MEDIA,
-    CONFIG_TURN_ON_LIGHT,
-    CONFIG_TURN_ON_DEFAULT,
     CONFIG_NUMBERED_PRESET_SCENES,
     CONFIG_NUMBERED_PRESET_SCENES_DEFAULT,
+    CONFIG_TURN_ON_DEFAULT,
+    CONFIG_TURN_ON_LIGHT,
+    CONFIG_TURN_ON_MEDIA,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class HatchOptionFlowHandler(config_entries.OptionsFlow):
+    """Handle Hatch options."""
+
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize the hatch option flow handler."""
         self.schema = vol.Schema(
             {
                 vol.Required(
                     CONFIG_TURN_ON_LIGHT,
-                    default=config_entry.options.get(
-                        CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT
-                    ),
+                    default=config_entry.options.get(CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT),
                 ): bool,
                 vol.Required(
                     CONFIG_TURN_ON_MEDIA,
-                    default=config_entry.options.get(
-                        CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT
-                    ),
+                    default=config_entry.options.get(CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT),
                 ): bool,
                 vol.Required(
                     CONFIG_NUMBERED_PRESET_SCENES,
@@ -50,7 +50,8 @@ class HatchOptionFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Manage the integration options."""
         if user_input is not None:
             _LOGGER.debug("user input in option flow : %s", user_input)
             return self.async_create_entry(title="", data=user_input)
@@ -60,18 +61,25 @@ class HatchOptionFlowHandler(config_entries.OptionsFlow):
 
 @config_entries.HANDLERS.register(DOMAIN)
 class ConfigFlowHandler(config_entries.ConfigFlow):
+    """Handle a Hatch config flow."""
 
     VERSION = CONFIG_FLOW_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-    data: dict[str, Any] | None = {}
+    def __init__(self) -> None:
+        """Initialize the config flow handler."""
+        self.data: dict[str, Any] = {}
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> HatchOptionFlowHandler:
+        """Return the options flow handler."""
         return HatchOptionFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Handle the user step of the config flow."""
         data_schema = {
             vol.Required(CONF_EMAIL): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
@@ -84,8 +92,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow):
 
             api_cloud = None
             try:
-                from hatch_rest_api import Hatch
-
                 api_cloud = Hatch()
                 await api_cloud.login(email=email, password=password)
                 await self.async_set_unique_id(unique_id="hatch")

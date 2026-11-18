@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "$0")/.."
+
+if [ ! -x .venv/bin/python ]; then
+	echo "Missing .venv Python. Run scripts/setup first." >&2
+	exit 1
+fi
+
+.venv/bin/python -m pytest "$@"

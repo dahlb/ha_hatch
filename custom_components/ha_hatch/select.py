@@ -1,6 +1,9 @@
+"""Select platform for Hatch devices."""
+
 from __future__ import annotations
 
 import logging
+from typing import ClassVar
 
 from hatch_rest_api import RestoreV5
 from hatch_rest_api.const import RIOT_FLAGS_CLOCK_ON
@@ -24,26 +27,26 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
+    """Set up the platform from a config entry."""
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
-    entities = []
-    for rest_device in coordinator.rest_devices:
-        # RestoreV4 subclasses RestoreV5, so this covers both.
-        if isinstance(rest_device, RestoreV5):
-            entities.append(
-                ClockModeSelect(
-                    coordinator=coordinator,
-                    thing_name=rest_device.thing_name,
-                )
-            )
+    # RestoreV4 subclasses RestoreV5, so this covers both.
+    entities = [
+        ClockModeSelect(coordinator=coordinator, thing_name=rest_device.thing_name)
+        for rest_device in coordinator.rest_devices
+        if isinstance(rest_device, RestoreV5)
+    ]
     async_add_entities(entities)
 
 
 class ClockModeSelect(HatchEntity, SelectEntity):
-    _attr_icon = "mdi:clock-time-four-outline"
-    _attr_options = [MODE_ALWAYS_ON, MODE_OFF_AT_NIGHT, MODE_ALWAYS_OFF]
+    """Clock mode select."""
 
-    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+    _attr_icon = "mdi:clock-time-four-outline"
+    _attr_options: ClassVar[list[str]] = [MODE_ALWAYS_ON, MODE_OFF_AT_NIGHT, MODE_ALWAYS_OFF]
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
+        """Initialize the clock mode select."""
         super().__init__(
             coordinator=coordinator,
             thing_name=thing_name,
@@ -52,6 +55,7 @@ class ClockModeSelect(HatchEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
+        """Return the selected option."""
         dev = self.rest_device
         mode = getattr(dev, "clock_turn_off_mode", None)
         if mode == "always":
@@ -64,9 +68,11 @@ class ClockModeSelect(HatchEntity, SelectEntity):
         return MODE_ALWAYS_OFF if not dev.is_clock_on else MODE_ALWAYS_ON
 
     def select_option(self, option: str) -> None:
+        """Select an option."""
         dev = self.rest_device
         if option == MODE_ALWAYS_OFF:
-            dev._update(
+            # hatch_rest_api has no public API for writing these shadow fields.
+            dev._update(  # noqa: SLF001
                 {
                     "clock": {
                         "flags": dev.flags & ~RIOT_FLAGS_CLOCK_ON,
@@ -75,7 +81,8 @@ class ClockModeSelect(HatchEntity, SelectEntity):
                 }
             )
         elif option == MODE_ALWAYS_ON:
-            dev._update(
+            # hatch_rest_api has no public API for writing these shadow fields.
+            dev._update(  # noqa: SLF001
                 {
                     "clock": {
                         "flags": dev.flags | RIOT_FLAGS_CLOCK_ON,
@@ -84,7 +91,8 @@ class ClockModeSelect(HatchEntity, SelectEntity):
                 }
             )
         elif option == MODE_OFF_AT_NIGHT:
-            dev._update(
+            # hatch_rest_api has no public API for writing these shadow fields.
+            dev._update(  # noqa: SLF001
                 {
                     "clock": {
                         "flags": dev.flags | RIOT_FLAGS_CLOCK_ON,

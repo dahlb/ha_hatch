@@ -1,21 +1,16 @@
+"""Services for the Hatch integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.target import (
-    TargetSelection,
-    async_extract_referenced_entity_ids,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
+import voluptuous as vol
 
-from .alarm import (
-    alarm_reference_from_unique_id,
-    normalize_alarm_weekdays,
-)
+from .alarm import alarm_reference_from_unique_id, normalize_alarm_weekdays
 from .const import DOMAIN
 from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 
@@ -25,6 +20,7 @@ ALARM_SERVICE_UNIQUE_ID_SUFFIXES = {"_switch"}
 
 
 def async_register_services(hass: HomeAssistant) -> None:
+    """Register the integration services."""
     if hass.services.has_service(DOMAIN, SERVICE_SET_ALARM_WEEKDAYS):
         return
 

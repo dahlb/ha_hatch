@@ -1,3 +1,5 @@
+"""Track catalog for Hatch Rest+ (riot) devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -27,10 +29,9 @@ def _build_program_sounds() -> dict[str, dict[str, Any]]:
 
 
 PROGRAM_SOUNDS = _build_program_sounds()
-_PROGRAM_SOUND_NAMES_BY_ID = {
-    sound["id"]: name for name, sound in PROGRAM_SOUNDS.items()
-}
+_PROGRAM_SOUND_NAMES_BY_ID = {sound["id"]: name for name, sound in PROGRAM_SOUNDS.items()}
 
 
 def program_sound_name(sound_id: int | None) -> str | None:
+    """Return the program name for a sound id, if any."""
     return _PROGRAM_SOUND_NAMES_BY_ID.get(sound_id)
