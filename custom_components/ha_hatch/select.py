@@ -6,7 +6,11 @@ import logging
 from typing import ClassVar
 
 from hatch_rest_api import RestoreV5
-from hatch_rest_api.const import RIOT_FLAGS_CLOCK_ON
+from hatch_rest_api.const import (
+    CLOCK_TURN_OFF_MODE_ALWAYS,
+    CLOCK_TURN_OFF_MODE_CUSTOM,
+    CLOCK_TURN_OFF_MODE_NEVER,
+)
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,6 +25,13 @@ _LOGGER = logging.getLogger(__name__)
 MODE_ALWAYS_ON = "Always On"
 MODE_ALWAYS_OFF = "Always Off"
 MODE_OFF_AT_NIGHT = "Off at Night"
+
+OPTION_TO_TURN_OFF_MODE = {
+    MODE_ALWAYS_ON: CLOCK_TURN_OFF_MODE_NEVER,
+    MODE_OFF_AT_NIGHT: CLOCK_TURN_OFF_MODE_CUSTOM,
+    MODE_ALWAYS_OFF: CLOCK_TURN_OFF_MODE_ALWAYS,
+}
+TURN_OFF_MODE_TO_OPTION = {mode: option for option, mode in OPTION_TO_TURN_OFF_MODE.items()}
 
 
 async def async_setup_entry(
@@ -57,46 +68,18 @@ class ClockModeSelect(HatchEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the selected option."""
         dev = self.rest_device
-        mode = getattr(dev, "clock_turn_off_mode", None)
-        if mode == "always":
-            return MODE_ALWAYS_OFF
-        if mode == "custom":
-            return MODE_OFF_AT_NIGHT
-        if mode == "never":
-            return MODE_ALWAYS_ON
+        option = TURN_OFF_MODE_TO_OPTION.get(getattr(dev, "clock_turn_off_mode", None))
+        if option is not None:
+            return option
         # Fall back to the display flag until the mode field has been parsed.
         return MODE_ALWAYS_OFF if not dev.is_clock_on else MODE_ALWAYS_ON
 
     def select_option(self, option: str) -> None:
-        """Select an option."""
-        dev = self.rest_device
-        if option == MODE_ALWAYS_OFF:
-            # hatch_rest_api has no public API for writing these shadow fields.
-            dev._update(  # noqa: SLF001
-                {
-                    "clock": {
-                        "flags": dev.flags & ~RIOT_FLAGS_CLOCK_ON,
-                        "turnOffMode": "always",
-                    }
-                }
-            )
-        elif option == MODE_ALWAYS_ON:
-            # hatch_rest_api has no public API for writing these shadow fields.
-            dev._update(  # noqa: SLF001
-                {
-                    "clock": {
-                        "flags": dev.flags | RIOT_FLAGS_CLOCK_ON,
-                        "turnOffMode": "never",
-                    }
-                }
-            )
-        elif option == MODE_OFF_AT_NIGHT:
-            # hatch_rest_api has no public API for writing these shadow fields.
-            dev._update(  # noqa: SLF001
-                {
-                    "clock": {
-                        "flags": dev.flags | RIOT_FLAGS_CLOCK_ON,
-                        "turnOffMode": "custom",
-                    }
-                }
-            )
+        """Select an option.
+
+        Args:
+            option: One of the clock mode options.
+        """
+        mode = OPTION_TO_TURN_OFF_MODE.get(option)
+        if mode is not None:
+            self.rest_device.set_clock_turn_off_mode(mode)
