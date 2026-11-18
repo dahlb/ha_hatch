@@ -1,47 +1,81 @@
 name: Release
+
 on:
   push:
     branches:
       - main
+
 permissions:
   contents: write
   deployments: write
+
 jobs:
   build:
+    if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - name: Gets semantic release info
+      - name: Checkout the repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Get semantic release info
         id: semantic_release_info
-        uses: jossef/action-semantic-release-info@v3.0.0
+        uses: cycjimmy/semantic-release-action@v8
+        with:
+          dry_run: true
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Update Version and Commit
-        if: ${{steps.semantic_release_info.outputs.version != ''}}
+        if: ${{steps.semantic_release_info.outputs.new_release_published == 'true'}}
+        env:
+          NEW_VERSION: ${{steps.semantic_release_info.outputs.new_release_version}}
         run: |
-          echo "Version: ${{steps.semantic_release_info.outputs.version}}"
-          sed -i "s/\"version\": \".*\"/\"version\": \"${{steps.semantic_release_info.outputs.version}}\"/g" custom_components/ha_hatch/manifest.json 
+          echo "Version: $NEW_VERSION"
+          sed -i "s/^VERSION: str = \".*\"/VERSION: str = \"$NEW_VERSION\"/g" custom_components/ha_hatch/const.py
+          sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/g" custom_components/ha_hatch/manifest.json
+      - name: Verify version updates
+        if: ${{steps.semantic_release_info.outputs.new_release_published == 'true'}}
+        env:
+          NEW_VERSION: ${{steps.semantic_release_info.outputs.new_release_version}}
+        run: |
+          expected_version="$NEW_VERSION"
+          if ! grep -Fq "VERSION: str = \"$expected_version\"" custom_components/ha_hatch/const.py; then
+            echo "Expected custom_components/ha_hatch/const.py to contain VERSION: str = \"$expected_version\" after version update" >&2
+            exit 1
+          fi
+          if ! grep -Fq "\"version\": \"$expected_version\"" custom_components/ha_hatch/manifest.json; then
+            echo "Expected custom_components/ha_hatch/manifest.json to contain \"version\": \"$expected_version\" after version update" >&2
+            exit 1
+          fi
+      - name: Commit version updates
+        if: ${{steps.semantic_release_info.outputs.new_release_published == 'true'}}
+        env:
+          NEW_VERSION: ${{steps.semantic_release_info.outputs.new_release_version}}
+          NEW_GIT_TAG: ${{steps.semantic_release_info.outputs.new_release_git_tag}}
+        run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git diff
           git add -A
-          git commit -m "chore: bumping version to ${{steps.semantic_release_info.outputs.version}}"
-          git tag ${{ steps.semantic_release_info.outputs.git_tag }}
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: bumping version to $NEW_VERSION [skip ci]"
+          fi
+          if ! git rev-parse -q --verify "refs/tags/$NEW_GIT_TAG" >/dev/null; then
+            git tag "$NEW_GIT_TAG"
+          fi
       - name: Push changes
-        if: ${{steps.semantic_release_info.outputs.version != ''}}
-        uses: ad-m/github-push-action@v1.3.0
+        if: ${{steps.semantic_release_info.outputs.new_release_published == 'true'}}
+        uses: ad-m/github-push-action@v1
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           branch: ${{ github.ref }}
           tags: true
       - name: Create GitHub Release
-        if: ${{steps.semantic_release_info.outputs.version != ''}}
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        if: ${{steps.semantic_release_info.outputs.new_release_published == 'true'}}
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.semantic_release_info.outputs.git_tag }}
-          release_name: ${{ steps.semantic_release_info.outputs.git_tag }}
-          body: ${{ steps.semantic_release_info.outputs.notes }}
+          tag_name: ${{ steps.semantic_release_info.outputs.new_release_git_tag }}
+          name: ${{ steps.semantic_release_info.outputs.new_release_git_tag }}
+          body: ${{ steps.semantic_release_info.outputs.new_release_notes }}
           draft: false
           prerelease: false

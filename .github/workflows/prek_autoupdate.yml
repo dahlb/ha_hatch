@@ -1,0 +1,57 @@
+name: prek Autoupdate
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: prek-autoupdate-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  prek-autoupdate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install prek
+        uses: taiki-e/install-action@v2
+        with:
+          tool: prek
+
+      - name: Run prek autoupdate
+        run: prek autoupdate
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: auto-update prek hooks"
+          title: "chore: auto-update prek hooks"
+          body: |
+            Bumps hook versions in `prek.toml` to their latest releases using `prek autoupdate`.
+          branch: prek-autoupdate
+          delete-branch: true
+          add-paths: |
+            prek.toml
+          labels: |
+            dependencies
+            automated-pr
+
+      - name: Enable Pull Request Automerge
+        if: ${{ steps.cpr.outputs.pull-request-number }}
+        run: gh pr merge --auto --squash "$PR_NUMBER"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}

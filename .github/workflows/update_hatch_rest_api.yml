@@ -1,0 +1,138 @@
+name: Update hatch-rest-api dependency
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      hatch_rest_api_release_owner:
+        description: Owner for hatch_rest_api releases lookup
+        required: false
+        default: dahlb
+      hatch_rest_api_release_repo:
+        description: Repository for hatch_rest_api releases lookup
+        required: false
+        default: hatch_rest_api
+
+concurrency:
+  group: update-hatch-rest-api-dependency
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-hatch-rest-api:
+    name: Update hatch-rest-api
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - name: Determine current and latest hatch-rest-api versions
+        id: versions
+        run: |
+          set -euo pipefail
+
+          python .github/scripts/update_hatch_rest_api_pins.py \
+            --manifest-path custom_components/ha_hatch/manifest.json \
+            --pyproject-path pyproject.toml \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Update hatch-rest-api dependency pins
+        if: steps.versions.outputs.update_needed == 'true'
+        env:
+          LATEST_VERSION: ${{ steps.versions.outputs.latest }}
+        run: |
+          set -euo pipefail
+
+          python .github/scripts/update_hatch_rest_api_pins.py \
+            --manifest-path custom_components/ha_hatch/manifest.json \
+            --pyproject-path pyproject.toml \
+            --latest-version "$LATEST_VERSION" \
+            --write
+
+      - name: Build hatch-rest-api release notes
+        if: steps.versions.outputs.update_needed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CURRENT_VERSION: ${{ steps.versions.outputs.current }}
+          PYPROJECT_CURRENT_VERSION: ${{ steps.versions.outputs.pyproject_current }}
+          LATEST_VERSION: ${{ steps.versions.outputs.latest }}
+          REPO_OWNER: ${{ github.event.inputs.hatch_rest_api_release_owner || vars.HATCH_REST_API_RELEASE_OWNER || 'dahlb' }}
+          REPO_NAME: ${{ github.event.inputs.hatch_rest_api_release_repo || vars.HATCH_REST_API_RELEASE_REPO || 'hatch_rest_api' }}
+        run: |
+          set -euo pipefail
+
+          python .github/scripts/build_hatch_rest_api_release_notes.py \
+            --current-version "$CURRENT_VERSION" \
+            --pyproject-current-version "$PYPROJECT_CURRENT_VERSION" \
+            --latest-version "$LATEST_VERSION" \
+            --release-owner "$REPO_OWNER" \
+            --release-repo "$REPO_NAME" \
+            --body-path hatch-rest-api-update-pr-body.md
+
+      - name: Create or update hatch-rest-api update PR
+        if: steps.versions.outputs.update_needed == 'true'
+        id: cpr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: chore/update-hatch-rest-api-dependency
+          delete-branch: true
+          commit-message: 'Bump hatch-rest-api to ${{ steps.versions.outputs.latest }}'
+          title: 'Bump hatch-rest-api to ${{ steps.versions.outputs.latest }}'
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          labels: hatch-rest-api-auto-update
+          body-path: hatch-rest-api-update-pr-body.md
+          add-paths: |
+            custom_components/ha_hatch/manifest.json
+            pyproject.toml
+
+      - name: Close extra auto-generated PRs
+        if: steps.versions.outputs.update_needed == 'true' && steps.cpr.outputs.pull-request-number != ''
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          KEEP_PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          python .github/scripts/cleanup_hatch_rest_api_update_branches.py \
+            --repository "$REPOSITORY" \
+            --branch chore/update-hatch-rest-api-dependency \
+            --branch-prefix chore/update-hatch-rest-api \
+            --label-name hatch-rest-api-auto-update \
+            --keep-pr-number "$KEEP_PR_NUMBER" \
+            --close-stale-prs \
+            --delete-merged-branches
+
+      - name: Log when no update is required
+        if: steps.versions.outputs.update_needed != 'true'
+        run: echo "hatch-rest-api is already at the latest version; checking for stale update PRs."
+
+      - name: Close stale hatch-rest-api update PRs
+        if: steps.versions.outputs.update_needed != 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          python .github/scripts/cleanup_hatch_rest_api_update_branches.py \
+            --repository "$REPOSITORY" \
+            --branch chore/update-hatch-rest-api-dependency \
+            --branch-prefix chore/update-hatch-rest-api \
+            --label-name hatch-rest-api-auto-update \
+            --close-stale-prs \
+            --delete-stale-branch \
+            --delete-merged-branches

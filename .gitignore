@@ -2,15 +2,21 @@
 __pycache__
 .pytest*
 *.egg-info
+build/
 */build/*
+dist/
 */dist/*
-
+.mypy_cache
+.ruff_cache
+.venv
 
 # misc
 .coverage
 .vscode
 .idea
 coverage.xml
+htmlcov/
+uv.lock
 
 
 # Home Assistant configuration

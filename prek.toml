@@ -1,0 +1,52 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
+
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v6.0.0"
+
+[[repos.hooks]]
+id = "trailing-whitespace"
+exclude = ".*\\.md$"
+
+[[repos.hooks]]
+id = "end-of-file-fixer"
+exclude = ".*\\.md$"
+
+[[repos.hooks]]
+id = "check-yaml"
+
+[[repos.hooks]]
+id = "check-toml"
+
+[[repos.hooks]]
+id = "check-added-large-files"
+
+[[repos]]
+repo = "https://github.com/rhysd/actionlint"
+rev = "v1.7.12"
+
+[[repos.hooks]]
+id = "actionlint"
+additional_dependencies = [
+  "github.com/wasilibs/go-shellcheck/cmd/shellcheck@v0.11.1",
+]
+
+[[repos]]
+repo = "https://github.com/codespell-project/codespell"
+rev = "v2.4.3"
+
+[[repos.hooks]]
+id = "codespell"
+
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+rev = "v0.17.5"
+
+[[repos.hooks]]
+id = "ruff-check"
+args = ["--fix"]
+
+[[repos.hooks]]
+id = "ruff-format"

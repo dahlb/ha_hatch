@@ -1,0 +1,185 @@
+[project]
+name = "ha_hatch"
+requires-python = ">=3.14"
+dynamic = ["version"]
+
+[build-system]
+requires = ["setuptools>=62.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["custom_components*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"custom_components.ha_hatch" = ["*.json", "translations/*.json"]
+
+[tool.setuptools.dynamic]
+version = { attr = "custom_components.ha_hatch.const.VERSION" }
+
+[dependency-groups]
+ha = [
+    "hatch-rest-api==1.34.5",
+    "homeassistant==2026.11.0",
+]
+lint = [
+    { include-group = "ha" },
+    "mypy",
+    "prek",
+    "ruff",
+]
+pytest = [
+    { include-group = "ha" },
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-homeassistant",
+    "pytest-timeout",
+]
+dev = [
+    { include-group = "lint" },
+    { include-group = "pytest" },
+]
+
+[tool.mypy]
+python_version = "3.14"
+files = ["custom_components/ha_hatch"]
+explicit_package_bases = true
+namespace_packages = true
+pretty = true
+show_error_codes = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = ["hatch_rest_api.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+fix = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "lf"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN002",   # missing-type-args
+    "ANN003",   # missing-type-kwargs
+    "ANN401",   # any-type
+    "ARG",      # flake8-unused-arguments
+    "CPY001",	# flake8-copyright
+    "EM",       # flake8-errmsg
+    "ERA",      # eradicate
+    "FBT",      # flake8-boolean-trap
+    "PLC1901",  # {existing} can be simplified to {replacement} as an empty string is falsey; too many false positives
+    "PLR0904",  # Too many public methods
+    "PLR0911",  # Too many return statements ({returns} > {max_returns})
+    "PLR0912",  # Too many branches ({branches} > {max_branches})
+    "PLR0913",  # Too many arguments to function call ({c_args} > {max_args})
+    "PLR0914",  # Too many local variables
+    "PLR0915",  # Too many statements ({statements} > {max_statements})
+    "PLR0916",  # Too many Boolean expressions
+    "PLR0917",  # Too many positional arguments
+    "PLR1702",  # Too many nested blocks
+    "PLR2004",  # Magic value used in comparison, consider replacing {value} with a constant variable
+    "PLW2901",  # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
+    "PT011",    # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
+    "PT018",    # Assertion should be broken down into multiple parts
+    "RUF001",   # String contains ambiguous unicode character.
+    "RUF002",   # Docstring contains ambiguous unicode character.
+    "RUF003",   # Comment contains ambiguous unicode character.
+    "RUF015",   # Prefer next(...) over single element slice
+    "S311",     # suspicious-non-cryptographic-random-usage
+    "SIM103",   # Return the condition {condition} directly
+    "SIM108",   # Use ternary operator {contents} instead of if-else-block
+    "SIM115",   # Use context handler for opening files
+    "TC001",    # Move application import {} into a type-checking block
+    "TC002",    # Move third-party import {} into a type-checking block
+    "TC003",    # Move standard library import {} into a type-checking block
+    "TD003",    # missing-todo-link
+    "TRY003",   # Avoid specifying long messages outside the exception class
+    "TRY301",   # raise-within-try
+    "TRY400",   # Use `logging.exception` instead of `logging.error`
+
+    # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "COM812",   # missing-trailing-comma
+    "COM819",   # prohibited-trailing-comma
+    "D206",     # docstring-tab-indentation
+    "D300",     # triple-single-quotes
+    "E111",     # indentation-with-invalid-multiple
+    "E114",     # indentation-with-invalid-multiple-comment
+    "E117",     # over-indented
+    "Q000",     # bad-quotes-inline-string
+    "Q001",     # bad-quotes-multiline-string
+    "Q002",     # bad-quotes-docstring
+    "Q003",     # avoidable-escaped-quote
+    "Q004",     # unnecessary-escaped-quote
+    "W191",     # tab-indentation
+]
+fixable = ["ALL"]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+known-third-party = ["hatch_rest_api", "homeassistant"]
+combine-as-imports = true
+split-on-trailing-comma = false
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "B017",    # Don't assert blind Exception
+    "C90",     # mccabe, complexity
+    "E501",    # line too long
+    "S101",    # Use of assert detected
+    "S105",    # Possible hardcoded password
+    "S108",    # hardcoded-temp-file
+    "SLF001",  # Private member accessed
+]
+
+[tool.codespell]
+ignore-words-list = "hass"
+skip = "custom_components/ha_hatch/translations/*"
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+# Let Home Assistant install its httpx alias before respx is imported.
+pythonpath = ["."]
+addopts = """
+  -p no:respx
+  --quiet
+  --timeout=20
+  --durations=10
+  -o console_output_style=progress
+  --cov=custom_components/ha_hatch
+  --cov-report=term-missing
+  --cov-report=html
+"""
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+branch = true
+source = ["custom_components/ha_hatch"]
+relative_files = true
+parallel = false
+
+[tool.coverage.report]
+show_missing = true
