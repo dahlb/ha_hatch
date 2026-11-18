@@ -43,15 +43,13 @@ def _clock_schedule_time(
     ("entity_type", "attr", "setter", "icon"),
     CLOCK_SCHEDULE_TIMES,
 )
-def test_set_value_calls_public_setter(
-    entity_type: str, attr: str, setter: str, icon: str
-) -> None:
+def test_set_value_calls_public_setter(entity_type: str, attr: str, setter: str, icon: str) -> None:
     """Setting the time calls the matching public library setter."""
     rest_device = MagicMock(spec=RestoreV5)
     entity = _clock_schedule_time(rest_device, entity_type, attr, setter, icon)
     entity.set_value(time(6, 30))
     getattr(rest_device, setter).assert_called_once_with(time(6, 30))
-    rest_device._update.assert_not_called()  # noqa: SLF001
+    rest_device._update.assert_not_called()
 
 
 @pytest.mark.parametrize(
