@@ -1,12 +1,14 @@
+"""Diagnostics support for the Hatch integration."""
+
 from __future__ import annotations
+
+import logging
 from typing import Any
 
 import attr
-import logging
-
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIQUE_ID, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
