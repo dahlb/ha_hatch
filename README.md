@@ -4,15 +4,15 @@
 
 | Name                                                             |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
 |----------------------------------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
-| custom\_components/ha\_hatch/\_\_init\_\_.py                     |       35 |       35 |        6 |        0 |      0% |      3-63 |
+| custom\_components/ha\_hatch/\_\_init\_\_.py                     |       35 |       22 |        6 |        0 |     32% |19-20, 25-45, 50, 55-63 |
 | custom\_components/ha\_hatch/alarm.py                            |      173 |       43 |       92 |       13 |     70% |50, 67-72, 85, 101-105, 124, 140, 179, 181, 207-224, 234-246, 254, 264, 268, 280, 312, 316, 320, 330 |
 | custom\_components/ha\_hatch/binary\_sensor.py                   |       26 |       26 |        2 |        0 |      0% |      3-58 |
 | custom\_components/ha\_hatch/config\_flow.py                     |       52 |       52 |        6 |        0 |      0% |     3-113 |
-| custom\_components/ha\_hatch/const.py                            |       10 |       10 |        0 |        0 |      0% |      4-17 |
+| custom\_components/ha\_hatch/const.py                            |       10 |        0 |        0 |        0 |    100% |           |
 | custom\_components/ha\_hatch/diagnostics.py                      |       36 |       36 |        8 |        0 |      0% |      3-79 |
 | custom\_components/ha\_hatch/favorites.py                        |        9 |        0 |        2 |        0 |    100% |           |
-| custom\_components/ha\_hatch/hatch\_data\_update\_coordinator.py |      176 |      176 |       36 |        0 |      0% |     3-353 |
-| custom\_components/ha\_hatch/hatch\_entity.py                    |       21 |       21 |        0 |        0 |      0% |      3-54 |
+| custom\_components/ha\_hatch/hatch\_data\_update\_coordinator.py |      176 |      126 |       36 |        0 |     24% |56-63, 83-100, 106-120, 123-124, 128-131, 142-147, 150-153, 160-190, 193-199, 205-207, 218-235, 246-255, 258-261, 268-338, 342-349, 353 |
+| custom\_components/ha\_hatch/hatch\_entity.py                    |       21 |        1 |        0 |        0 |     95% |        54 |
 | custom\_components/ha\_hatch/light.py                            |       28 |       28 |        8 |        0 |      0% |      3-54 |
 | custom\_components/ha\_hatch/light\_rest\_entity.py              |       35 |       35 |        4 |        0 |      0% |      3-67 |
 | custom\_components/ha\_hatch/light\_restoreiot\_entity.py        |       46 |       46 |        6 |        0 |      0% |     3-100 |
@@ -26,10 +26,10 @@
 | custom\_components/ha\_hatch/scene.py                            |       37 |       37 |        6 |        0 |      0% |      3-96 |
 | custom\_components/ha\_hatch/select.py                           |       44 |       44 |       12 |        0 |      0% |      3-95 |
 | custom\_components/ha\_hatch/sensor.py                           |      111 |      111 |       32 |        0 |      0% |     4-226 |
-| custom\_components/ha\_hatch/services.py                         |       70 |       70 |       32 |        0 |      0% |     3-138 |
-| custom\_components/ha\_hatch/switch.py                           |      135 |      135 |       32 |        0 |      0% |     3-282 |
+| custom\_components/ha\_hatch/services.py                         |       70 |       52 |       32 |        0 |     18% |24-30, 41-44, 51-67, 75-104, 114-138 |
+| custom\_components/ha\_hatch/switch.py                           |      129 |       74 |       30 |        0 |     35% |35-117, 132, 137, 141, 145, 159, 164, 168, 172, 220-229, 233-237, 242, 247-250, 255, 259, 263, 266-270, 274 |
 | custom\_components/ha\_hatch/time.py                             |      109 |      109 |       28 |        0 |      0% |     3-238 |
-| **TOTAL**                                                        | **1486** | **1329** |  **378** |   **13** | **12%** |           |
+| **TOTAL**                                                        | **1480** | **1157** |  **376** |   **13** | **21%** |           |
 
 
 ## Setup coverage badge
