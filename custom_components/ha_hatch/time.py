@@ -31,11 +31,11 @@ ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX = "_wake_time"
 
 # The Hatch app exposes a single clock start time and a single end time, but the
 # device shadow stores each as a pair (display on/off + brightness bright/dim).
-# Mirror the app: one entity per pair, writing both shadow keys together.
-# (entity type, instance attribute to read, shadow keys to write, icon)
+# Mirror the app: one entity per pair; the library setter writes both shadow keys.
+# (entity type, instance attribute to read, library setter method name, icon)
 CLOCK_SCHEDULE_TIMES = (
-    ("Clock Turn On At", "clock_turn_on_at", ("turnOnAt", "turnBrightAt"), "mdi:clock-start"),
-    ("Clock Turn Off At", "clock_turn_off_at", ("turnOffAt", "turnDimAt"), "mdi:clock-end"),
+    ("Clock Turn On At", "clock_turn_on_at", "set_clock_turn_on_at", "mdi:clock-start"),
+    ("Clock Turn Off At", "clock_turn_off_at", "set_clock_turn_off_at", "mdi:clock-end"),
 )
 
 
@@ -65,14 +65,14 @@ async def async_setup_entry(
     for rest_device in coordinator.rest_devices:
         # RestoreV4 subclasses RestoreV5, so this covers both.
         if isinstance(rest_device, RestoreV5):
-            for entity_type, attr, shadow_keys, icon in CLOCK_SCHEDULE_TIMES:
+            for entity_type, attr, setter, icon in CLOCK_SCHEDULE_TIMES:
                 clock_entities.append(
                     HatchClockScheduleTime(
                         coordinator=coordinator,
                         thing_name=rest_device.thing_name,
                         entity_type=entity_type,
                         attr=attr,
-                        shadow_keys=shadow_keys,
+                        setter=setter,
                         icon=icon,
                     )
                 )
@@ -150,12 +150,12 @@ class HatchClockScheduleTime(HatchEntity, TimeEntity):
         thing_name: str,
         entity_type: str,
         attr: str,
-        shadow_keys: tuple[str, ...],
+        setter: str,
         icon: str,
     ) -> None:
         """Initialize the hatch clock schedule time."""
         self._attr = attr
-        self._shadow_keys = shadow_keys
+        self._setter = setter
         self._attr_icon = icon
         super().__init__(
             coordinator=coordinator,
@@ -170,9 +170,7 @@ class HatchClockScheduleTime(HatchEntity, TimeEntity):
 
     def set_value(self, value: time) -> None:
         """Set the value."""
-        time_str = value.strftime("%H:%M:%S")
-        # hatch_rest_api has no public API for writing these shadow fields.
-        self.rest_device._update({"clock": dict.fromkeys(self._shadow_keys, time_str)})  # noqa: SLF001
+        getattr(self.rest_device, self._setter)(value)
 
 
 class HatchAlarmWakeTime(HatchEntity, TimeEntity):
