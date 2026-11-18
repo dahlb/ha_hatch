@@ -24,12 +24,12 @@
 | custom\_components/ha\_hatch/number.py                           |       48 |       48 |        4 |        0 |      0% |     3-100 |
 | custom\_components/ha\_hatch/riot\_tracks.py                     |       18 |        0 |        6 |        0 |    100% |           |
 | custom\_components/ha\_hatch/scene.py                            |       37 |       37 |        6 |        0 |      0% |      3-96 |
-| custom\_components/ha\_hatch/select.py                           |       44 |       44 |       12 |        0 |      0% |      3-95 |
+| custom\_components/ha\_hatch/select.py                           |       38 |        3 |        4 |        0 |     93% |     43-50 |
 | custom\_components/ha\_hatch/sensor.py                           |      111 |      111 |       32 |        0 |      0% |     4-226 |
 | custom\_components/ha\_hatch/services.py                         |       70 |       52 |       32 |        0 |     18% |24-30, 41-44, 51-67, 75-104, 114-138 |
 | custom\_components/ha\_hatch/switch.py                           |      129 |       74 |       30 |        0 |     35% |35-117, 132, 137, 141, 145, 159, 164, 168, 172, 220-229, 233-237, 242, 247-250, 255, 259, 263, 266-270, 274 |
 | custom\_components/ha\_hatch/time.py                             |      109 |      109 |       28 |        0 |      0% |     3-238 |
-| **TOTAL**                                                        | **1480** | **1157** |  **376** |   **13** | **21%** |           |
+| **TOTAL**                                                        | **1474** | **1116** |  **368** |   **13** | **23%** |           |
 
 
 ## Setup coverage badge
