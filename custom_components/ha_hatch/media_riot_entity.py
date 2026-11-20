@@ -50,11 +50,14 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
         """Initialize the media riot entity."""
         super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Media Player")
-        audio_data = (
-            REST_IOT_AUDIO_TRACKS[1:]
-            if not isinstance(self.rest_device, RestBaby)
-            else REST_BABY_AUDIO_TRACKS[1:]
-        )
+        if isinstance(self.rest_device, RestBaby):
+            audio_data = REST_BABY_AUDIO_TRACKS[1:]
+        elif isinstance(self.rest_device, RestIot):
+            audio_data = REST_IOT_AUDIO_TRACKS[1:]
+        else:
+            # Restore devices have no set_audio_track and only play sounds from their own
+            # catalog (sounds_by_name), so the built-in Rest tracks aren't offered.
+            audio_data = []
         self._program_sounds = PROGRAM_SOUNDS if isinstance(self.rest_device, RestIot) else {}
         self._attr_sound_mode_list = sorted(
             set(
@@ -130,7 +133,10 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
         if self.rest_device.is_playing:
             _LOGGER.debug("media player already playing")
             return
-        new_sound_mode = self.sound_mode or self._attr_sound_mode_list[0]
+        new_sound_mode = self.sound_mode or next(iter(self._attr_sound_mode_list or []), None)
+        if new_sound_mode is None:
+            _LOGGER.debug("no sound available to play")
+            return
         _LOGGER.debug("selecting sound mode of %s", new_sound_mode)
         self.select_sound_mode(new_sound_mode)
 
@@ -143,8 +149,10 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             return
         if isinstance(self.rest_device, RestBaby):
             track = _find_rest_baby_track(track_name=sound_mode)
-        else:
+        elif isinstance(self.rest_device, RestIot):
             track = _find_track(track_name=sound_mode)
+        else:
+            track = None
         if track is None:
             _LOGGER.debug("No track found")
             self.rest_device.set_sound(sound_mode)
