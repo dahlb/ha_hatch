@@ -64,7 +64,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow):
     """Handle a Hatch config flow."""
 
     VERSION = CONFIG_FLOW_VERSION
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self) -> None:
         """Initialize the config flow handler."""
