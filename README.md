@@ -20,7 +20,7 @@
 | custom\_components/ha\_hatch/light\_riot\_entity.py              |       43 |       43 |        8 |        0 |      0% |      3-87 |
 | custom\_components/ha\_hatch/media\_player.py                    |       20 |       20 |        2 |        0 |      0% |      3-55 |
 | custom\_components/ha\_hatch/media\_rest\_entity.py              |       64 |       64 |       18 |        0 |      0% |     3-133 |
-| custom\_components/ha\_hatch/media\_riot\_entity.py              |       76 |       76 |       14 |        0 |      0% |     3-157 |
+| custom\_components/ha\_hatch/media\_riot\_entity.py              |       85 |       16 |       22 |        4 |     79% |82-84, 92, 94-95, 105, 111-112, 128, 134-135, 147-149, 165 |
 | custom\_components/ha\_hatch/number.py                           |       48 |       48 |        4 |        0 |      0% |     3-100 |
 | custom\_components/ha\_hatch/riot\_tracks.py                     |       18 |        0 |        6 |        0 |    100% |           |
 | custom\_components/ha\_hatch/scene.py                            |       37 |       37 |        6 |        0 |      0% |      3-96 |
@@ -29,7 +29,7 @@
 | custom\_components/ha\_hatch/services.py                         |       70 |       52 |       32 |        0 |     18% |24-30, 41-44, 51-67, 75-104, 114-138 |
 | custom\_components/ha\_hatch/switch.py                           |      129 |       74 |       30 |        0 |     35% |35-117, 132, 137, 141, 145, 159, 164, 168, 172, 220-229, 233-237, 242, 247-250, 255, 259, 263, 266-270, 274 |
 | custom\_components/ha\_hatch/time.py                             |      108 |       56 |       28 |        0 |     40% |62-139, 193-201, 205-209, 214, 219, 224, 228-232, 236 |
-| **TOTAL**                                                        | **1473** | **1063** |  **368** |   **13** | **26%** |           |
+| **TOTAL**                                                        | **1482** | **1003** |  **376** |   **17** | **30%** |           |
 
 
 ## Setup coverage badge
