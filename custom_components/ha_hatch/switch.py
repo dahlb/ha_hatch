@@ -1,14 +1,12 @@
+"""Switch platform for Hatch devices."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from homeassistant.components.switch import (
-    SwitchEntity,
-    SwitchDeviceClass, SwitchEntityDescription,
-)
-from hatch_rest_api import RestPlus, RestIot, RestBaby, Restore, RestoreV5
-from hatch_rest_api.const import RIOT_FLAGS_CLOCK_IGNORE_TAP
+from hatch_rest_api import RestBaby, RestIot, Restore, RestoreV5, RestPlus
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,6 +27,7 @@ from .restore_entities import (
     RestoreAlarmsSwitch,
     RestoreAlarmSwitch,
     RestoreClock24Hour,
+    RestoreRoutineSwitch,
     async_setup_restore_alarm_entities,
 )
 
@@ -36,44 +35,38 @@ _LOGGER = logging.getLogger(__name__)
 ALARM_UNIQUE_ID_SUFFIX = "_switch"
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the platform from a config entry."""
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
-    entities = []
+    entities: list[SwitchEntity] = []
     for rest_device in coordinator.rest_devices:
         if isinstance(rest_device, RestPlus):
-            entities.append(HatchPowerSwitch(coordinator=coordinator, thing_name=rest_device.thing_name))
+            entities.append(
+                HatchPowerSwitch(coordinator=coordinator, thing_name=rest_device.thing_name)
+            )
         if isinstance(rest_device, RestIot):
             entities.append(
-                HatchToddlerLockSwitch(
-                    coordinator=coordinator, thing_name=rest_device.thing_name
-                )
+                HatchToddlerLockSwitch(coordinator=coordinator, thing_name=rest_device.thing_name)
             )
         if isinstance(rest_device, RestBaby):
             entities.append(
-                HatchToddlerLockSwitch(
-                    coordinator=coordinator, thing_name=rest_device.thing_name
-                )
+                HatchToddlerLockSwitch(coordinator=coordinator, thing_name=rest_device.thing_name)
             )
             entities.append(
-                HatchPowerSwitch(
-                    coordinator=coordinator, thing_name=rest_device.thing_name
-                )
+                HatchPowerSwitch(coordinator=coordinator, thing_name=rest_device.thing_name)
             )
         # RestoreV4 subclasses RestoreV5, so this covers both.
         if isinstance(rest_device, RestoreV5):
             entities.append(
-                HatchClockTapSwitch(
-                    coordinator=coordinator, thing_name=rest_device.thing_name
-                )
+                HatchClockTapSwitch(coordinator=coordinator, thing_name=rest_device.thing_name)
             )
         if isinstance(rest_device, Restore):
-            entities.append(
-                HatchRestoreRoutineSwitch(
-                    coordinator=coordinator, thing_name=rest_device.thing_name
-                )
+            entities.extend(
+                switch_class(coordinator=coordinator, thing_name=rest_device.thing_name)
+                for switch_class in (RestoreRoutineSwitch, RestoreAlarmsSwitch, RestoreClock24Hour)
             )
-            entities.append(RestoreAlarmsSwitch(coordinator=coordinator, thing_name=rest_device.thing_name))
-            entities.append(RestoreClock24Hour(coordinator=coordinator, thing_name=rest_device.thing_name))
 
     async_add_entities(entities)
     await async_setup_restore_alarm_entities(
@@ -92,9 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
                 authoritative_alarm_unique_id_prefixes.add(
                     alarm_unique_id_prefix(rest_device.thing_name)
                 )
-            for alarm_id, alarm_name in alarm_base_names(
-                getattr(rest_device, "alarms", [])
-            ):
+            for alarm_id, alarm_name in alarm_base_names(getattr(rest_device, "alarms", [])):
                 unique_id = alarm_unique_id(
                     rest_device.thing_name,
                     alarm_id,
@@ -144,50 +135,65 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
 
 
 class HatchPowerSwitch(HatchEntity, SwitchEntity):
+    """Hatch power switch."""
+
     entity_description: SwitchEntityDescription(
         key="power-switch",
         device_class=SwitchDeviceClass.SWITCH,
     )
 
-    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
+        """Initialize the hatch power switch."""
         super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Power Switch")
 
     @property
     def is_on(self) -> bool | None:
+        """Return whether the entity is on."""
         return self.rest_device.is_on
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
+        """Turn the entity on."""
         self.rest_device.set_on(True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
         self.rest_device.set_on(False)
 
 
 class HatchToddlerLockSwitch(HatchEntity, SwitchEntity):
+    """Hatch toddler lock switch."""
+
     entity_description: SwitchEntityDescription(
         key="toddler-lock",
         icon="mdi:human-child",
         device_class=SwitchDeviceClass.SWITCH,
     )
 
-    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
+        """Initialize the hatch toddler lock switch."""
         super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Toddler Lock")
 
     @property
     def is_on(self) -> bool | None:
+        """Return whether the entity is on."""
         return self.rest_device.toddler_lock
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
+        """Turn the entity on."""
         self.rest_device.set_toddler_lock(True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
         self.rest_device.set_toddler_lock(False)
 
 
 class HatchClockTapSwitch(HatchEntity, SwitchEntity):
+    """Hatch clock tap switch."""
+
     _attr_icon = "mdi:gesture-tap"
 
-    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
+        """Initialize the hatch clock tap switch."""
         super().__init__(
             coordinator=coordinator,
             thing_name=thing_name,
@@ -196,48 +202,21 @@ class HatchClockTapSwitch(HatchEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool | None:
-        flags = self.rest_device.flags
-        if flags is None:
-            return None
-        return not (flags & RIOT_FLAGS_CLOCK_IGNORE_TAP)
+        """Return whether the entity is on."""
+        return self.rest_device.is_clock_tap_on
 
-    def turn_on(self, **kwargs):
-        dev = self.rest_device
-        dev._update({"clock": {"flags": dev.flags & ~RIOT_FLAGS_CLOCK_IGNORE_TAP}})
+    def turn_on(self, **kwargs) -> None:
+        """Turn the entity on."""
+        self.rest_device.clock_tap_on()
 
-    def turn_off(self, **kwargs):
-        dev = self.rest_device
-        dev._update({"clock": {"flags": dev.flags | RIOT_FLAGS_CLOCK_IGNORE_TAP}})
-
-
-class HatchRestoreRoutineSwitch(HatchEntity, SwitchEntity):
-    """Starts and stops the original Restore's bedtime routine.
-
-    On while the Restore plays anything, including content started from the
-    Hatch app, so turning it off always stops the device.
-    """
-
-    _attr_icon = "mdi:power-sleep"
-
-    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
-        super().__init__(
-            coordinator=coordinator,
-            thing_name=thing_name,
-            entity_type="Bedtime Routine",
-        )
-
-    @property
-    def is_on(self) -> bool | None:
-        return self.rest_device.is_on
-
-    def turn_on(self, **kwargs):
-        self.rest_device.turn_on_routine()
-
-    def turn_off(self, **kwargs):
-        self.rest_device.turn_off()
+    def turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
+        self.rest_device.clock_tap_off()
 
 
 class HatchAlarmSwitch(HatchEntity, SwitchEntity):
+    """Hatch alarm switch."""
+
     entity_description = SwitchEntityDescription(
         key="alarm-switch",
         icon="mdi:alarm",
@@ -251,7 +230,8 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
         alarm_id: int | str,
         alarm_name: str,
         unique_id: str,
-    ):
+    ) -> None:
+        """Initialize the hatch alarm switch."""
         self._alarm_id = alarm_id
         self._alarm_display_name = alarm_name
         super().__init__(
@@ -264,6 +244,7 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
         self._attr_name = alarm_name
 
     def update_alarm_name(self, alarm_name: str) -> None:
+        """Update the alarm entity name."""
         if self._attr_name == alarm_name:
             return
         self._attr_name = alarm_name
@@ -272,10 +253,12 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
 
     @property
     def available(self) -> bool:
+        """Return whether the entity is available."""
         return self._alarm is not None
 
     @property
     def is_on(self) -> bool | None:
+        """Return whether the entity is on."""
         alarm = self._alarm
         if alarm is None:
             return None
@@ -283,20 +266,21 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
         return alarm_repeat_attributes(self._alarm)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
+        """Turn the entity on."""
         await self._async_set_enabled(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
         await self._async_set_enabled(False)
 
     async def _async_set_enabled(self, enabled: bool) -> None:
         set_alarm_enabled = getattr(self.rest_device, "set_alarm_enabled", None)
         if not callable(set_alarm_enabled):
-            raise TypeError(
-                f"{self.rest_device.device_name} does not support alarm switches"
-            )
+            raise TypeError(f"{self.rest_device.device_name} does not support alarm switches")
         await set_alarm_enabled(self._alarm_id, enabled)
         self.schedule_update_ha_state()
 

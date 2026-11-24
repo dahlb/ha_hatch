@@ -1,9 +1,12 @@
+"""Base entity for Hatch devices."""
+
 from __future__ import annotations
 
 import logging
+
 from hatch_rest_api import RestDevice
-from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HatchDataUpdateCoordinator
@@ -13,11 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HatchEntity(CoordinatorEntity[HatchDataUpdateCoordinator]):
-    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str, entity_type: str):
+    """Base class for Hatch entities."""
+
+    def __init__(
+        self, coordinator: HatchDataUpdateCoordinator, thing_name: str, entity_type: str
+    ) -> None:
+        """Initialize the hatch entity."""
         super().__init__(coordinator=coordinator, context=thing_name)
-        self._attr_unique_id = (
-            f"{thing_name}_{entity_type.lower().replace(' ', '_')}"
-        )
+        self._attr_unique_id = f"{thing_name}_{entity_type.lower().replace(' ', '_')}"
         self._attr_name = f"{self.rest_device.device_name} {entity_type}"
         connections = {
             (
@@ -40,6 +46,7 @@ class HatchEntity(CoordinatorEntity[HatchDataUpdateCoordinator]):
 
     @property
     def rest_device(self) -> RestDevice | None:
+        """Return the Hatch device for this entity."""
         return self.coordinator.rest_device_by_thing_name(self.coordinator_context)
 
     def _handle_coordinator_update(self) -> None:

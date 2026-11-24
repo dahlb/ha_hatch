@@ -1,7 +1,10 @@
+"""Constants for the Hatch integration."""
+
 # Configuration Constants
 from homeassistant.const import Platform
 
 DOMAIN: str = "ha_hatch"
+VERSION: str = "1.32.6"
 
 # Integration Setting Constants
 CONFIG_FLOW_VERSION: int = 2

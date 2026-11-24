@@ -1,36 +1,35 @@
+"""The Hatch integration."""
+
 import logging
 
-from homeassistant.core import HomeAssistant
-from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_PASSWORD,
-)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import DOMAIN, PLATFORMS
 from .hatch_data_update_coordinator import (
+    RESTORE_ALARM_SLOTS_STORE_VERSION,
     HatchDataUpdateCoordinator,
     restore_alarm_slots_store_key,
 )
+from .services import async_register_services
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, _config):
-    from .services import async_register_services
-
+async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
+    """Set up the Hatch integration."""
     async_register_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up the platform from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     email = config_entry.data[CONF_EMAIL]
     password = config_entry.data[CONF_PASSWORD]
-
 
     hass.data[DOMAIN] = HatchDataUpdateCoordinator(
         hass=hass,
@@ -52,16 +51,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return True
 
 
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Reload the config entry when its options change."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
     _LOGGER.debug("unload entry")
     coordinator: HatchDataUpdateCoordinator | None = hass.data.get(DOMAIN)
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
     if unload_ok:
         if coordinator is not None:
             await coordinator.async_shutdown()
@@ -70,8 +69,15 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Drop the original Restore alarm slots stored for this entry."""
-    from homeassistant.helpers.storage import Store
+async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Drop the original Restore alarm slots stored for a removed entry.
 
-    await Store(hass, 1, restore_alarm_slots_store_key(config_entry.entry_id)).async_remove()
+    Args:
+        hass: Home Assistant instance.
+        config_entry: The entry being removed.
+    """
+    await Store(
+        hass,
+        RESTORE_ALARM_SLOTS_STORE_VERSION,
+        restore_alarm_slots_store_key(config_entry.entry_id),
+    ).async_remove()

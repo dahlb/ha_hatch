@@ -1,0 +1,58 @@
+name: pytest and coverage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: pytest and coverage report
+    if: >-
+      ${{ !(github.event_name == 'pull_request' && (
+        contains(github.event.pull_request.labels.*.name, 'dependencies') ||
+        (github.event.pull_request.user.type == 'Bot' &&
+         !contains(github.event.pull_request.labels.*.name, 'hatch-rest-api-auto-update'))
+      )) }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Setup Python 3.14 (with caching)
+        uses: actions/setup-python@v7
+        with:
+          python-version: 3.14
+          cache: 'pip'
+          cache-dependency-path: |
+            pyproject.toml
+
+      - name: Install pytest Requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install --group pytest -e .
+
+      - name: Run pytest with coverage (pytest-cov)
+        run: pytest
+
+      - name: 'Generate coverage Comment (and possibly Post to PR)'
+        id: coverage_comment
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MINIMUM_GREEN: 90
+          MINIMUM_ORANGE: 70
+
+      - name: Store PR Comment to be Posted
+        if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-coverage-comment-action
+          path: python-coverage-comment-action.txt
+          retention-days: 1

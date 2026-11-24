@@ -1,9 +1,13 @@
+"""Binary sensor platform for Hatch devices."""
+
 from __future__ import annotations
 
 from logging import getLogger
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
-    BinarySensorEntity, BinarySensorEntityDescription,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,15 +20,24 @@ from .hatch_entity import HatchEntity
 _LOGGER = getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the platform from a config entry."""
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
 
-    binary_sensor_entities = [HatchOnlineSensor(coordinator=coordinator, thing_name=rest_device.thing_name) for rest_device in coordinator.rest_devices]
+    binary_sensor_entities = [
+        HatchOnlineSensor(coordinator=coordinator, thing_name=rest_device.thing_name)
+        for rest_device in coordinator.rest_devices
+    ]
     async_add_entities(binary_sensor_entities)
 
 
 class HatchOnlineSensor(HatchEntity, BinarySensorEntity):
-    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str):
+    """Hatch online sensor."""
+
+    def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
+        """Initialize the hatch online sensor."""
         super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Wifi")
         self.entity_description = BinarySensorEntityDescription(
             key=f"#{self._attr_unique_id}-online",
@@ -34,11 +47,12 @@ class HatchOnlineSensor(HatchEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
+        """Return whether the entity is on."""
         return self.rest_device.is_online
 
     @property
     def icon(self) -> str | None:
+        """Return the icon to use in the frontend."""
         if self.is_on:
             return self.entity_description.icon
-        else:
-            return "mdi:wifi-strength-outline"
+        return "mdi:wifi-strength-outline"

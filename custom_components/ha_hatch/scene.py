@@ -1,3 +1,5 @@
+"""Scene platform for Hatch devices."""
+
 from __future__ import annotations
 
 import logging
@@ -9,11 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HatchDataUpdateCoordinator
-from .const import (
-    CONFIG_NUMBERED_PRESET_SCENES,
-    CONFIG_NUMBERED_PRESET_SCENES_DEFAULT,
-    DOMAIN,
-)
+from .const import CONFIG_NUMBERED_PRESET_SCENES, CONFIG_NUMBERED_PRESET_SCENES_DEFAULT, DOMAIN
 from .favorites import favorite_scene_attributes, favorite_scene_name
 from .hatch_entity import HatchEntity
 
@@ -25,6 +23,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the platform from a config entry."""
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
     show_preset_numbers = bool(
         config_entry.options.get(
@@ -39,10 +38,11 @@ async def async_setup_entry(
                 try:
                     favorite_name = favorite["steps"][0]["name"]
                     favorite_id = favorite["id"]
-                except (TypeError, KeyError, IndexError):
+                except TypeError, KeyError, IndexError:
                     _LOGGER.error(
-                        f"Error creating scene for {rest_device.thing_name} "
-                        f"with favorite {favorite}. Skipping this favorite."
+                        "Error creating scene for %s with favorite %s. Skipping this favorite.",
+                        rest_device.thing_name,
+                        favorite,
                     )
                     continue
                 scene_entities.append(
@@ -63,6 +63,8 @@ async def async_setup_entry(
 
 
 class RiotScene(HatchEntity, Scene):
+    """Riot scene."""
+
     def __init__(
         self,
         coordinator: HatchDataUpdateCoordinator,
@@ -72,6 +74,7 @@ class RiotScene(HatchEntity, Scene):
         favorite_id: int,
         extra_state_attributes: dict[str, Any],
     ) -> None:
+        """Initialize the riot scene."""
         super().__init__(
             coordinator=coordinator,
             thing_name=thing_name,
@@ -81,10 +84,13 @@ class RiotScene(HatchEntity, Scene):
         self._attr_extra_state_attributes = extra_state_attributes
         self.favorite_name_id = f"{favorite_name}-{favorite_id}"
         _LOGGER.debug(
-            f"scene; unique_id:{self._attr_unique_id}, "
-            f"name:{self._attr_name}, favorite_name_id:{self.favorite_name_id}"
+            "scene; unique_id:%s, name:%s, favorite_name_id:%s",
+            self._attr_unique_id,
+            self._attr_name,
+            self.favorite_name_id,
         )
 
     def activate(self, **kwargs: Any) -> None:
-        _LOGGER.debug(f"activating scene:{self.unique_id}")
+        """Activate the scene."""
+        _LOGGER.debug("activating scene:%s", self.unique_id)
         self.rest_device.set_favorite(self.favorite_name_id)

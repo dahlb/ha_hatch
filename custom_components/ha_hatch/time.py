@@ -1,7 +1,9 @@
+"""Time platform for Hatch devices."""
+
 from __future__ import annotations
 
-import logging
 from datetime import time
+import logging
 from typing import Any
 
 from hatch_rest_api import Restore, RestoreV5
@@ -23,22 +25,18 @@ from .alarm import (
 )
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
-from .restore_entities import (
-    RestoreAlarmTime,
-    RestoreClockTime,
-    async_setup_restore_alarm_entities,
-)
+from .restore_entities import RestoreAlarmTime, RestoreClockTime, async_setup_restore_alarm_entities
 
 _LOGGER = logging.getLogger(__name__)
 ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX = "_wake_time"
 
 # The Hatch app exposes a single clock start time and a single end time, but the
 # device shadow stores each as a pair (display on/off + brightness bright/dim).
-# Mirror the app: one entity per pair, writing both shadow keys together.
-# (entity type, instance attribute to read, shadow keys to write, icon)
+# Mirror the app: one entity per pair; the library setter writes both shadow keys.
+# (entity type, instance attribute to read, library setter method name, icon)
 CLOCK_SCHEDULE_TIMES = (
-    ("Clock Turn On At", "clock_turn_on_at", ("turnOnAt", "turnBrightAt"), "mdi:clock-start"),
-    ("Clock Turn Off At", "clock_turn_off_at", ("turnOffAt", "turnDimAt"), "mdi:clock-end"),
+    ("Clock Turn On At", "clock_turn_on_at", "set_clock_turn_on_at", "mdi:clock-start"),
+    ("Clock Turn Off At", "clock_turn_off_at", "set_clock_turn_off_at", "mdi:clock-end"),
 )
 
 
@@ -52,7 +50,7 @@ def _parse_clock_time(value: str | None) -> time | None:
         minute = int(parts[1]) if len(parts) > 1 else 0
         second = int(parts[2]) if len(parts) > 2 else 0
         return time(hour, minute, second)
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return None
 
 
@@ -60,33 +58,32 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
+    """Set up the platform from a config entry."""
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
 
-    clock_entities = []
+    clock_entities: list[TimeEntity] = []
     for rest_device in coordinator.rest_devices:
         # RestoreV4 subclasses RestoreV5, so this covers both.
         if isinstance(rest_device, RestoreV5):
-            for entity_type, attr, shadow_keys, icon in CLOCK_SCHEDULE_TIMES:
+            for entity_type, attr, setter, icon in CLOCK_SCHEDULE_TIMES:
                 clock_entities.append(
                     HatchClockScheduleTime(
                         coordinator=coordinator,
                         thing_name=rest_device.thing_name,
                         entity_type=entity_type,
                         attr=attr,
-                        shadow_keys=shadow_keys,
+                        setter=setter,
                         icon=icon,
                     )
                 )
         if isinstance(rest_device, Restore):
-            for turn_on in (True, False):
-                clock_entities.append(
-                    RestoreClockTime(
-                        coordinator=coordinator,
-                        thing_name=rest_device.thing_name,
-                        turn_on=turn_on,
-                    )
+            clock_entities.extend(
+                RestoreClockTime(
+                    coordinator=coordinator, thing_name=rest_device.thing_name, turn_on=turn_on
                 )
+                for turn_on in (True, False)
+            )
     if clock_entities:
         async_add_entities(clock_entities)
     await async_setup_restore_alarm_entities(
@@ -105,9 +102,7 @@ async def async_setup_entry(
                 authoritative_alarm_unique_id_prefixes.add(
                     alarm_unique_id_prefix(rest_device.thing_name)
                 )
-            for alarm_id, alarm_name in alarm_base_names(
-                getattr(rest_device, "alarms", [])
-            ):
+            for alarm_id, alarm_name in alarm_base_names(getattr(rest_device, "alarms", [])):
                 unique_id = alarm_unique_id(
                     rest_device.thing_name,
                     alarm_id,
@@ -158,17 +153,20 @@ async def async_setup_entry(
 
 
 class HatchClockScheduleTime(HatchEntity, TimeEntity):
+    """Hatch clock schedule time."""
+
     def __init__(
         self,
         coordinator: HatchDataUpdateCoordinator,
         thing_name: str,
         entity_type: str,
         attr: str,
-        shadow_keys: tuple[str, ...],
+        setter: str,
         icon: str,
-    ):
+    ) -> None:
+        """Initialize the hatch clock schedule time."""
         self._attr = attr
-        self._shadow_keys = shadow_keys
+        self._setter = setter
         self._attr_icon = icon
         super().__init__(
             coordinator=coordinator,
@@ -178,16 +176,17 @@ class HatchClockScheduleTime(HatchEntity, TimeEntity):
 
     @property
     def native_value(self) -> time | None:
+        """Return the native value."""
         return _parse_clock_time(getattr(self.rest_device, self._attr, None))
 
     def set_value(self, value: time) -> None:
-        time_str = value.strftime("%H:%M:%S")
-        self.rest_device._update(
-            {"clock": dict.fromkeys(self._shadow_keys, time_str)}
-        )
+        """Set the value."""
+        getattr(self.rest_device, self._setter)(value)
 
 
 class HatchAlarmWakeTime(HatchEntity, TimeEntity):
+    """Hatch alarm wake time."""
+
     entity_description = TimeEntityDescription(
         key="alarm-wake-time",
         icon="mdi:alarm",
@@ -200,7 +199,8 @@ class HatchAlarmWakeTime(HatchEntity, TimeEntity):
         alarm_id: int | str,
         alarm_name: str,
         unique_id: str,
-    ):
+    ) -> None:
+        """Initialize the hatch alarm wake time."""
         self._alarm_id = alarm_id
         super().__init__(
             coordinator=coordinator,
@@ -212,6 +212,7 @@ class HatchAlarmWakeTime(HatchEntity, TimeEntity):
         self._attr_name = alarm_name
 
     def update_alarm_name(self, alarm_name: str) -> None:
+        """Update the alarm entity name."""
         if self._attr_name == alarm_name:
             return
         self._attr_name = alarm_name
@@ -220,22 +221,24 @@ class HatchAlarmWakeTime(HatchEntity, TimeEntity):
 
     @property
     def available(self) -> bool:
+        """Return whether the entity is available."""
         return self._alarm is not None
 
     @property
     def native_value(self) -> time | None:
+        """Return the native value."""
         return alarm_wake_time(self._alarm)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
         return alarm_repeat_attributes(self._alarm)
 
     async def async_set_value(self, value: time) -> None:
+        """Set the value."""
         set_alarm_wake_time = getattr(self.rest_device, "set_alarm_wake_time", None)
         if not callable(set_alarm_wake_time):
-            raise TypeError(
-                f"{self.rest_device.device_name} does not support alarm wake times"
-            )
+            raise TypeError(f"{self.rest_device.device_name} does not support alarm wake times")
         await set_alarm_wake_time(self._alarm_id, value)
         self.schedule_update_ha_state()
 

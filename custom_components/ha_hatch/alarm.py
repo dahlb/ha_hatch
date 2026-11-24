@@ -1,7 +1,14 @@
+"""Alarm helpers for Hatch devices."""
+
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import datetime, time, timedelta
 from typing import Any
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 DEFAULT_ALARM_NAME = "alarm default name"
 ALARM_UNIQUE_ID_MARKER = "_alarm_"
@@ -34,7 +41,8 @@ ALARM_WEEKDAYS_ONLY_MASK = (
 ALARM_WEEKENDS_MASK = ALARM_WEEKDAY_BITS["sunday"] | ALARM_WEEKDAY_BITS["saturday"]
 
 
-def alarm_base_names(alarms: list[dict[str, Any]]):
+def alarm_base_names(alarms: list[dict[str, Any]]) -> Iterator[tuple[Any, str]]:
+    """Return base entity names for a device's alarms."""
     default_alarm_count = 0
     for alarm in alarms:
         alarm_id = alarm.get("id")
@@ -54,7 +62,8 @@ def alarm_base_names(alarms: list[dict[str, Any]]):
         yield alarm_id, f"{alarm_name} Alarm"
 
 
-def alarm_by_id(rest_device, alarm_id: int | str) -> dict[str, Any] | None:
+def alarm_by_id(rest_device: object, alarm_id: int | str) -> dict[str, Any] | None:
+    """Return the alarm with the given id, if any."""
     get_alarm_by_id = getattr(rest_device, "alarm_by_id", None)
     if callable(get_alarm_by_id):
         return get_alarm_by_id(alarm_id)
@@ -71,6 +80,7 @@ def alarm_by_id(rest_device, alarm_id: int | str) -> dict[str, Any] | None:
 
 
 def alarm_wake_time(alarm: dict[str, Any] | None) -> time | None:
+    """Return the wake time of an alarm."""
     if alarm is None:
         return None
     parsed_start_time = _parse_alarm_datetime(alarm.get("startTime"))
@@ -87,6 +97,7 @@ def alarm_wake_time(alarm: dict[str, Any] | None) -> time | None:
 
 
 def alarm_has_valid_wake_times(alarm: dict[str, Any]) -> bool:
+    """Return whether an alarm has usable wake times."""
     if _parse_alarm_datetime(alarm.get("startTime")) is None:
         return False
     if alarm.get("endTime") is None:
@@ -95,10 +106,12 @@ def alarm_has_valid_wake_times(alarm: dict[str, Any]) -> bool:
 
 
 def alarm_unique_id(thing_name: str, alarm_id: int | str, suffix: str) -> str:
+    """Return the unique id for an alarm entity."""
     return f"{alarm_unique_id_prefix(thing_name)}{alarm_id}{suffix}"
 
 
 def alarm_unique_id_prefix(thing_name: str) -> str:
+    """Return the unique id prefix for a device's alarm entities."""
     return f"{thing_name}{ALARM_UNIQUE_ID_MARKER}"
 
 
@@ -106,6 +119,7 @@ def alarm_reference_from_unique_id(
     unique_id: str | None,
     suffixes: set[str],
 ) -> tuple[str, str] | None:
+    """Parse the device and alarm reference from an alarm entity unique id."""
     if not unique_id:
         return None
 
@@ -113,9 +127,7 @@ def alarm_reference_from_unique_id(
         if not unique_id.endswith(suffix):
             continue
         unique_id_without_suffix = unique_id[: -len(suffix)]
-        thing_name, marker, alarm_id = unique_id_without_suffix.rpartition(
-            ALARM_UNIQUE_ID_MARKER
-        )
+        thing_name, marker, alarm_id = unique_id_without_suffix.rpartition(ALARM_UNIQUE_ID_MARKER)
         if marker and thing_name and alarm_id:
             return thing_name, alarm_id
 
@@ -123,6 +135,7 @@ def alarm_reference_from_unique_id(
 
 
 def alarm_repeat_attributes(alarm: dict[str, Any] | None) -> dict[str, Any]:
+    """Return state attributes describing an alarm's repeat days."""
     if alarm is None:
         return {}
 
@@ -135,17 +148,15 @@ def alarm_repeat_attributes(alarm: dict[str, Any] | None) -> dict[str, Any]:
 
 
 def alarm_weekdays(days_of_week: Any) -> list[str]:
+    """Return the weekdays an alarm repeats on."""
     normalized_days_of_week = _normalize_days_of_week(days_of_week)
     if normalized_days_of_week is None:
         return []
-    return [
-        weekday
-        for weekday, bit in ALARM_WEEKDAY_BITS.items()
-        if normalized_days_of_week & bit
-    ]
+    return [weekday for weekday, bit in ALARM_WEEKDAY_BITS.items() if normalized_days_of_week & bit]
 
 
 def alarm_repeat_label(days_of_week: Any) -> str:
+    """Return a human readable label for an alarm's repeat days."""
     normalized_days_of_week = _normalize_days_of_week(days_of_week)
     if normalized_days_of_week is None:
         return "Unknown"
@@ -158,12 +169,12 @@ def alarm_repeat_label(days_of_week: Any) -> str:
     if normalized_days_of_week == ALARM_WEEKDAYS_MASK:
         return "Every day"
     return ", ".join(
-        ALARM_WEEKDAY_LABELS[weekday]
-        for weekday in alarm_weekdays(normalized_days_of_week)
+        ALARM_WEEKDAY_LABELS[weekday] for weekday in alarm_weekdays(normalized_days_of_week)
     )
 
 
 def normalize_alarm_weekdays(weekdays: Any) -> list[str]:
+    """Normalize weekday values from the UI into the API format."""
     if weekdays is None:
         return []
     if isinstance(weekdays, str):
@@ -185,17 +196,16 @@ def normalize_alarm_weekdays(weekdays: Any) -> list[str]:
 
 
 def remove_stale_alarm_entities(
-    hass,
-    config_entry,
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
     domain: str,
     current_alarm_unique_ids: set[str],
     authoritative_alarm_unique_id_prefixes: set[str],
     unique_id_suffix: str,
 ) -> None:
+    """Remove entities for alarms that no longer exist."""
     if not authoritative_alarm_unique_id_prefixes:
         return
-
-    from homeassistant.helpers import entity_registry as er
 
     entity_registry = er.async_get(hass)
     for entry in er.async_entries_for_config_entry(
@@ -215,15 +225,14 @@ def remove_stale_alarm_entities(
 
 
 def update_alarm_entity_names(
-    hass,
-    config_entry,
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
     domain: str,
     current_alarm_names: dict[str, str],
 ) -> None:
+    """Update alarm entity names after alarms change."""
     if not current_alarm_names:
         return
-
-    from homeassistant.helpers import entity_registry as er
 
     entity_registry = er.async_get(hass)
     for entry in er.async_entries_for_config_entry(
@@ -319,6 +328,5 @@ def _is_alarm_unique_id_for_authoritative_device(
     unique_id_suffix: str,
 ) -> bool:
     return unique_id.endswith(unique_id_suffix) and any(
-        unique_id.startswith(prefix)
-        for prefix in authoritative_alarm_unique_id_prefixes
+        unique_id.startswith(prefix) for prefix in authoritative_alarm_unique_id_prefixes
     )
