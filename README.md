@@ -94,6 +94,7 @@ You can now use the following services:
   * Possible options here are: Stream, PinkNoise, Dryer, Ocean, Wind, Rain, Bird, Crickets, Brahms, Twinkle, RockABye
   * Restore 2 and Restore 3 offer the free sounds from their own Hatch sound library instead of the built-in Rest tracks, which they can't play
   * Rest 2nd gen and Rest+ 2nd gen also offer the Time to Rise and Time for Bed tracks as `TimeToRise.<Name>` and `TimeForBed.<Name>` (for example `TimeToRise.YukiSaysGoodMorning`), and show these names as the sound mode while a Hatch app routine plays them
+  * Rest+, Rest Baby and Restore 2/3 also offer any sounds defined in `hatch_custom_sounds.yaml`; see [Custom Sounds](#custom-sounds)
 * Media player: Set volume
 * Media player: Play
 * Media player: Stop
@@ -126,6 +127,25 @@ Here are the basic colors from the app:
   * hs_color: 330.811, 60.163
   * rgb_color: 246, 98, 170
   * xy_color: 0.476, 0.248
+
+## Custom Sounds ##
+Additional sounds can be defined outside the integration in
+`/config/hatch_custom_sounds.yaml` (see `hatch_custom_sounds.example.yaml`). The
+YAML key becomes the sound-mode name. Each sound needs a positive integer `id`
+and either a WAV or MP3 URL. Both camel-case (`wavUrl`/`mp3Url`) and snake-case
+(`wav_url`/`mp3_url`) URL keys are supported.
+
+```yaml
+ClassicOcean:
+  id: 10165
+  wav_url: "https://downloads.ctfassets.net/hlsdh3zwyrtx/2L4XgH93PtqfypPvORIFxo/9d5eb4d5f18d182a8277a8589b27aaee/RV4_Sleep_ClassicOcean_CGMasterV5_20221020.wav"
+```
+
+Reload the integration or restart Home Assistant after changing the file.
+Invalid entries are ignored and described in the Home Assistant log. While a
+sound plays, the media player shows its `current_sound_id`,
+`current_sound_url`, `current_sound_filename` and `current_sound_title`
+attributes.
 
 ***
 

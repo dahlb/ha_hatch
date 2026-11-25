@@ -11,7 +11,7 @@ from copy import deepcopy
 from datetime import time
 from types import ModuleType, SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from hatch_rest_api.util import convert_from_percentage
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_EFFECT
@@ -86,11 +86,12 @@ async def _set_up_platforms(coordinator: FakeCoordinator) -> Added:
     )
     added: Added = {}
     registry_get, registry_entries = _registry_patches()
-    # The scheduled-routine alarm reconcilers prune the entity registry, which
-    # needs a real hass.
+    # The scheduled-routine alarm reconcilers prune the entity registry, and the
+    # custom sounds loader reads the config directory; both need a real hass.
     with (
         registry_get,
         registry_entries,
+        patch.object(media_player, "async_load_custom_sounds", AsyncMock(return_value={})),
         patch.object(switch, "remove_stale_alarm_entities"),
         patch.object(switch, "update_alarm_entity_names"),
         patch.object(sensor, "remove_stale_alarm_entities"),

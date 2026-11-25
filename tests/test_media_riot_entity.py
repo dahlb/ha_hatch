@@ -14,23 +14,34 @@ from hatch_rest_api import (
 from hatch_rest_api.const import NO_SOUND_ID
 import pytest
 
+from custom_components.ha_hatch.custom_sounds import CustomSound
 from custom_components.ha_hatch.media_riot_entity import MediaRiotEntity
 
 RESTORE_CATALOG = [
     {"id": 20001, "title": "432 Hz Ambience", "wavUrl": "https://example.invalid/432.wav"},
     {"id": 20002, "title": "Meditative Flute", "wavUrl": "https://example.invalid/flute.wav"},
 ]
+CUSTOM_SOUNDS: dict[str, CustomSound] = {
+    "ClassicOcean": {
+        "id": 10165,
+        "title": "ClassicOcean",
+        "wavUrl": "https://example.invalid/sounds/Classic%20Ocean.wav",
+    }
+}
 RIOT_TRACK_NAMES = {track.name for track in RIoTAudioTrack if track is not RIoTAudioTrack.NONE}
 
 
 def _media_entity(
-    device_class: type, sounds: list[dict[str, object]] | None = None
+    device_class: type,
+    sounds: list[dict[str, object]] | None = None,
+    custom_sounds: dict[str, CustomSound] | None = None,
 ) -> tuple[MediaRiotEntity, MagicMock]:
     """Build a media entity backed by a mocked coordinator and device.
 
     Args:
         device_class: hatch_rest_api device class the mocked device is specced on.
         sounds: Sound catalog the device was created with.
+        custom_sounds: User-defined sounds offered by the entity.
 
     Returns:
         The media entity under test and its mocked device.
@@ -48,7 +59,10 @@ def _media_entity(
     rest_device.sounds_by_id = {sound["id"]: sound for sound in sounds}
     coordinator = MagicMock()
     coordinator.rest_device_by_thing_name.return_value = rest_device
-    return MediaRiotEntity(coordinator=coordinator, thing_name="thing"), rest_device
+    entity = MediaRiotEntity(
+        coordinator=coordinator, thing_name="thing", custom_sounds=custom_sounds
+    )
+    return entity, rest_device
 
 
 @pytest.mark.parametrize("device_class", [RestoreV4, RestoreV5])
@@ -133,3 +147,44 @@ def test_media_stop_turns_off_devices_without_stop_sound(device_class: type) -> 
     entity.media_stop()
 
     rest_device.turn_off.assert_called_once_with()
+
+
+@pytest.mark.parametrize("device_class", [RestIot, RestBaby, RestoreV4, RestoreV5])
+def test_custom_sound_is_offered_and_played_by_payload(device_class: type) -> None:
+    """A custom sound is listed and played by passing its full payload to set_sound."""
+    entity, rest_device = _media_entity(device_class, custom_sounds=CUSTOM_SOUNDS)
+
+    assert "ClassicOcean" in (entity.sound_mode_list or [])
+    entity.select_sound_mode("ClassicOcean")
+
+    rest_device.set_sound.assert_called_once_with(CUSTOM_SOUNDS["ClassicOcean"])
+    if hasattr(device_class, "set_audio_track"):
+        rest_device.set_audio_track.assert_not_called()
+
+
+@pytest.mark.parametrize("device_class", [RestIot, RestoreV5])
+def test_playing_custom_sound_is_the_sound_mode(device_class: type) -> None:
+    """While a custom sound plays, its name is the sound mode and is described."""
+    entity, rest_device = _media_entity(device_class, custom_sounds=CUSTOM_SOUNDS)
+    rest_device.sound_id = 10165
+    rest_device.current_playing = "remote"
+    rest_device.favorites = []
+
+    assert entity.sound_mode == "ClassicOcean"
+    attributes = entity.extra_state_attributes or {}
+    assert attributes["current_sound_id"] == 10165
+    assert attributes["current_sound_title"] == "ClassicOcean"
+    assert attributes["current_sound_filename"] == "Classic Ocean.wav"
+
+
+def test_catalog_sound_attributes_without_custom_sounds() -> None:
+    """Catalog sounds are described in the attributes without any custom sounds."""
+    entity, rest_device = _media_entity(RestoreV5, RESTORE_CATALOG)
+    rest_device.sound_id = 20002
+    rest_device.current_playing = "remote"
+    rest_device.favorites = []
+
+    assert entity.sound_mode == "Meditative Flute"
+    attributes = entity.extra_state_attributes or {}
+    assert attributes["current_sound_title"] == "Meditative Flute"
+    assert attributes["current_sound_filename"] == "flute.wav"
