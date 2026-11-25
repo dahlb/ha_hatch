@@ -4,7 +4,7 @@
 from homeassistant.const import Platform
 
 DOMAIN: str = "ha_hatch"
-VERSION: str = "1.33.1"
+VERSION: str = "1.34.0"
 
 # Integration Setting Constants
 CONFIG_FLOW_VERSION: int = 2
