@@ -6,7 +6,7 @@ from datetime import time
 import logging
 from typing import Any
 
-from hatch_rest_api import RestoreV5
+from hatch_rest_api import Restore, RestoreV5
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,6 +25,7 @@ from .alarm import (
 )
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
+from .restore_entities import RestoreAlarmTime, RestoreClockTime, async_setup_restore_alarm_entities
 
 _LOGGER = logging.getLogger(__name__)
 ALARM_WAKE_TIME_UNIQUE_ID_SUFFIX = "_wake_time"
@@ -61,7 +62,7 @@ async def async_setup_entry(
     """Set up the platform from a config entry."""
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
 
-    clock_entities = []
+    clock_entities: list[TimeEntity] = []
     for rest_device in coordinator.rest_devices:
         # RestoreV4 subclasses RestoreV5, so this covers both.
         if isinstance(rest_device, RestoreV5):
@@ -76,8 +77,18 @@ async def async_setup_entry(
                         icon=icon,
                     )
                 )
+        if isinstance(rest_device, Restore):
+            clock_entities.extend(
+                RestoreClockTime(
+                    coordinator=coordinator, thing_name=rest_device.thing_name, turn_on=turn_on
+                )
+                for turn_on in (True, False)
+            )
     if clock_entities:
         async_add_entities(clock_entities)
+    await async_setup_restore_alarm_entities(
+        hass, config_entry, coordinator, async_add_entities, RestoreAlarmTime, "time"
+    )
 
     alarm_entities_by_unique_id: dict[str, HatchAlarmWakeTime] = {}
 

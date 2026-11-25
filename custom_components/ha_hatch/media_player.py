@@ -3,7 +3,7 @@
 import functools
 import logging
 
-from hatch_rest_api import RestBaby, RestDevice, RestIot, RestoreIot, RestoreV5
+from hatch_rest_api import RestBaby, RestDevice, RestIot, Restore, RestoreIot, RestoreV5
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -12,6 +12,7 @@ from . import HatchDataUpdateCoordinator
 from .const import CONFIG_TURN_ON_DEFAULT, CONFIG_TURN_ON_MEDIA, DOMAIN
 from .media_rest_entity import MediaRestEntity
 from .media_riot_entity import MediaRiotEntity
+from .restore_entities import RestoreSound
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +21,12 @@ def choose_media_entity(
     rest_device: RestDevice,
     config_turn_on_media: bool,
     coordinator: HatchDataUpdateCoordinator,
-) -> MediaRiotEntity | MediaRestEntity:
+) -> MediaRiotEntity | MediaRestEntity | RestoreSound:
     """Return the media entity class for a device."""
+    if isinstance(rest_device, Restore):
+        # Must stay before the fallback below, which builds a Rest Mini/Plus
+        # player for anything not matched.
+        return RestoreSound(coordinator=coordinator, thing_name=rest_device.thing_name)
     if isinstance(rest_device, RestIot | RestoreIot | RestoreV5 | RestBaby):
         return MediaRiotEntity(coordinator=coordinator, thing_name=rest_device.thing_name)
     return MediaRestEntity(

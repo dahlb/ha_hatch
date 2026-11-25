@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import ClassVar
 
-from hatch_rest_api import RestoreV5
+from hatch_rest_api import Restore, RestoreV5
 from hatch_rest_api.const import (
     CLOCK_TURN_OFF_MODE_ALWAYS,
     CLOCK_TURN_OFF_MODE_CUSTOM,
@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HatchDataUpdateCoordinator
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
+from .restore_entities import RestoreClockMode, RestoreRoutineStep
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,11 +43,19 @@ async def async_setup_entry(
     """Set up the platform from a config entry."""
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
     # RestoreV4 subclasses RestoreV5, so this covers both.
-    entities = [
+    entities: list[SelectEntity] = [
         ClockModeSelect(coordinator=coordinator, thing_name=rest_device.thing_name)
         for rest_device in coordinator.rest_devices
         if isinstance(rest_device, RestoreV5)
     ]
+    for rest_device in coordinator.rest_devices:
+        if isinstance(rest_device, Restore):
+            entities.append(
+                RestoreRoutineStep(coordinator=coordinator, thing_name=rest_device.thing_name)
+            )
+            entities.append(
+                RestoreClockMode(coordinator=coordinator, thing_name=rest_device.thing_name)
+            )
     async_add_entities(entities)
 
 

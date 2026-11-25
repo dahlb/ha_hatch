@@ -8,7 +8,7 @@ from decimal import Decimal
 import logging
 from typing import Any
 
-from hatch_rest_api import RestIot, RestPlus
+from hatch_rest_api import RestIot, Restore, RestPlus
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
@@ -29,6 +29,13 @@ from .alarm import (
 )
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
+from .restore_entities import (
+    RestoreAlarmRepeat,
+    RestoreFirmwareVersion,
+    RestorePlaying,
+    RestoreSignalStrength,
+    async_setup_restore_alarm_entities,
+)
 
 _LOGGER = logging.getLogger(__name__)
 ALARM_REPEAT_UNIQUE_ID_SUFFIX = "_repeat"
@@ -41,7 +48,7 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})
 
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
-    sensor_entities = []
+    sensor_entities: list[SensorEntity] = []
     for rest_device in coordinator.rest_devices:
         if isinstance(rest_device, (RestPlus, RestIot)):
             sensor_entities.append(
@@ -51,7 +58,15 @@ async def async_setup_entry(
             sensor_entities.append(
                 HatchCharging(coordinator=coordinator, thing_name=rest_device.thing_name)
             )
+        if isinstance(rest_device, Restore):
+            sensor_entities.extend(
+                sensor_class(coordinator=coordinator, thing_name=rest_device.thing_name)
+                for sensor_class in (RestorePlaying, RestoreFirmwareVersion, RestoreSignalStrength)
+            )
     async_add_entities(sensor_entities)
+    await async_setup_restore_alarm_entities(
+        hass, config_entry, coordinator, async_add_entities, RestoreAlarmRepeat, "sensor"
+    )
 
     alarm_entities_by_unique_id: dict[str, HatchAlarmRepeat] = {}
 

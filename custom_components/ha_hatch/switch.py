@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hatch_rest_api import RestBaby, RestIot, RestoreV5, RestPlus
+from hatch_rest_api import RestBaby, RestIot, Restore, RestoreV5, RestPlus
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,6 +23,13 @@ from .alarm import (
 )
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
+from .restore_entities import (
+    RestoreAlarmsSwitch,
+    RestoreAlarmSwitch,
+    RestoreClock24Hour,
+    RestoreRoutineSwitch,
+    async_setup_restore_alarm_entities,
+)
 
 _LOGGER = logging.getLogger(__name__)
 ALARM_UNIQUE_ID_SUFFIX = "_switch"
@@ -33,7 +40,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the platform from a config entry."""
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
-    entities = []
+    entities: list[SwitchEntity] = []
     for rest_device in coordinator.rest_devices:
         if isinstance(rest_device, RestPlus):
             entities.append(
@@ -55,8 +62,16 @@ async def async_setup_entry(
             entities.append(
                 HatchClockTapSwitch(coordinator=coordinator, thing_name=rest_device.thing_name)
             )
+        if isinstance(rest_device, Restore):
+            entities.extend(
+                switch_class(coordinator=coordinator, thing_name=rest_device.thing_name)
+                for switch_class in (RestoreRoutineSwitch, RestoreAlarmsSwitch, RestoreClock24Hour)
+            )
 
     async_add_entities(entities)
+    await async_setup_restore_alarm_entities(
+        hass, config_entry, coordinator, async_add_entities, RestoreAlarmSwitch, "switch"
+    )
 
     alarm_entities_by_unique_id: dict[str, HatchAlarmSwitch] = {}
 
