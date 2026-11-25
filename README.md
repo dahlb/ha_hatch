@@ -20,7 +20,7 @@
 | custom\_components/ha\_hatch/light\_riot\_entity.py              |       43 |       23 |        8 |        0 |     39% |31-32, 37-42, 47, 52, 60-77, 87 |
 | custom\_components/ha\_hatch/media\_player.py                    |       23 |        1 |        4 |        1 |     93% |        31 |
 | custom\_components/ha\_hatch/media\_rest\_entity.py              |       64 |       30 |       18 |        1 |     43% |54-56, 70-74, 79, 84, 87-94, 101, 105-107, 111, 115, 119-124, 128, 132-133 |
-| custom\_components/ha\_hatch/media\_riot\_entity.py              |       85 |       16 |       22 |        4 |     79% |82-84, 92, 94-95, 105, 111-112, 128, 134-135, 147-149, 165 |
+| custom\_components/ha\_hatch/media\_riot\_entity.py              |       89 |       15 |       24 |        4 |     81% |82-84, 92, 94-95, 105, 111-112, 128, 134-135, 147-149 |
 | custom\_components/ha\_hatch/number.py                           |       48 |        8 |        4 |        1 |     83% |32-38, 59, 68, 72, 87, 96, 100 |
 | custom\_components/ha\_hatch/restore\_alarm\_slots.py            |       80 |        1 |       24 |        1 |     98% |       265 |
 | custom\_components/ha\_hatch/restore\_entities.py                |      357 |        3 |       50 |        5 |     98% |185-\>187, 187-\>exit, 634-635, 643-\>645, 657, 889-\>888 |
@@ -31,7 +31,7 @@
 | custom\_components/ha\_hatch/services.py                         |       75 |       33 |       34 |        6 |     51% |28-34, 45-48, 57, 61, 65, 85-114, 126-128, 142, 147-151 |
 | custom\_components/ha\_hatch/switch.py                           |      133 |       51 |       32 |        9 |     58% |46, 50, 54-57, 62, 65-\>44, 85, 89-108, 111-112, 129, 147, 152, 156, 160, 174, 179, 183, 187, 235-244, 248-252, 257, 262-265, 270, 274, 278, 281-285, 289 |
 | custom\_components/ha\_hatch/time.py                             |      112 |       35 |       30 |        7 |     63% |69-70, 80-\>66, 87-\>89, 102, 106-126, 129-130, 147, 204-212, 216-220, 225, 230, 235, 239-243, 247 |
-| **TOTAL**                                                        | **1992** |  **603** |  **480** |   **65** | **66%** |           |
+| **TOTAL**                                                        | **1996** |  **602** |  **482** |   **65** | **66%** |           |
 
 
 ## Setup coverage badge
