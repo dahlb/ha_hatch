@@ -113,3 +113,23 @@ def test_rest_baby_keeps_built_in_tracks() -> None:
     entity.select_sound_mode(track.name)
 
     rest_device.set_audio_track.assert_called_once_with(track)
+
+
+def test_media_stop_rest_iot_stops_sound_only() -> None:
+    """Stopping a Rest+ stops only its sound, leaving the light as it is."""
+    entity, rest_device = _media_entity(RestIot)
+
+    entity.media_stop()
+
+    rest_device.stop_sound.assert_called_once_with()
+    rest_device.turn_off.assert_not_called()
+
+
+@pytest.mark.parametrize("device_class", [RestBaby, RestoreIot, RestoreV4, RestoreV5])
+def test_media_stop_turns_off_devices_without_stop_sound(device_class: type) -> None:
+    """Devices with no sound-only stop are turned off."""
+    entity, rest_device = _media_entity(device_class)
+
+    entity.media_stop()
+
+    rest_device.turn_off.assert_called_once_with()
