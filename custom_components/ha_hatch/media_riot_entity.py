@@ -161,5 +161,14 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             self.rest_device.set_audio_track(track)
 
     def media_stop(self) -> None:
-        """Stop playback."""
-        self.rest_device.turn_off()
+        """Stop playback.
+
+        A Rest+ (RestIot) stops only its sound so a light that is on stays on; other
+        devices have no sound-only stop and are turned off.
+        """
+        if isinstance(self.rest_device, RestIot):
+            _LOGGER.debug("media stop: stopping sound only")
+            self.rest_device.stop_sound()
+        else:
+            _LOGGER.debug("media stop: turning device off")
+            self.rest_device.turn_off()
