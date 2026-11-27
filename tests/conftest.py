@@ -17,6 +17,7 @@ from unittest.mock import MagicMock
 from hatch_rest_api import RestDevice, Restore
 import pytest
 
+from custom_components.ha_hatch.favorite_slots import FavoriteSlots
 from custom_components.ha_hatch.hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from custom_components.ha_hatch.restore_alarm_slots import RestoreAlarmSlots
 
@@ -238,6 +239,8 @@ class FakeCoordinator:
     """The coordinator's real original Restore methods, without Home Assistant."""
 
     _restore_alarm_slots_store = None
+    _favorite_slots_store = None
+    favorites_by_slot = HatchDataUpdateCoordinator.favorites_by_slot
     last_update_success = True
     restore_alarms_by_slot = HatchDataUpdateCoordinator.restore_alarms_by_slot
     restore_alarm = HatchDataUpdateCoordinator.restore_alarm
@@ -254,6 +257,7 @@ class FakeCoordinator:
         """
         self.rest_devices = rest_devices
         self.restore_alarm_slots = RestoreAlarmSlots()
+        self.favorite_slots = FavoriteSlots()
         self.alarm_refresh_callbacks: list[Callable[[], Awaitable[None]]] = []
 
     def rest_device_by_thing_name(self, thing_name: str) -> RestDevice | None:
