@@ -102,8 +102,8 @@ class SceneHarness:
         with registry_get, registry_entries:
             await scene.async_setup_entry(
                 self.hass,
-                cast(ConfigEntry, self.config_entry),
-                cast(AddEntitiesCallback, self._add),
+                cast("ConfigEntry", self.config_entry),
+                cast("AddEntitiesCallback", self._add),
             )
 
     async def refresh(self, favorites: list[dict[str, Any]]) -> None:
