@@ -19,6 +19,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .favorite_slots import FavoriteSlots
 from .restore_alarm_slots import RestoreAlarmSlots
 
 _LOGGER: Logger = getLogger(__name__)
@@ -36,6 +37,8 @@ AWSCRT_MISMATCH_TRACE_NAME: Final = "connect"
 AlarmRefreshCallback = Callable[[], Awaitable[None] | None]
 RESTORE_ALARM_SLOTS_STORE_VERSION: Final = 1
 RESTORE_ALARM_SLOTS_SAVE_DELAY: Final = 5
+FAVORITE_SLOTS_STORE_VERSION: Final = 1
+FAVORITE_SLOTS_SAVE_DELAY: Final = 5
 
 
 def restore_alarm_slots_store_key(entry_id: str) -> str:
@@ -48,6 +51,18 @@ def restore_alarm_slots_store_key(entry_id: str) -> str:
         The key, under Home Assistant's ``.storage`` directory.
     """
     return f"{DOMAIN}.restore_alarm_slots.{entry_id}"
+
+
+def favorite_slots_store_key(entry_id: str) -> str:
+    """Return the storage key of a config entry's favorite slots.
+
+    Args:
+        entry_id: The config entry's id.
+
+    Returns:
+        The key, under Home Assistant's ``.storage`` directory.
+    """
+    return f"{DOMAIN}.favorite_slots.{entry_id}"
 
 
 class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
@@ -80,6 +95,10 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         # has run.
         self.restore_alarm_slots = RestoreAlarmSlots()
         self._restore_alarm_slots_store: Store | None = None
+        # Favorites change id on every edit in the Hatch app; slots keep their
+        # scenes stable. Persisted once async_load_favorite_slots has run.
+        self.favorite_slots = FavoriteSlots()
+        self._favorite_slots_store: Store | None = None
 
         super().__init__(
             hass,
@@ -391,6 +410,45 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             self._restore_alarm_slots_store.async_delay_save(
                 self.restore_alarm_slots.as_dict, RESTORE_ALARM_SLOTS_SAVE_DELAY
             )
+
+    async def async_load_favorite_slots(self) -> None:
+        """Load the favorite slots saved for this config entry.
+
+        Without a config entry the slots are kept in memory only.
+        """
+        if self.config_entry is None:
+            return
+        self._favorite_slots_store = Store(
+            self.hass,
+            FAVORITE_SLOTS_STORE_VERSION,
+            favorite_slots_store_key(self.config_entry.entry_id),
+        )
+        self.favorite_slots = FavoriteSlots(await self._favorite_slots_store.async_load())
+
+    def favorites_by_slot(self, rest_device: RestDevice) -> dict[str, dict[str, Any]]:
+        """Return a device's favorites by slot key, in display order.
+
+        Args:
+            rest_device: The device.
+
+        Returns:
+            The favorites by slot key; empty for a device without favorites.
+        """
+        favorites = getattr(rest_device, "favorites", None)
+        if not isinstance(favorites, list):
+            return {}
+        by_slot, changed = self.favorite_slots.reconcile(rest_device.thing_name, favorites)
+        if changed:
+            _LOGGER.debug(
+                "favorite slots for %s changed: %s",
+                rest_device.thing_name,
+                self.favorite_slots.slots(rest_device.thing_name),
+            )
+            if self._favorite_slots_store is not None:
+                self._favorite_slots_store.async_delay_save(
+                    self.favorite_slots.as_dict, FAVORITE_SLOTS_SAVE_DELAY
+                )
+        return by_slot
 
     def restore_alarms_by_slot(self, rest_device: Restore) -> dict[str, dict[str, Any]]:
         """Return an original Restore's alarms by slot key.

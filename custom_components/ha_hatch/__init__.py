@@ -10,8 +10,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .hatch_data_update_coordinator import (
+    FAVORITE_SLOTS_STORE_VERSION,
     RESTORE_ALARM_SLOTS_STORE_VERSION,
     HatchDataUpdateCoordinator,
+    favorite_slots_store_key,
     restore_alarm_slots_store_key,
 )
 from .services import async_register_services
@@ -40,6 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
     await coordinator.async_load_restore_alarm_slots()
+    await coordinator.async_load_favorite_slots()
     await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -70,7 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Drop the original Restore alarm slots stored for a removed entry.
+    """Drop the alarm and favorite slots stored for a removed entry.
 
     Args:
         hass: Home Assistant instance.
@@ -80,4 +83,9 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         hass,
         RESTORE_ALARM_SLOTS_STORE_VERSION,
         restore_alarm_slots_store_key(config_entry.entry_id),
+    ).async_remove()
+    await Store(
+        hass,
+        FAVORITE_SLOTS_STORE_VERSION,
+        favorite_slots_store_key(config_entry.entry_id),
     ).async_remove()

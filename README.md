@@ -82,7 +82,8 @@ If something does not work, Download Diagnostics: it includes the device's full 
 ## Usage ##
 You can now use the following services:
 * Rest+ 2nd gen: activate scene to start a defined favorite
-  * if you add new favorites reload the integration to update available scenes or restart ha
+  * scenes for new, edited, reordered or deleted favorites follow within about an hour (when the integration logs in again); reload the integration to pick them up right away
+  * editing or reordering a favorite in the Hatch app gives it a new Hatch id, but its scene keeps its entity id, so dashboards and automations keep working; the `hatch_favorite_id` attribute shows the current id
 * Restore (`restoreIot`)/Restore 2/Restore 3: use the alarm switch to enable or disable an existing alarm (for the original Restore, see [Original Restore](#original-restore))
   * use the alarm wake time entity to change when the alarm sound starts; the sunrise light start shifts with it
   * when Hatch omits an alarm `endTime`, wake time is derived from `startTime` plus the alarm sunrise duration
