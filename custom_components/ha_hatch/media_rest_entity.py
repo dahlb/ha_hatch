@@ -75,14 +75,16 @@ class MediaRestEntity(HatchEntity, MediaPlayerEntity):
         return STATE_OFF
 
     @property
-    def sound_mode(self) -> str:
-        """Return the current sound mode."""
-        return self.rest_device.audio_track.name
+    def sound_mode(self) -> str | None:
+        """Return the current sound mode, or None before the device reports one."""
+        audio_track = self.rest_device.audio_track
+        return audio_track.name if audio_track is not None else None
 
     @property
     def volume_level(self) -> float | None:
-        """Return the volume level (0..1)."""
-        return self.rest_device.volume / 100
+        """Return the volume level (0..1), or None before the device reports one."""
+        volume = self.rest_device.volume
+        return volume / 100 if volume is not None else None
 
     def _find_track(self, sound_mode: str | None = None) -> Any:
         if sound_mode is None:
