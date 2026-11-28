@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+import probatio
 
 from .const import (
     CONFIG_FLOW_VERSION,
@@ -61,17 +61,17 @@ class HatchOptionFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize the hatch option flow handler."""
-        self.schema = vol.Schema(
+        self.schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONFIG_TURN_ON_LIGHT,
                     default=config_entry.options.get(CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT),
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONFIG_TURN_ON_MEDIA,
                     default=config_entry.options.get(CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT),
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONFIG_NUMBERED_PRESET_SCENES,
                     default=config_entry.options.get(
                         CONFIG_NUMBERED_PRESET_SCENES,
@@ -123,10 +123,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    probatio.Required(CONF_EMAIL): cv.string,
+                    probatio.Required(CONF_PASSWORD): cv.string,
                 }
             ),
             errors=errors,
@@ -168,7 +168,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): cv.string}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): cv.string}),
             description_placeholders={"email": email},
             errors=errors,
         )
@@ -203,12 +203,12 @@ class ConfigFlowHandler(config_entries.ConfigFlow):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_EMAIL, default=reconfigure_entry.data.get(CONF_EMAIL, "")
                     ): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    probatio.Required(CONF_PASSWORD): cv.string,
                 }
             ),
             errors=errors,

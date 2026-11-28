@@ -12,8 +12,8 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import HatchDataUpdateCoordinator
 from .const import DOMAIN
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 
 TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID}
 TO_REDACT_MAPPED = {
@@ -21,8 +21,8 @@ TO_REDACT_MAPPED = {
     "indoor_serial",
     "outdoor_serial",
 }
-TO_REDACT_DEVICE = {}
-TO_REDACT_ENTITIES = {}
+TO_REDACT_DEVICE: set[str] = set()
+TO_REDACT_ENTITIES: set[str] = set()
 # Raw shadow keys (the original Restore reports its whole shadow): the paired
 # Bluetooth headphones' PIN and addresses.
 TO_REDACT_SHADOW = {

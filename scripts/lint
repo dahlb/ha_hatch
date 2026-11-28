@@ -2,12 +2,15 @@
 
 cd "$(dirname "$0")/.."
 
-if [ ! -x .venv/bin/prek ]; then
+if [ ! -x .venv/bin/prek ] || [ ! -x .venv/bin/mypy ]; then
 	echo "Missing .venv tooling. Run scripts/setup first." >&2
 	exit 1
 fi
 
-# mypy is configured in pyproject.toml and installed by scripts/setup; run
-# `.venv/bin/mypy .` manually until the existing type errors are resolved and
-# it can be added here as a gating check (as in ha_carrier).
-.venv/bin/prek run -a
+status=0
+
+.venv/bin/prek run -a || status=$?
+# Type-check the integration (tool.mypy files) in strict mode.
+.venv/bin/mypy || status=$?
+
+exit "$status"

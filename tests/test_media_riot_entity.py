@@ -12,6 +12,7 @@ from hatch_rest_api import (
     RIoTAudioTrack,
 )
 from hatch_rest_api.const import NO_SOUND_ID
+from homeassistant.exceptions import ServiceValidationError
 import pytest
 
 from custom_components.ha_hatch.custom_sounds import CustomSound
@@ -107,6 +108,21 @@ async def test_restore_iot_without_sounds_play_does_nothing() -> None:
 
     assert entity.sound_mode_list == []
     await entity.async_media_play()
+
+    assert rest_device.method_calls == []
+
+
+async def test_restore_iot_rejects_sound_modes() -> None:
+    """The Restore (1st gen) has no set_sound, so it isn't offered custom sounds.
+
+    Selecting a sound mode raises a validation error instead of AttributeError
+    ('RestoreIot' object has no attribute 'set_sound').
+    """
+    entity, rest_device = _media_entity(RestoreIot, custom_sounds=CUSTOM_SOUNDS)
+
+    assert "ClassicOcean" not in (entity.sound_mode_list or [])
+    with pytest.raises(ServiceValidationError):
+        await entity.async_select_sound_mode("ClassicOcean")
 
     assert rest_device.method_calls == []
 

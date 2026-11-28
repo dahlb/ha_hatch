@@ -10,6 +10,7 @@ from typing import Any, ClassVar, Final
 
 from hatch_rest_api import RestDevice, Restore, get_rest_devices
 from hatch_rest_api.errors import AuthError, RateError
+from hatch_rest_api.shadow_client_subscriber import ShadowClientSubscriberMixin
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -65,7 +66,7 @@ def favorite_slots_store_key(entry_id: str) -> str:
     return f"{DOMAIN}.favorite_slots.{entry_id}"
 
 
-class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
+class HatchDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Coordinate Hatch device updates."""
 
     mqtt_connection = None
@@ -94,11 +95,11 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         # their entities stable. Persisted once async_load_restore_alarm_slots
         # has run.
         self.restore_alarm_slots = RestoreAlarmSlots()
-        self._restore_alarm_slots_store: Store | None = None
+        self._restore_alarm_slots_store: Store[dict[str, Any]] | None = None
         # Favorites change id on every edit in the Hatch app; slots keep their
         # scenes stable. Persisted once async_load_favorite_slots has run.
         self.favorite_slots = FavoriteSlots()
-        self._favorite_slots_store: Store | None = None
+        self._favorite_slots_store: Store[dict[str, Any]] | None = None
 
         super().__init__(
             hass,
@@ -193,7 +194,8 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
 
     async def async_refresh_alarms(self) -> None:
         """Refresh alarms for all devices."""
-        alarm_devices = [
+        # Duck-typed: the alarm-capable classes share no base class.
+        alarm_devices: list[Any] = [
             rest_device
             for rest_device in self.rest_devices
             if (
@@ -300,7 +302,7 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             for frame in traceback.extract_tb(error.__traceback__)
         )
 
-    async def _async_update_data(self) -> list[dict]:
+    async def _async_update_data(self) -> list[dict[str, Any]]:
         self._raise_if_retry_backoff_active()
         try:
             _LOGGER.debug("_async_update_data: %s", self.email)
@@ -426,7 +428,9 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         )
         self.favorite_slots = FavoriteSlots(await self._favorite_slots_store.async_load())
 
-    def favorites_by_slot(self, rest_device: RestDevice) -> dict[str, dict[str, Any]]:
+    def favorites_by_slot(
+        self, rest_device: ShadowClientSubscriberMixin
+    ) -> dict[str, dict[str, Any]]:
         """Return a device's favorites by slot key, in display order.
 
         Args:

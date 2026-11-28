@@ -20,3 +20,27 @@ jobs:
 
       - name: Run prek
         uses: j178/prek-action@v2
+
+  typing:
+    name: Type-check (mypy --strict)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Setup Python 3.14 (with caching)
+        uses: actions/setup-python@v7
+        with:
+          python-version: 3.14
+          cache: 'pip'
+          cache-dependency-path: |
+            pyproject.toml
+
+      - name: Install lint requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install --group lint -e .
+
+      - name: Run mypy
+        # Checks custom_components/ha_hatch with strict = true from pyproject.toml.
+        run: mypy

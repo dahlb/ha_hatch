@@ -5,20 +5,20 @@ from __future__ import annotations
 from logging import getLogger
 from typing import Any, ClassVar
 
+from hatch_rest_api.iot_device import IotDevice
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_RGBW_COLOR, ColorMode, LightEntity
 
-from . import HatchDataUpdateCoordinator
 from .commands import translate_command_errors
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 
 _LOGGER = getLogger(__name__)
 
 
-class LightRestoreIotEntity(HatchEntity, LightEntity):
+class LightRestoreIotEntity(HatchEntity[IotDevice], LightEntity):
     """Light restore iot entity."""
 
     _attr_color_mode = ColorMode.RGBW
-    _attr_supported_color_modes: ClassVar[set[ColorMode]] = {ColorMode.RGBW}
 
     _DEFAULT_LIGHT_ON_COLORS: ClassVar[dict[str, int]] = {
         "r": 127,
@@ -31,6 +31,7 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
     def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
         """Initialize the light restore iot entity."""
         super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Light")
+        self._attr_supported_color_modes = {ColorMode.RGBW}
         self._last_light_on_colors: dict[str, int] = dict(self._DEFAULT_LIGHT_ON_COLORS)
 
     @property
@@ -50,7 +51,7 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
         return int(round(self.rest_device.brightness / 100 * 255.0, 0))
 
     @property
-    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+    def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the RGBW color."""
         return (
             self.rest_device.red,
@@ -60,7 +61,7 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
         )
 
     @translate_command_errors
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         _LOGGER.debug("args:%s", kwargs)
         if not kwargs:
@@ -76,7 +77,7 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
             return
 
         # Convert Home Assistant brightness (0-255) to percent (0-100)
-        brightness = round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100)
+        brightness = round(kwargs.get(ATTR_BRIGHTNESS, self.brightness or 0) / 255 * 100)
         red, green, blue, white = kwargs.get(ATTR_RGBW_COLOR, self.rgbw_color)
 
         # Add white offset to RGB values to prevent black display in the Hatch

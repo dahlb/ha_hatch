@@ -9,9 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HatchDataUpdateCoordinator
 from .const import CONFIG_TURN_ON_DEFAULT, CONFIG_TURN_ON_MEDIA, DOMAIN
 from .custom_sounds import CustomSound, async_load_custom_sounds
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .media_rest_entity import MediaRestEntity
 from .media_riot_entity import MediaRiotEntity
 from .restore_entities import RestoreSound

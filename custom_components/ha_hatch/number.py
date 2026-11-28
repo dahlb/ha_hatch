@@ -11,9 +11,9 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HatchDataUpdateCoordinator
 from .commands import translate_command_errors
 from .const import DOMAIN
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the platform from a config entry."""
     coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
-    entities = []
+    entities: list[NumberEntity] = []
     for rest_device in coordinator.rest_devices:
         # RestoreV4 subclasses RestoreV5, so this covers both.
         if isinstance(rest_device, RestoreV5):
@@ -45,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ClockDaytimeBrightnessNumber(HatchEntity, NumberEntity):
+class ClockDaytimeBrightnessNumber(HatchEntity[RestoreV5], NumberEntity):
     """Clock daytime brightness number."""
 
     _attr_icon = "mdi:weather-sunny"
@@ -76,7 +76,7 @@ class ClockDaytimeBrightnessNumber(HatchEntity, NumberEntity):
         )
 
 
-class ClockNighttimeBrightnessNumber(HatchEntity, NumberEntity):
+class ClockNighttimeBrightnessNumber(HatchEntity[RestoreV5], NumberEntity):
     """Clock nighttime brightness number."""
 
     _attr_icon = "mdi:weather-night"

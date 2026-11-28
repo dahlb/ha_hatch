@@ -66,7 +66,8 @@ def alarm_by_id(rest_device: object, alarm_id: int | str) -> dict[str, Any] | No
     """Return the alarm with the given id, if any."""
     get_alarm_by_id = getattr(rest_device, "alarm_by_id", None)
     if callable(get_alarm_by_id):
-        return get_alarm_by_id(alarm_id)
+        alarm = get_alarm_by_id(alarm_id)
+        return alarm if isinstance(alarm, dict) else None
 
     alarm_id_string = str(alarm_id)
     return next(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from logging import getLogger
 
+from hatch_rest_api import RestDevice
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -13,8 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HatchDataUpdateCoordinator
 from .const import DOMAIN
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 
 _LOGGER = getLogger(__name__)
@@ -33,7 +34,7 @@ async def async_setup_entry(
     async_add_entities(binary_sensor_entities)
 
 
-class HatchOnlineSensor(HatchEntity, BinarySensorEntity):
+class HatchOnlineSensor(HatchEntity[RestDevice], BinarySensorEntity):
     """Hatch online sensor."""
 
     def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
@@ -48,7 +49,7 @@ class HatchOnlineSensor(HatchEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return whether the entity is on."""
-        return self.rest_device.is_online
+        return bool(self.rest_device.is_online)
 
     @property
     def icon(self) -> str | None:

@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from hatch_rest_api.iot_device import IotDevice
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,7 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HatchDataUpdateCoordinator
 from .commands import translate_command_errors
 from .const import CONFIG_NUMBERED_PRESET_SCENES, CONFIG_NUMBERED_PRESET_SCENES_DEFAULT, DOMAIN
 from .favorite_slots import (
@@ -28,6 +28,7 @@ from .favorite_slots import (
     favorite_scene_unique_id_prefix,
 )
 from .favorites import favorite_scene_attributes, favorite_scene_name
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,7 +104,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(coordinator.async_add_alarm_refresh_callback(async_reconcile))
 
 
-class RiotScene(HatchEntity, Scene):
+class RiotScene(HatchEntity[IotDevice], Scene):
     """Scene that starts the favorite in one favorite slot."""
 
     def __init__(
