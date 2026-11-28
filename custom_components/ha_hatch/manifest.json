@@ -13,7 +13,7 @@
     "hatch_rest_api"
   ],
   "requirements": [
-    "hatch-rest-api==1.41.0"
+    "hatch-rest-api==1.42.0"
   ],
   "version": "1.34.2"
 }

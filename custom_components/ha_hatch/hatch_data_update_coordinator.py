@@ -343,7 +343,7 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             # Re-login replaces every RestDevice instance, so alarm-derived entities
             # must reconcile against the new objects to keep references current.
             await self._async_notify_alarm_refresh_callbacks()
-            return [rest_device.__repr__() for rest_device in self.rest_devices]
+            return [rest_device.as_dict() for rest_device in self.rest_devices]
         except AuthError as error:
             self._clear_retry_backoff()
             raise ConfigEntryAuthFailed("Hatch credentials rejected during setup") from error
