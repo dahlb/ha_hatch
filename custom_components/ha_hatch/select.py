@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HatchDataUpdateCoordinator
+from .commands import translate_command_errors
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
 from .restore_entities import RestoreClockMode, RestoreRoutineStep
@@ -83,6 +84,7 @@ class ClockModeSelect(HatchEntity, SelectEntity):
         # Fall back to the display flag until the mode field has been parsed.
         return MODE_ALWAYS_OFF if not dev.is_clock_on else MODE_ALWAYS_ON
 
+    @translate_command_errors
     def select_option(self, option: str) -> None:
         """Select an option.
 

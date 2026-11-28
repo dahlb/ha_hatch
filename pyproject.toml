@@ -54,7 +54,7 @@ show_error_codes = true
 warn_unused_configs = true
 
 [[tool.mypy.overrides]]
-module = ["hatch_rest_api.*"]
+module = ["awscrt.*", "hatch_rest_api.*"]
 ignore_missing_imports = true
 
 [tool.ruff]

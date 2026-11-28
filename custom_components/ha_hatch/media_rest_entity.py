@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PLAYING
 
 from . import HatchDataUpdateCoordinator
+from .commands import translate_command_errors
 from .hatch_entity import HatchEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,24 +97,29 @@ class MediaRestEntity(HatchEntity, MediaPlayerEntity):
             None,
         )
 
+    @translate_command_errors
     def set_volume_level(self, volume: float) -> None:
         """Set the volume level (0..1)."""
         self.rest_device.set_volume(volume * 100)
 
+    @translate_command_errors
     def media_play(self) -> None:
         """Start playback."""
         self.rest_device.set_audio_track(self.rest_device.audio_track)
         if self.config_turn_on_media:
             self.turn_on()
 
+    @translate_command_errors
     def media_pause(self) -> None:
         """Pause playback."""
         self.rest_device.set_audio_track(self.none_track)
 
+    @translate_command_errors
     def media_stop(self) -> None:
         """Stop playback."""
         self.rest_device.set_audio_track(self.none_track)
 
+    @translate_command_errors
     def select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
         track = self._find_track(sound_mode=sound_mode)
@@ -123,10 +129,12 @@ class MediaRestEntity(HatchEntity, MediaPlayerEntity):
         if self.config_turn_on_media:
             self.turn_on()
 
+    @translate_command_errors
     def turn_off(self) -> None:
         """Turn the entity off."""
         self.media_stop()
 
+    @translate_command_errors
     def turn_on(self) -> None:
         """Turn the entity on."""
         if isinstance(self.rest_device, RestPlus):

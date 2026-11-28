@@ -25,5 +25,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "command_timeout": {
+      "message": "Hatch did not confirm the command for {target} in time. Check the device's connection and try again."
+    },
+    "command_failed": {
+      "message": "The command for {target} could not be sent to Hatch ({error}). Check the device's connection and try again."
+    }
   }
 }

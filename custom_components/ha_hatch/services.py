@@ -12,6 +12,7 @@ from homeassistant.helpers.target import TargetSelection, async_extract_referenc
 import voluptuous as vol
 
 from .alarm import alarm_reference_from_unique_id, normalize_alarm_weekdays
+from .commands import hatch_command_errors
 from .const import DOMAIN
 from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .restore_alarm_slots import restore_alarm_reference_from_unique_id
@@ -68,13 +69,14 @@ async def _async_set_alarm_weekdays(
 
     weekdays = call.data[ATTR_WEEKDAYS]
     for rest_device, alarm_id in alarm_targets.values():
-        if isinstance(rest_device, Restore):
-            # An edit gives the alarm a new id; the coordinator keeps its slot.
-            await coordinator.async_set_restore_alarm_schedule(
-                rest_device, alarm_id, weekdays=weekdays
-            )
-        else:
-            await rest_device.set_alarm_weekdays(alarm_id, weekdays)
+        with hatch_command_errors(rest_device.device_name):
+            if isinstance(rest_device, Restore):
+                # An edit gives the alarm a new id; the coordinator keeps its slot.
+                await coordinator.async_set_restore_alarm_schedule(
+                    rest_device, alarm_id, weekdays=weekdays
+                )
+            else:
+                await rest_device.set_alarm_weekdays(alarm_id, weekdays)
 
 
 def _alarm_targets_from_service_call(
