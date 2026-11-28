@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from concurrent.futures import Future
 from copy import deepcopy
+import json
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -19,7 +20,7 @@ from hatch_rest_api.const import CUSTOM_COLOR_ID, RIOT_FLAGS_CLOCK_ON
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -40,7 +41,7 @@ ALARM = {
     "active": True,
     "enabled": True,
     "type": "alarm",
-    "macAddress": "AA:00:00:00:00:06",
+    "macAddress": "AA:00:00:00:06:00",
     "startTime": "2026-05-08T06:30:00",
     "endTime": "2026-05-08T07:00:00",
     "daysOfWeek": 62,
@@ -163,7 +164,7 @@ class Household:
 
     def _add(self, device_class: type, name: str, state: dict[str, Any]) -> Any:
         index = len(self.devices) + 1
-        device, client = build_device(device_class, f"thing-{name}", f"AA:00:00:00:00:0{index}")
+        device, client = build_device(device_class, f"thing-{name}", f"AA:00:00:00:0{index}:00")
         device.device_name = name.capitalize()
         device._update_local_state(state)
         client.published.clear()
@@ -250,6 +251,39 @@ async def test_states_reflect_the_devices(
     assert hass.states.get(_entity_id(hass, "light", "thing-riot_light")).state == "on"
     assert hass.states.get(_entity_id(hass, "light", "thing-riot_clock")).state == "on"
     assert hass.states.get(_entity_id(hass, "switch", "thing-riot_toddler_lock")).state == "off"
+
+
+async def test_entities_are_named_after_their_device(
+    hass: HomeAssistant, loaded: tuple[MockConfigEntry, Household]
+) -> None:
+    """Names keep the "<device> <entity>" form, and follow a renamed device."""
+    entry, _ = loaded
+    light = _entity_id(hass, "light", "thing-plus_light")
+    assert light == "light.plus_light"
+    assert hass.states.get(light).attributes["friendly_name"] == "Plus Light"
+    assert (
+        hass.states.get(_entity_id(hass, "switch", "thing-plus_power_switch")).attributes[
+            "friendly_name"
+        ]
+        == "Plus Power Switch"
+    )
+    strings = json.loads(
+        (Path(__file__).parents[1] / "custom_components/ha_hatch/strings.json").read_text()
+    )
+    for registry_entry in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id):
+        # A key missing from strings.json would leave the entity with just the device's name.
+        if registry_entry.translation_key is not None:
+            assert registry_entry.translation_key in strings["entity"][registry_entry.domain], (
+                registry_entry.entity_id
+            )
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device_by_identifier((DOMAIN, "thing-plus"), entry.entry_id)
+    assert device is not None
+    device_registry.async_update_device(device.id, name_by_user="Nursery")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(light).attributes["friendly_name"] == "Nursery Light"
 
 
 async def test_service_calls_reach_the_devices(
@@ -341,3 +375,48 @@ async def test_unload_releases_the_devices(
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_two_accounts_keep_their_own_devices(
+    hass: HomeAssistant, loaded: tuple[MockConfigEntry, Household]
+) -> None:
+    """A second Hatch account gets its own coordinator; unloading it leaves the first."""
+    first_entry, household = loaded
+    other_email = "grandparents@example.invalid"
+    other_mini, _ = build_device(RestMini, "thing-other-mini", "AA:00:00:00:00:99")
+    other_mini.device_name = "Grandparents"
+    other_mini._update_local_state({"connected": True, "current": {"playing": "none"}})
+
+    async def get_rest_devices(**kwargs: Any) -> tuple[Any, Any, list[Any], float]:
+        session, connection, devices, expires = await household.get_rest_devices(**kwargs)
+        if kwargs["email"] == other_email:
+            devices = [other_mini]
+        return session, connection, devices, expires
+
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=other_email,
+        unique_id=other_email,
+        version=CONFIG_FLOW_VERSION,
+        data={CONF_EMAIL: other_email, CONF_PASSWORD: "password"},
+    )
+    second_entry.add_to_hass(hass)
+    with (
+        patch.object(coordinator_module, "get_rest_devices", get_rest_devices),
+        patch.object(coordinator_module, "async_get_clientsession"),
+    ):
+        assert await hass.config_entries.async_setup(second_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert first_entry.runtime_data is not second_entry.runtime_data
+    assert first_entry.runtime_data.rest_devices == household.devices
+    assert second_entry.runtime_data.rest_devices == [other_mini]
+    first_entity = _first_entity(hass, first_entry, "media_player", "thing-mini")
+    second_entity = _first_entity(hass, second_entry, "media_player", "thing-other-mini")
+
+    assert await hass.config_entries.async_unload(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert first_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(first_entity).state != "unavailable"
+    assert hass.states.get(second_entity).state == "unavailable"

@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import pytest
 
 from custom_components.ha_hatch import scene
-from custom_components.ha_hatch.const import CONFIG_NUMBERED_PRESET_SCENES, DOMAIN
+from custom_components.ha_hatch.const import CONFIG_NUMBERED_PRESET_SCENES
 
 from .conftest import FakeCoordinator, StubShadowClient, build_device
 
@@ -57,11 +57,11 @@ class SceneHarness:
         self.client: StubShadowClient = client
         self.coordinator = FakeCoordinator([device])
         self.hass = MagicMock()
-        self.hass.data = {DOMAIN: self.coordinator}
         self.config_entry = SimpleNamespace(
             options={CONFIG_NUMBERED_PRESET_SCENES: numbered},
             entry_id="entry-1",
             async_on_unload=lambda remove: None,
+            runtime_data=self.coordinator,
         )
         self.added: list[scene.RiotScene] = []
         self.registry = MagicMock()

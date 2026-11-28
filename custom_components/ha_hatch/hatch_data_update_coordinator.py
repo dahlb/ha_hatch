@@ -66,6 +66,10 @@ def favorite_slots_store_key(entry_id: str) -> str:
     return f"{DOMAIN}.favorite_slots.{entry_id}"
 
 
+type HatchConfigEntry = ConfigEntry["HatchDataUpdateCoordinator"]
+"""A Hatch config entry; its ``runtime_data`` is the account's coordinator."""
+
+
 class HatchDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Coordinate Hatch device updates."""
 

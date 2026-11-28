@@ -7,13 +7,12 @@ from typing import Any
 
 import attr
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .hatch_data_update_coordinator import HatchConfigEntry
 
 TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID}
 TO_REDACT_MAPPED = {
@@ -35,10 +34,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: HatchConfigEntry
 ) -> dict[str, dict[str, Any]]:
     """Return diagnostics for a config entry."""
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
     data = {
         "entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
     }
@@ -47,8 +46,8 @@ async def async_get_config_entry_diagnostics(
 
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
-        hass_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, rest_device.thing_name)}
+        hass_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, rest_device.thing_name), config_entry.entry_id
         )
         if hass_device is not None:
             data[rest_device.thing_name]["device"] = {

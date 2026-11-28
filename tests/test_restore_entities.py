@@ -32,7 +32,6 @@ from custom_components.ha_hatch import (
     switch,
     time as time_platform,
 )
-from custom_components.ha_hatch.const import DOMAIN
 
 from .conftest import (
     RESTORE_THING,
@@ -80,9 +79,12 @@ async def _set_up_platforms(coordinator: FakeCoordinator) -> Added:
     Returns:
         The entities each platform added.
     """
-    hass = SimpleNamespace(data={DOMAIN: coordinator})
+    hass = SimpleNamespace(data={})
     config_entry = SimpleNamespace(
-        options={}, entry_id="entry-1", async_on_unload=lambda remove: None
+        options={},
+        entry_id="entry-1",
+        async_on_unload=lambda remove: None,
+        runtime_data=coordinator,
     )
     added: Added = {}
     registry_get, registry_entries = _registry_patches()
@@ -208,12 +210,15 @@ def test_unique_ids_and_alarm_names(added: Added) -> None:
             for suffix in ("switch", "time", "repeat")
         ),
     }
-    # Alarm 1 goes off first in the day.
-    assert _entity(added, "switch", f"{THING}_restore_alarm_1002_switch").name == "Bedroom Alarm 1"
-    assert _entity(added, "switch", f"{THING}_restore_alarm_1001_switch").name == "Bedroom Alarm 2"
-    assert (
-        _entity(added, "time", f"{THING}_restore_alarm_1002_time").name
-        == "Bedroom Alarm 1 Wake Time"
+    # Alarm 1 goes off first in the day; Home Assistant names it "Bedroom Alarm 1".
+    first = _entity(added, "switch", f"{THING}_restore_alarm_1002_switch")
+    second = _entity(added, "switch", f"{THING}_restore_alarm_1001_switch")
+    wake_time = _entity(added, "time", f"{THING}_restore_alarm_1002_time")
+    assert (first.translation_key, first.translation_placeholders) == ("alarm", {"number": "1"})
+    assert second.translation_placeholders == {"number": "2"}
+    assert (wake_time.translation_key, wake_time.translation_placeholders) == (
+        "alarm_wake_time",
+        {"number": "1"},
     )
 
 

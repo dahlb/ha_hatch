@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from hatch_rest_api import Restore
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
 import probatio
@@ -53,22 +54,18 @@ async def _async_set_alarm_weekdays(
     hass: HomeAssistant,
     call: ServiceCall,
 ) -> None:
-    coordinator = hass.data.get(DOMAIN)
-    if not isinstance(coordinator, HatchDataUpdateCoordinator):
-        raise HomeAssistantError("Hatch integration is not loaded")
-
-    alarm_targets = _alarm_targets_from_service_call(hass, coordinator, call)
+    alarm_targets = _alarm_targets_from_service_call(hass, call)
     if not alarm_targets:
         raise ServiceValidationError("Target at least one Hatch alarm entity")
 
-    for rest_device, _alarm_id in alarm_targets.values():
+    for _coordinator, rest_device, _alarm_id in alarm_targets.values():
         if not callable(getattr(rest_device, "set_alarm_weekdays", None)):
             raise ServiceValidationError(
                 f"{rest_device.device_name} does not support alarm weekdays"
             )
 
     weekdays = call.data[ATTR_WEEKDAYS]
-    for rest_device, alarm_id in alarm_targets.values():
+    for coordinator, rest_device, alarm_id in alarm_targets.values():
         with hatch_command_errors(rest_device.device_name):
             if isinstance(rest_device, Restore):
                 # An edit gives the alarm a new id; the coordinator keeps its slot.
@@ -79,13 +76,16 @@ async def _async_set_alarm_weekdays(
                 await rest_device.set_alarm_weekdays(alarm_id, weekdays)
 
 
+type AlarmTarget = tuple[HatchDataUpdateCoordinator, Any, str]
+"""The coordinator of the alarm's account, the alarm's device and the alarm id."""
+
+
 def _alarm_targets_from_service_call(
     hass: HomeAssistant,
-    coordinator: HatchDataUpdateCoordinator,
     call: ServiceCall,
-) -> dict[tuple[str, str], tuple[Any, str]]:
+) -> dict[tuple[str, str], AlarmTarget]:
     entity_registry = er.async_get(hass)
-    targets: dict[tuple[str, str], tuple[Any, str]] = {}
+    targets: dict[tuple[str, str], AlarmTarget] = {}
 
     selected = async_extract_referenced_entity_ids(
         hass, TargetSelection(call.data), expand_group=True
@@ -93,8 +93,8 @@ def _alarm_targets_from_service_call(
 
     for entity_id in selected.referenced:
         target = _alarm_target_from_entity_id(
+            hass,
             entity_registry,
-            coordinator,
             entity_id,
             raise_if_not_alarm=True,
         )
@@ -104,8 +104,8 @@ def _alarm_targets_from_service_call(
 
     for entity_id in selected.indirectly_referenced:
         target = _alarm_target_from_entity_id(
+            hass,
             entity_registry,
-            coordinator,
             entity_id,
             raise_if_not_alarm=False,
         )
@@ -116,13 +116,30 @@ def _alarm_targets_from_service_call(
     return targets
 
 
+def _loaded_coordinator(
+    hass: HomeAssistant, config_entry_id: str | None
+) -> HatchDataUpdateCoordinator | None:
+    """Return the coordinator of a loaded Hatch config entry, if it is one."""
+    if config_entry_id is None:
+        return None
+    config_entry = hass.config_entries.async_get_entry(config_entry_id)
+    if (
+        config_entry is None
+        or config_entry.domain != DOMAIN
+        or config_entry.state is not ConfigEntryState.LOADED
+    ):
+        return None
+    coordinator: HatchDataUpdateCoordinator = config_entry.runtime_data
+    return coordinator
+
+
 def _alarm_target_from_entity_id(
+    hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    coordinator: HatchDataUpdateCoordinator,
     entity_id: str,
     *,
     raise_if_not_alarm: bool,
-) -> tuple[tuple[str, str], tuple[Any, str]] | None:
+) -> tuple[tuple[str, str], AlarmTarget] | None:
     entry = entity_registry.async_get(entity_id)
     if entry is None or entry.platform != DOMAIN:
         if raise_if_not_alarm:
@@ -144,12 +161,14 @@ def _alarm_target_from_entity_id(
         return None
 
     thing_name, alarm_id = alarm_reference
-    rest_device = coordinator.rest_device_by_thing_name(thing_name)
-    if rest_device is None:
+    # Each account has its own coordinator: use the one of the entity's entry.
+    coordinator = _loaded_coordinator(hass, entry.config_entry_id)
+    rest_device = coordinator.rest_device_by_thing_name(thing_name) if coordinator else None
+    if coordinator is None or rest_device is None:
         if raise_if_not_alarm:
             raise ServiceValidationError(
                 f"{entity_id} belongs to a Hatch device that is not loaded"
             )
         return None
 
-    return (thing_name, alarm_id), (rest_device, alarm_id)
+    return (thing_name, alarm_id), (coordinator, rest_device, alarm_id)

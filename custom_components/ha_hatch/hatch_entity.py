@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+import re
 from typing import cast
 
 from hatch_rest_api.shadow_client_subscriber import ShadowClientSubscriberMixin
@@ -16,6 +18,18 @@ from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+def entity_translation_key(entity_type: str) -> str:
+    """Return the translation key for an entity type, e.g. ``clock_24_hour``.
+
+    Args:
+        entity_type: The entity type, such as "Clock 24-Hour".
+
+    Returns:
+        The entity type in lower case, with each run of other characters as ``_``.
+    """
+    return re.sub(r"[^a-z0-9]+", "_", entity_type.lower()).strip("_")
+
+
 class HatchEntity[DeviceT: ShadowClientSubscriberMixin](
     CoordinatorEntity[HatchDataUpdateCoordinator]
 ):
@@ -23,15 +37,38 @@ class HatchEntity[DeviceT: ShadowClientSubscriberMixin](
 
     ``DeviceT`` is the hatch_rest_api class, or shared base class, of the devices
     the entity is created for, such as ``HatchEntity[RestPlus]``.
+
+    The entity is named by its ``translation_key`` (from ``strings.json``), and
+    Home Assistant puts the device's name in front of it, so renaming a device
+    renames its entities.
     """
 
+    _attr_has_entity_name = True
+
     def __init__(
-        self, coordinator: HatchDataUpdateCoordinator, thing_name: str, entity_type: str
+        self,
+        coordinator: HatchDataUpdateCoordinator,
+        thing_name: str,
+        entity_type: str,
+        *,
+        translation_key: str | None = None,
+        translation_placeholders: Mapping[str, str] | None = None,
     ) -> None:
-        """Initialize the hatch entity."""
+        """Initialize the hatch entity.
+
+        Args:
+            coordinator: The account's coordinator.
+            thing_name: The device's AWS IoT thing name.
+            entity_type: What the entity is, such as "Light"; it makes the unique id
+                and, unless ``translation_key`` is given, the translation key.
+            translation_key: The entity's translation key, if not from ``entity_type``.
+            translation_placeholders: Values for the placeholders in the name.
+        """
         super().__init__(coordinator=coordinator, context=thing_name)
         self._attr_unique_id = f"{thing_name}_{entity_type.lower().replace(' ', '_')}"
-        self._attr_name = f"{self.rest_device.device_name} {entity_type}"
+        self._attr_translation_key = translation_key or entity_translation_key(entity_type)
+        if translation_placeholders is not None:
+            self._attr_translation_placeholders = dict(translation_placeholders)
         connections = {
             (
                 dr.CONNECTION_NETWORK_MAC,

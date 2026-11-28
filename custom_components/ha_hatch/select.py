@@ -11,13 +11,11 @@ from hatch_rest_api.const import (
     CLOCK_TURN_OFF_MODE_NEVER,
 )
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .commands import translate_command_errors
-from .const import DOMAIN
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .hatch_data_update_coordinator import HatchConfigEntry, HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 from .restore_entities import RestoreClockMode, RestoreRoutineStep
 
@@ -37,11 +35,11 @@ TURN_OFF_MODE_TO_OPTION = {mode: option for option, mode in OPTION_TO_TURN_OFF_M
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HatchConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
     # RestoreV4 subclasses RestoreV5, so this covers both.
     entities: list[SelectEntity] = [
         ClockModeSelect(coordinator=coordinator, thing_name=rest_device.thing_name)

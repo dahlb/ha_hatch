@@ -51,7 +51,7 @@ from homeassistant.helpers.typing import StateType
 from .alarm import alarm_repeat_label, alarm_weekdays
 from .commands import translate_command_errors
 from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
-from .hatch_entity import HatchEntity
+from .hatch_entity import HatchEntity, entity_translation_key
 from .restore_alarm_slots import (
     RESTORE_ALARM_UNIQUE_ID_MARKER,
     alarm_section,
@@ -772,6 +772,8 @@ class RestoreAlarmEntity(RestoreEntity):
             coordinator=coordinator,
             thing_name=thing_name,
             entity_type=f"Alarm {number}{self.name_suffix}",
+            translation_key=entity_translation_key(f"Alarm{self.name_suffix}"),
+            translation_placeholders={"number": str(number)},
         )
         self._attr_unique_id = restore_alarm_unique_id(thing_name, slot_key, self.unique_id_suffix)
 

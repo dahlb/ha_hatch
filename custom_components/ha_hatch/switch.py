@@ -8,7 +8,6 @@ from typing import Any
 from hatch_rest_api import RestBaby, RestIot, Restore, RestoreIot, RestoreV5, RestPlus
 from hatch_rest_api.iot_device import IotRestDevice
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,8 +21,7 @@ from .alarm import (
     update_alarm_entity_names,
 )
 from .commands import translate_command_errors
-from .const import DOMAIN
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .hatch_data_update_coordinator import HatchConfigEntry, HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 from .restore_entities import (
     RestoreAlarmsSwitch,
@@ -38,10 +36,10 @@ ALARM_UNIQUE_ID_SUFFIX = "_switch"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, config_entry: HatchConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the platform from a config entry."""
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
     entities: list[SwitchEntity] = []
     for rest_device in coordinator.rest_devices:
         if isinstance(rest_device, RestPlus):
@@ -248,7 +246,8 @@ class HatchAlarmSwitch(HatchEntity[RestoreIot | RestoreV5], SwitchEntity):
             entity_type="Alarm",
         )
         self._attr_unique_id = unique_id
-        self._attr_has_entity_name = True
+        # Named after the alarm in the Hatch app, not translated.
+        self._attr_translation_key = None
         self._attr_name = alarm_name
 
     def update_alarm_name(self, alarm_name: str) -> None:

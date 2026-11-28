@@ -8,7 +8,6 @@ from typing import Any
 
 from hatch_rest_api import Restore, RestoreIot, RestoreV5
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -23,8 +22,7 @@ from .alarm import (
     update_alarm_entity_names,
 )
 from .commands import translate_command_errors
-from .const import DOMAIN
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .hatch_data_update_coordinator import HatchConfigEntry, HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 from .restore_entities import RestoreAlarmTime, RestoreClockTime, async_setup_restore_alarm_entities
 
@@ -57,11 +55,11 @@ def _parse_clock_time(value: str | None) -> time | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HatchConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
 
     clock_entities: list[TimeEntity] = []
     for rest_device in coordinator.rest_devices:
@@ -210,7 +208,8 @@ class HatchAlarmWakeTime(HatchEntity[RestoreIot | RestoreV5], TimeEntity):
             entity_type="Alarm",
         )
         self._attr_unique_id = unique_id
-        self._attr_has_entity_name = True
+        # Named after the alarm in the Hatch app, not translated.
+        self._attr_translation_key = None
         self._attr_name = alarm_name
 
     def update_alarm_name(self, alarm_name: str) -> None:

@@ -8,10 +8,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
+from .const import PLATFORMS
 from .hatch_data_update_coordinator import (
     FAVORITE_SLOTS_STORE_VERSION,
     RESTORE_ALARM_SLOTS_STORE_VERSION,
+    HatchConfigEntry,
     HatchDataUpdateCoordinator,
     favorite_slots_store_key,
     restore_alarm_slots_store_key,
@@ -27,20 +28,18 @@ async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: HatchConfigEntry) -> bool:
     """Set up the platform from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     email = config_entry.data[CONF_EMAIL]
     password = config_entry.data[CONF_PASSWORD]
 
-    hass.data[DOMAIN] = HatchDataUpdateCoordinator(
+    coordinator = HatchDataUpdateCoordinator(
         hass=hass,
         email=email,
         password=password,
         config_entry=config_entry,
     )
-
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    config_entry.runtime_data = coordinator
     await coordinator.async_load_restore_alarm_slots()
     await coordinator.async_load_favorite_slots()
     await coordinator.async_config_entry_first_refresh()
@@ -59,15 +58,12 @@ async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: HatchConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("unload entry")
-    coordinator: HatchDataUpdateCoordinator | None = hass.data.get(DOMAIN)
     unload_ok = await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
     if unload_ok:
-        if coordinator is not None:
-            await coordinator.async_shutdown()
-        hass.data[DOMAIN] = None
+        await config_entry.runtime_data.async_shutdown()
 
     return unload_ok
 

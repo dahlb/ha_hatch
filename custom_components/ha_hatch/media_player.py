@@ -5,13 +5,12 @@ import functools
 import logging
 
 from hatch_rest_api import RestBaby, RestDevice, RestIot, Restore, RestoreIot, RestoreV5
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONFIG_TURN_ON_DEFAULT, CONFIG_TURN_ON_MEDIA, DOMAIN
+from .const import CONFIG_TURN_ON_DEFAULT, CONFIG_TURN_ON_MEDIA
 from .custom_sounds import CustomSound, async_load_custom_sounds
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .hatch_data_update_coordinator import HatchConfigEntry, HatchDataUpdateCoordinator
 from .media_rest_entity import MediaRestEntity
 from .media_riot_entity import MediaRiotEntity
 from .restore_entities import RestoreSound
@@ -55,11 +54,11 @@ def choose_media_entity(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HatchConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
     config_turn_on_media = config_entry.options.get(CONFIG_TURN_ON_MEDIA, CONFIG_TURN_ON_DEFAULT)
     custom_sounds = await async_load_custom_sounds(hass)
     media_player_entities = list(

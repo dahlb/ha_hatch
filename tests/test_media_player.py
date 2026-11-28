@@ -9,7 +9,6 @@ from unittest.mock import MagicMock
 from hatch_rest_api import RestIot, RestMini
 
 from custom_components.ha_hatch import media_player
-from custom_components.ha_hatch.const import DOMAIN
 from custom_components.ha_hatch.custom_sounds import CUSTOM_SOUNDS_FILENAME
 from custom_components.ha_hatch.media_rest_entity import MediaRestEntity
 from custom_components.ha_hatch.media_riot_entity import MediaRiotEntity
@@ -50,7 +49,6 @@ async def test_setup_passes_custom_sounds_to_riot_players(tmp_path: Path) -> Non
     coordinator.rest_devices = [rest_iot]
     coordinator.rest_device_by_thing_name.return_value = rest_iot
     hass = MagicMock()
-    hass.data = {DOMAIN: coordinator}
     hass.config.path.side_effect = lambda name: str(tmp_path / name)
 
     async def run_in_executor(func: Any, *args: Any) -> Any:
@@ -68,6 +66,7 @@ async def test_setup_passes_custom_sounds_to_riot_players(tmp_path: Path) -> Non
     hass.async_add_executor_job = run_in_executor
     config_entry = MagicMock()
     config_entry.options = {}
+    config_entry.runtime_data = coordinator
     async_add_entities = MagicMock()
 
     await media_player.async_setup_entry(hass, config_entry, async_add_entities)
