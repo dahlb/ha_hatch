@@ -156,6 +156,7 @@ def _load_script(module_name: str, script_path: Path) -> ModuleType:
         "--delete-merged-branches",
         "LATEST_VERSION: ${{ steps.versions.outputs.latest }}",
         '--latest-version "$LATEST_VERSION"',
+        "title: 'fix: bump hatch-rest-api to ${{ steps.versions.outputs.latest }}'",
         "REPOSITORY: ${{ github.repository }}",
         '--repository "$REPOSITORY"',
     ],

@@ -89,8 +89,10 @@ jobs:
         with:
           branch: chore/update-hatch-rest-api-dependency
           delete-branch: true
-          commit-message: 'Bump hatch-rest-api to ${{ steps.versions.outputs.latest }}'
-          title: 'Bump hatch-rest-api to ${{ steps.versions.outputs.latest }}'
+          # Conventional title so the Lint PR check passes and the squash-merged
+          # bump cuts a patch release; retitle to chore: to skip the release.
+          commit-message: 'fix: bump hatch-rest-api to ${{ steps.versions.outputs.latest }}'
+          title: 'fix: bump hatch-rest-api to ${{ steps.versions.outputs.latest }}'
           author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           labels: hatch-rest-api-auto-update
           body-path: hatch-rest-api-update-pr-body.md
