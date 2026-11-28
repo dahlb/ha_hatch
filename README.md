@@ -10,6 +10,20 @@
 
 A custom integration for Hatch Rest/Restore Sound Machines. This project is mostly from looking at other core integrations
 
+## Table of Contents ##
+- [Tested Devices](#tested-devices)
+- [Feature Highlights](#feature-highlights)
+- [Installation](#installation)
+- [Options](#options)
+- [How Data Updates](#how-data-updates)
+- [Troubleshooting](#troubleshooting)
+- [Original Restore](#original-restore)
+- [Usage](#usage)
+- [Custom Sounds](#custom-sounds)
+- [Automation Examples](#automation-examples)
+- [Known Limitations](#known-limitations)
+- [Removal](#removal)
+
 ## Tested Devices ##
 - Rest Mini
 - Rest+
@@ -37,9 +51,29 @@ A custom integration for Hatch Rest/Restore Sound Machines. This project is most
 - monitor device charging status (Rest+ 2nd gen)
 
 ## Installation ##
-You can install this either manually copying files or using HACS. Configuration can be done on UI, you need to enter your username and password, (I know, translations are missing). 
+**HACS (recommended):** search for **Hatch** in HACS, download it, then restart Home Assistant.
 
-upstream limitation https://github.com/awslabs/aws-crt-python/issues/315 is now automatically worked around thanks to code provided by https://github.com/qqaatw/
+**Manually:** copy `custom_components/ha_hatch` from the [latest release][releases] into your Home Assistant `config/custom_components/` folder, then restart Home Assistant.
+
+Then add it under **Settings → Devices & services → Add integration → Hatch**, and sign in with the email and password of your Hatch account. Every supported device on the account is added. The integration's text is in English only for now.
+
+An upstream limitation, https://github.com/awslabs/aws-crt-python/issues/315, is automatically worked around thanks to code provided by https://github.com/qqaatw/
+
+## Options ##
+Change these under **Settings → Devices & services → Hatch → Configure**.
+
+| Option | Default | What it does |
+|---|---|---|
+| Auto turn on Rest+ when media play starts | on | Playing a sound on a Rest+ also turns the Rest+ on |
+| Auto turn on Rest+ when light turns on | on | Turning on a Rest+'s light also turns the Rest+ on |
+| Show preset numbers in favorite scene names | off | Favorite scenes are named with their preset number, such as `Preset 1 - Bedtime` |
+
+## How Data Updates ##
+* **Live state:** each device pushes its changes over AWS IoT (MQTT), so entities update within a second or two of a change, whether it came from Home Assistant, the Hatch app or the device's buttons.
+* **Hourly reconnect:** the cloud connection's credentials last about an hour. Shortly before they expire, the integration logs in again and reconnects. Favorites and new devices added in the Hatch app are picked up then.
+* **Alarms** are refreshed every 10 minutes.
+* **Commands** are sent without blocking Home Assistant. If a device doesn't confirm one within 10 seconds, for example because its connection dropped, the action fails with an error that automations can handle with `continue_on_error`.
+* **Rate limits:** if Hatch rate limits the account, the integration waits 15 minutes before logging in again, doubling up to 6 hours while it stays limited, so it doesn't make the limit last longer.
 
 ## Troubleshooting ##
 If you receive an error, please go through these steps;
@@ -49,6 +83,8 @@ If you receive an error, please go through these steps;
 4. Click the three dots menu for your device, at /config/integrations/integration/ha_hatch
 5. Click Download Diagnostics
 6. Attach both logs and diagnostics to your issue ticket.
+
+Passwords, login tokens, AWS credentials and your account email are masked in the debug log, and diagnostics redact your email and password. Still look over anything you attach before posting it.
 
 ## Original Restore ##
 Hatch sold two first generation Restores, and they report different product codes to the Hatch cloud: `restoreIot` and the older `restore`. Both are supported, but differently. Once set up, the device page shows model `RestoreIot` or `Restore` respectively. The model label underneath an original reads RESTORE01 or RESTORE02.
@@ -147,6 +183,62 @@ Invalid entries are ignored and described in the Home Assistant log. While a
 sound plays, the media player shows its `current_sound_id`,
 `current_sound_url`, `current_sound_filename` and `current_sound_title`
 attributes.
+
+## Automation Examples ##
+Replace the entity ids with your own; you can find them on each device's page.
+
+Start a sound at bedtime:
+```yaml
+automation:
+  - alias: "Nursery: ocean sounds at bedtime"
+    triggers:
+      - trigger: time
+        at: "19:30:00"
+    actions:
+      - action: media_player.select_sound_mode
+        target:
+          entity_id: media_player.nursery_media_player
+        data:
+          sound_mode: Ocean
+      - action: media_player.volume_set
+        target:
+          entity_id: media_player.nursery_media_player
+        data:
+          volume_level: 0.3
+```
+
+Start a favorite from the Hatch app, which is a scene:
+```yaml
+action: scene.turn_on
+target:
+  entity_id: scene.nursery_bedtime
+```
+
+Move a Restore alarm's wake time, and make it repeat on weekdays only:
+```yaml
+actions:
+  - action: time.set_value
+    target:
+      entity_id: time.bedroom_alarm_1_wake_time
+    data:
+      time: "06:45:00"
+  - action: ha_hatch.set_alarm_weekdays
+    target:
+      entity_id: switch.bedroom_alarm_1
+    data:
+      weekdays: [monday, tuesday, wednesday, thursday, friday]
+```
+
+## Known Limitations ##
+* **Cloud only:** the integration talks to Hatch's cloud and AWS IoT, so devices need internet access, and it stops working if Hatch changes or turns off those services.
+* **Alarms:** existing alarms can be turned on or off, and have their wake time and repeat days changed. Creating or deleting alarms, and changing their sound, volume or sunrise light, isn't supported.
+* **Favorites** are created and edited in the Hatch app; Home Assistant can start them, as scenes, but not change them.
+* **Sounds:** each device offers the sounds it can play; see [Usage](#usage).
+* **Original Restore (`restore`)** support is newer; see [Original Restore](#original-restore) for what it can and can't do.
+
+## Removal ##
+1. Go to **Settings → Devices & services → Hatch**, open the three-dot menu, and choose **Delete**. This removes the devices and entities, and the alarm and favorite numbering the integration stored.
+2. To remove the code too, uninstall **Hatch** in HACS, or delete `config/custom_components/ha_hatch` if you installed it by hand, then restart Home Assistant.
 
 ***
 
