@@ -6,12 +6,11 @@ from logging import getLogger
 
 from hatch_rest_api import RestBaby, RestIot, Restore, RestoreIot, RestoreV5, RestPlus
 from homeassistant.components.light import LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONFIG_TURN_ON_DEFAULT, CONFIG_TURN_ON_LIGHT, DOMAIN
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .const import CONFIG_TURN_ON_DEFAULT, CONFIG_TURN_ON_LIGHT
+from .hatch_data_update_coordinator import HatchConfigEntry
 from .light_rest_entity import LightRestEntity
 from .light_restoreiot_entity import LightRestoreIotEntity
 from .light_riot_clock_entity import LightRiotClockEntity
@@ -22,12 +21,12 @@ _LOGGER = getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, config_entry: HatchConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the platform from a config entry."""
     config_turn_on_light = config_entry.options.get(CONFIG_TURN_ON_LIGHT, CONFIG_TURN_ON_DEFAULT)
     _LOGGER.debug("setting up hatch lights, auto turn on switch set to %s", config_turn_on_light)
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
     light_entities: list[LightEntity] = []
     for rest_device in coordinator.rest_devices:
         if isinstance(rest_device, RestPlus):

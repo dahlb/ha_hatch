@@ -10,22 +10,20 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .hatch_data_update_coordinator import HatchConfigEntry, HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 
 _LOGGER = getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, config_entry: HatchConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the platform from a config entry."""
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
 
     binary_sensor_entities = [
         HatchOnlineSensor(coordinator=coordinator, thing_name=rest_device.thing_name)

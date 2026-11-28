@@ -6,14 +6,12 @@ import logging
 
 from hatch_rest_api import RestoreV5
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .commands import translate_command_errors
-from .const import DOMAIN
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .hatch_data_update_coordinator import HatchConfigEntry, HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,11 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HatchConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
     entities: list[NumberEntity] = []
     for rest_device in coordinator.rest_devices:
         # RestoreV4 subclasses RestoreV5, so this covers both.

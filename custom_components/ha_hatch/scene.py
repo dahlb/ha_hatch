@@ -13,14 +13,13 @@ from typing import Any
 
 from hatch_rest_api.iot_device import IotDevice
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .commands import translate_command_errors
-from .const import CONFIG_NUMBERED_PRESET_SCENES, CONFIG_NUMBERED_PRESET_SCENES_DEFAULT, DOMAIN
+from .const import CONFIG_NUMBERED_PRESET_SCENES, CONFIG_NUMBERED_PRESET_SCENES_DEFAULT
 from .favorite_slots import (
     favorite_id,
     favorite_name,
@@ -28,7 +27,7 @@ from .favorite_slots import (
     favorite_scene_unique_id_prefix,
 )
 from .favorites import favorite_scene_attributes, favorite_scene_name
-from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
+from .hatch_data_update_coordinator import HatchConfigEntry, HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HatchConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry.
@@ -46,7 +45,7 @@ async def async_setup_entry(
         config_entry: The config entry.
         async_add_entities: The platform's add-entities callback.
     """
-    coordinator: HatchDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
     show_preset_numbers = bool(
         config_entry.options.get(
             CONFIG_NUMBERED_PRESET_SCENES,
@@ -128,6 +127,9 @@ class RiotScene(HatchEntity[IotDevice], Scene):
             entity_type=f"Scene-{slot_key}",
         )
         self._attr_unique_id = favorite_scene_unique_id(thing_name, slot_key)
+        # A scene is named after its favorite alone, as it always has been.
+        self._attr_has_entity_name = False
+        self._attr_translation_key = None
         self._slot_key = slot_key
         self._show_preset_number = show_preset_number
         _LOGGER.debug("scene; unique_id:%s, slot:%s", self._attr_unique_id, slot_key)

@@ -58,5 +58,98 @@
     "sound_not_supported": {
       "message": "{target} can't play sound modes; choose one of its favorites as the source instead."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "wifi": {
+        "name": "Wifi"
+      }
+    },
+    "light": {
+      "clock": {
+        "name": "Clock"
+      },
+      "light": {
+        "name": "Light"
+      }
+    },
+    "media_player": {
+      "media_player": {
+        "name": "Media Player"
+      },
+      "sound": {
+        "name": "Sound"
+      }
+    },
+    "number": {
+      "clock_daytime_brightness": {
+        "name": "Clock Daytime Brightness"
+      },
+      "clock_nighttime_brightness": {
+        "name": "Clock Nighttime Brightness"
+      }
+    },
+    "select": {
+      "clock_mode": {
+        "name": "Clock Mode"
+      },
+      "routine_step": {
+        "name": "Routine Step"
+      }
+    },
+    "sensor": {
+      "alarm_repeat": {
+        "name": "Alarm {number} Repeat"
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "charging_status": {
+        "name": "Charging Status"
+      },
+      "firmware_version": {
+        "name": "Firmware Version"
+      },
+      "playing": {
+        "name": "Playing"
+      },
+      "wifi_signal": {
+        "name": "Wifi Signal"
+      }
+    },
+    "switch": {
+      "alarm": {
+        "name": "Alarm {number}"
+      },
+      "alarms": {
+        "name": "Alarms"
+      },
+      "bedtime_routine": {
+        "name": "Bedtime Routine"
+      },
+      "clock_24_hour": {
+        "name": "Clock 24-Hour"
+      },
+      "clock_tap_to_show": {
+        "name": "Clock Tap to Show"
+      },
+      "power_switch": {
+        "name": "Power Switch"
+      },
+      "toddler_lock": {
+        "name": "Toddler Lock"
+      }
+    },
+    "time": {
+      "alarm_wake_time": {
+        "name": "Alarm {number} Wake Time"
+      },
+      "clock_turn_off_at": {
+        "name": "Clock Turn Off At"
+      },
+      "clock_turn_on_at": {
+        "name": "Clock Turn On At"
+      }
+    }
   }
 }
