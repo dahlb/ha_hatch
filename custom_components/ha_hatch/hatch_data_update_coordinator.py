@@ -138,21 +138,20 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
 
     async def _async_disconnect_mqtt(self) -> None:
         # disconnect() returns a future that never resolves if the connection
-        # is already broken; waiting on it without a timeout on the event loop
-        # freezes all of Home Assistant.
+        # is already broken, so the wait is bounded by MQTT_DISCONNECT_TIMEOUT.
+        # The call itself only queues the disconnect, so it is awaited here
+        # rather than blocking an executor thread on .result().
         if self.mqtt_connection is None:
             return
         mqtt_connection = self.mqtt_connection
         self.mqtt_connection = None
 
-        def _disconnect() -> None:
-            mqtt_connection.disconnect().result(timeout=MQTT_DISCONNECT_TIMEOUT)
-
         try:
-            await asyncio.wait_for(
-                self.hass.async_add_executor_job(_disconnect),
-                timeout=MQTT_DISCONNECT_TIMEOUT * 2,
-            )
+            async with asyncio.timeout(MQTT_DISCONNECT_TIMEOUT):
+                # shield: on timeout, leave awscrt's future uncancelled, since awscrt
+                # completes it later from its own thread and set_result() on a
+                # cancelled future raises InvalidStateError there.
+                await asyncio.shield(asyncio.wrap_future(mqtt_connection.disconnect()))
         except Exception as error:
             _LOGGER.error("mqtt_connection disconnect failed during reconnect", exc_info=error)
 

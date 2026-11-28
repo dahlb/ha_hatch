@@ -250,3 +250,70 @@ async def test_rate_limit_backs_off_in_the_coordinator() -> None:
             assert coordinator.update_interval == RATE_LIMIT_RETRY_INTERVAL * 2
     finally:
         _forget_backoff(email)
+
+
+def _disconnecting_coordinator(future: Future[dict[str, object]]) -> SimpleNamespace:
+    """A stand-in coordinator whose MQTT connection's disconnect() returns ``future``.
+
+    It has no ``hass``, so the disconnect cannot be using an executor job.
+    """
+    connection = MagicMock()
+    connection.disconnect.return_value = future
+    return SimpleNamespace(mqtt_connection=connection)
+
+
+async def test_disconnect_awaits_the_future_without_an_executor() -> None:
+    """The MQTT disconnect is awaited directly and the connection is dropped."""
+    done: Future[dict[str, object]] = Future()
+    done.set_result({})
+    coordinator = _disconnecting_coordinator(done)
+    connection = coordinator.mqtt_connection
+
+    await HatchDataUpdateCoordinator._async_disconnect_mqtt(
+        cast("HatchDataUpdateCoordinator", coordinator)
+    )
+
+    connection.disconnect.assert_called_once_with()
+    assert coordinator.mqtt_connection is None
+
+
+async def test_disconnect_that_never_completes_is_cut_off_and_left_uncancelled() -> None:
+    """A disconnect that never resolves times out without cancelling awscrt's future.
+
+    awscrt completes the future later from its own thread; set_result() on a
+    cancelled future would raise InvalidStateError there.
+    """
+    never: Future[dict[str, object]] = Future()
+    coordinator = _disconnecting_coordinator(never)
+
+    with patch.object(coordinator_module, "MQTT_DISCONNECT_TIMEOUT", 0.01):
+        await HatchDataUpdateCoordinator._async_disconnect_mqtt(
+            cast("HatchDataUpdateCoordinator", coordinator)
+        )
+
+    assert coordinator.mqtt_connection is None
+    assert not never.cancelled()
+    never.set_result({})  # what awscrt does later; must not raise
+
+
+async def test_failed_disconnect_is_logged_not_raised(caplog: pytest.LogCaptureFixture) -> None:
+    """A disconnect that fails is logged, and the reconnect carries on."""
+    failed: Future[dict[str, object]] = Future()
+    failed.set_exception(RuntimeError("socket closed"))
+    coordinator = _disconnecting_coordinator(failed)
+
+    await HatchDataUpdateCoordinator._async_disconnect_mqtt(
+        cast("HatchDataUpdateCoordinator", coordinator)
+    )
+
+    assert coordinator.mqtt_connection is None
+    assert "disconnect failed" in caplog.text
+
+
+async def test_disconnect_without_a_connection_does_nothing() -> None:
+    """With no connection there is nothing to disconnect."""
+    coordinator = SimpleNamespace(mqtt_connection=None)
+    await HatchDataUpdateCoordinator._async_disconnect_mqtt(
+        cast("HatchDataUpdateCoordinator", coordinator)
+    )
+    assert coordinator.mqtt_connection is None
