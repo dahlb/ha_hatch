@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_RGBW_COLOR, ColorMode, LightEntity
 
@@ -60,12 +60,13 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
         )
 
     @translate_command_errors
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         _LOGGER.debug("args:%s", kwargs)
         if not kwargs:
             # Turn on the light to the last known state/default state
-            self.rest_device.set_color(
+            await self.rest_device.async_command(
+                self.rest_device.set_color,
                 self._last_light_on_colors["r"],
                 self._last_light_on_colors["g"],
                 self._last_light_on_colors["b"],
@@ -95,9 +96,11 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
             white,
             brightness,
         )
-        self.rest_device.set_color(red, green, blue, white, brightness)
+        await self.rest_device.async_command(
+            self.rest_device.set_color, red, green, blue, white, brightness
+        )
 
     @translate_command_errors
-    def turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self.rest_device.turn_light_off()
+        await self.rest_device.async_command(self.rest_device.turn_light_off)

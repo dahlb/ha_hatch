@@ -118,22 +118,19 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         # which is hourly, for as long as the process ran.
         #
         # Has to happen before the disconnect below, while the connection can
-        # still carry the UNSUBSCRIBE, and off the event loop because the
-        # library call blocks waiting for each UNSUBACK.
+        # still carry the UNSUBSCRIBE. async_unsubscribe awaits each UNSUBACK
+        # without blocking the event loop.
         if not self.rest_devices:
             return
 
         rest_devices = self.rest_devices
 
-        def _unsubscribe() -> None:
+        async def _unsubscribe() -> None:
             for rest_device in rest_devices:
-                rest_device.unsubscribe()
+                await rest_device.async_unsubscribe()
 
         try:
-            await asyncio.wait_for(
-                self.hass.async_add_executor_job(_unsubscribe),
-                timeout=MQTT_UNSUBSCRIBE_TIMEOUT * 2,
-            )
+            await asyncio.wait_for(_unsubscribe(), timeout=MQTT_UNSUBSCRIBE_TIMEOUT * 2)
         except Exception as error:
             # Best effort: a failure here costs memory, not correctness, and the
             # reconnect matters more than the cleanup.

@@ -6,6 +6,8 @@ import pytest
 
 from custom_components.ha_hatch.switch import HatchClockTapSwitch
 
+from .conftest import run_commands_on_mock
+
 
 def _clock_tap_switch(rest_device: MagicMock) -> HatchClockTapSwitch:
     """Build a clock tap switch backed by a mocked coordinator and device.
@@ -16,6 +18,7 @@ def _clock_tap_switch(rest_device: MagicMock) -> HatchClockTapSwitch:
     Returns:
         The clock tap switch entity under test.
     """
+    run_commands_on_mock(rest_device)
     rest_device.device_name = "Restore"
     rest_device.mac = "AA:BB:CC:DD:EE:FF"
     rest_device.firmware_version = "1.0"
@@ -32,17 +35,17 @@ def test_clock_tap_switch_is_on_uses_device_property(value: bool | None) -> None
     assert _clock_tap_switch(rest_device).is_on is value
 
 
-def test_clock_tap_switch_turn_on_calls_device_method() -> None:
+async def test_clock_tap_switch_turn_on_calls_device_method() -> None:
     """Turning the switch on calls clock_tap_on on the device."""
     rest_device = MagicMock()
-    _clock_tap_switch(rest_device).turn_on()
+    await _clock_tap_switch(rest_device).async_turn_on()
     rest_device.clock_tap_on.assert_called_once_with()
     rest_device.clock_tap_off.assert_not_called()
 
 
-def test_clock_tap_switch_turn_off_calls_device_method() -> None:
+async def test_clock_tap_switch_turn_off_calls_device_method() -> None:
     """Turning the switch off calls clock_tap_off on the device."""
     rest_device = MagicMock()
-    _clock_tap_switch(rest_device).turn_off()
+    await _clock_tap_switch(rest_device).async_turn_off()
     rest_device.clock_tap_off.assert_called_once_with()
     rest_device.clock_tap_on.assert_not_called()

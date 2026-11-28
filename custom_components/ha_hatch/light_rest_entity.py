@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ColorMode, LightEntity
 
@@ -47,7 +47,7 @@ class LightRestEntity(HatchEntity, LightEntity):
         )
 
     @translate_command_errors
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         _LOGGER.debug("args:%s", kwargs)
         if ATTR_BRIGHTNESS in kwargs:
@@ -59,14 +59,20 @@ class LightRestEntity(HatchEntity, LightEntity):
         rgb = kwargs.get(ATTR_RGB_COLOR, self.rgb_color)
 
         _LOGGER.debug("turning on light to %s with %s", rgb, brightness)
-        self.rest_device.set_color(rgb[0], rgb[1], rgb[2], brightness)
+        await self.rest_device.async_command(
+            self.rest_device.set_color, rgb[0], rgb[1], rgb[2], brightness
+        )
         if self.config_turn_on_light:
             _LOGGER.debug("auto turning on the hatch power switch for the light")
-            self.rest_device.set_on(True)
+            await self.rest_device.async_command(self.rest_device.set_on, True)
 
     @translate_command_errors
-    def turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self.rest_device.set_color(
-            self.rest_device.red, self.rest_device.green, self.rest_device.blue, 0
+        await self.rest_device.async_command(
+            self.rest_device.set_color,
+            self.rest_device.red,
+            self.rest_device.green,
+            self.rest_device.blue,
+            0,
         )

@@ -8,6 +8,8 @@ import pytest
 
 from custom_components.ha_hatch.time import CLOCK_SCHEDULE_TIMES, HatchClockScheduleTime
 
+from .conftest import run_commands_on_mock
+
 
 def _clock_schedule_time(
     rest_device: MagicMock, entity_type: str, attr: str, setter: str, icon: str
@@ -24,6 +26,7 @@ def _clock_schedule_time(
     Returns:
         The clock schedule time entity under test.
     """
+    run_commands_on_mock(rest_device)
     rest_device.device_name = "Restore"
     rest_device.mac = "AA:BB:CC:DD:EE:FF"
     rest_device.firmware_version = "1.0"
@@ -43,11 +46,13 @@ def _clock_schedule_time(
     ("entity_type", "attr", "setter", "icon"),
     CLOCK_SCHEDULE_TIMES,
 )
-def test_set_value_calls_public_setter(entity_type: str, attr: str, setter: str, icon: str) -> None:
+async def test_set_value_calls_public_setter(
+    entity_type: str, attr: str, setter: str, icon: str
+) -> None:
     """Setting the time calls the matching public library setter."""
     rest_device = MagicMock(spec=RestoreV5)
     entity = _clock_schedule_time(rest_device, entity_type, attr, setter, icon)
-    entity.set_value(time(6, 30))
+    await entity.async_set_value(time(6, 30))
     getattr(rest_device, setter).assert_called_once_with(time(6, 30))
     rest_device._update.assert_not_called()
 

@@ -58,9 +58,6 @@ class SceneHarness:
         self.coordinator = FakeCoordinator([device])
         self.hass = MagicMock()
         self.hass.data = {DOMAIN: self.coordinator}
-        self.hass.async_add_executor_job = AsyncMock(
-            side_effect=lambda function, *args: function(*args)
-        )
         self.config_entry = SimpleNamespace(
             options={CONFIG_NUMBERED_PRESET_SCENES: numbered},
             entry_id="entry-1",
