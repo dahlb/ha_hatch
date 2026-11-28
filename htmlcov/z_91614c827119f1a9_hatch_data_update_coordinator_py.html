@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_91614c827119f1a9_hatch_entity_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.5">coverage.py v7.17.5</a>,
-            created at 2026-11-28 02:55 +0000
+            created at 2026-11-28 02:59 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -427,7 +427,7 @@
     <p class="pln"><span class="n"><a id="t343" href="#t343">343</a></span><span class="t">            <span class="com"># Re-login replaces every RestDevice instance, so alarm-derived entities</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t344" href="#t344">344</a></span><span class="t">            <span class="com"># must reconcile against the new objects to keep references current.</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t">            <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_async_notify_alarm_refresh_callbacks</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">            <span class="key">return</span> <span class="op">[</span><span class="nam">rest_device</span><span class="op">.</span><span class="nam">__repr__</span><span class="op">(</span><span class="op">)</span> <span class="key">for</span> <span class="nam">rest_device</span> <span class="key">in</span> <span class="nam">self</span><span class="op">.</span><span class="nam">rest_devices</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">            <span class="key">return</span> <span class="op">[</span><span class="nam">rest_device</span><span class="op">.</span><span class="nam">as_dict</span><span class="op">(</span><span class="op">)</span> <span class="key">for</span> <span class="nam">rest_device</span> <span class="key">in</span> <span class="nam">self</span><span class="op">.</span><span class="nam">rest_devices</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t347" href="#t347">347</a></span><span class="t">        <span class="key">except</span> <span class="nam">AuthError</span> <span class="key">as</span> <span class="nam">error</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">_clear_retry_backoff</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t349" href="#t349">349</a></span><span class="t">            <span class="key">raise</span> <span class="nam">ConfigEntryAuthFailed</span><span class="op">(</span><span class="str">&quot;Hatch credentials rejected during setup&quot;</span><span class="op">)</span> <span class="key">from</span> <span class="nam">error</span>&nbsp;</span><span class="r"></span></p>
@@ -641,7 +641,7 @@
             <a class="nav" href="z_91614c827119f1a9_hatch_entity_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.5">coverage.py v7.17.5</a>,
-            created at 2026-11-28 02:55 +0000
+            created at 2026-11-28 02:59 +0000
         </p>
     </div>
 </footer>
