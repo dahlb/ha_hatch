@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_91614c827119f1a9_switch_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.5">coverage.py v7.17.5</a>,
-            created at 2026-11-28 13:29 +0000
+            created at 2026-11-28 13:43 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -93,7 +93,7 @@
     <p class="run"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="key">from</span> <span class="nam">homeassistant</span><span class="op">.</span><span class="nam">exceptions</span> <span class="key">import</span> <span class="nam">HomeAssistantError</span><span class="op">,</span> <span class="nam">ServiceValidationError</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="nam">homeassistant</span><span class="op">.</span><span class="nam">helpers</span> <span class="key">import</span> <span class="nam">config_validation</span> <span class="key">as</span> <span class="nam">cv</span><span class="op">,</span> <span class="nam">entity_registry</span> <span class="key">as</span> <span class="nam">er</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="nam">homeassistant</span><span class="op">.</span><span class="nam">helpers</span><span class="op">.</span><span class="nam">target</span> <span class="key">import</span> <span class="nam">TargetSelection</span><span class="op">,</span> <span class="nam">async_extract_referenced_entity_ids</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">import</span> <span class="nam">voluptuous</span> <span class="key">as</span> <span class="nam">vol</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">import</span> <span class="nam">probatio</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">alarm</span> <span class="key">import</span> <span class="nam">alarm_reference_from_unique_id</span><span class="op">,</span> <span class="nam">normalize_alarm_weekdays</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">commands</span> <span class="key">import</span> <span class="nam">hatch_command_errors</span>&nbsp;</span><span class="r"></span></p>
@@ -121,7 +121,7 @@
     <p class="run run2"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">        <span class="nam">SERVICE_SET_ALARM_WEEKDAYS</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">        <span class="nam">async_set_alarm_weekdays</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">        <span class="nam">schema</span><span class="op">=</span><span class="nam">cv</span><span class="op">.</span><span class="nam">make_entity_service_schema</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">            <span class="op">{</span><span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">ATTR_WEEKDAYS</span><span class="op">,</span> <span class="nam">default</span><span class="op">=</span><span class="nam">list</span><span class="op">)</span><span class="op">:</span> <span class="nam">_validate_weekdays</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">            <span class="op">{</span><span class="nam">probatio</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">ATTR_WEEKDAYS</span><span class="op">,</span> <span class="nam">default</span><span class="op">=</span><span class="nam">list</span><span class="op">)</span><span class="op">:</span> <span class="nam">_validate_weekdays</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">        <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -130,7 +130,7 @@
     <p class="run"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">    <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">        <span class="key">return</span> <span class="nam">normalize_alarm_weekdays</span><span class="op">(</span><span class="nam">value</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">    <span class="key">except</span> <span class="nam">ValueError</span> <span class="key">as</span> <span class="nam">error</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">        <span class="key">raise</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Invalid</span><span class="op">(</span><span class="nam">str</span><span class="op">(</span><span class="nam">error</span><span class="op">)</span><span class="op">)</span> <span class="key">from</span> <span class="nam">error</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">        <span class="key">raise</span> <span class="nam">probatio</span><span class="op">.</span><span class="nam">Invalid</span><span class="op">(</span><span class="nam">str</span><span class="op">(</span><span class="nam">error</span><span class="op">)</span><span class="op">)</span> <span class="key">from</span> <span class="nam">error</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t"><span class="key">async</span> <span class="key">def</span> <span class="nam">_async_set_alarm_weekdays</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -246,7 +246,7 @@
             <a class="nav" href="z_91614c827119f1a9_switch_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.5">coverage.py v7.17.5</a>,
-            created at 2026-11-28 13:29 +0000
+            created at 2026-11-28 13:43 +0000
         </p>
     </div>
 </footer>
