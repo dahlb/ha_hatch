@@ -183,3 +183,5 @@ parallel = false
 
 [tool.coverage.report]
 show_missing = true
+# Fail the test run if total coverage drops below this. It was 93% when set.
+fail_under = 90

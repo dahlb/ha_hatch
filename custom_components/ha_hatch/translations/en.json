@@ -8,11 +8,33 @@
           "email": "Email",
           "password": "Password"
         }
+      },
+      "reauth_confirm": {
+        "title": "Sign in to Hatch again",
+        "description": "Hatch no longer accepts the saved password for {email}. Enter the account's current password.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Update Hatch sign-in",
+        "description": "Change the email or password used to sign in to this Hatch account.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
       }
     },
     "error": {
       "auth": "Login failed into Hatch. Please use official Hatch app to logout and log back in and try again.",
-      "rate_limited": "Hatch rate-limited this account. Wait for the cooldown to clear before trying again."
+      "rate_limited": "Hatch rate-limited this account. Wait for the cooldown to clear before trying again.",
+      "cannot_connect": "Could not reach Hatch. Check your internet connection and try again."
+    },
+    "abort": {
+      "already_configured": "This Hatch account is already set up.",
+      "reauth_successful": "Signed in again. The integration is reloading.",
+      "reconfigure_successful": "Sign-in updated. The integration is reloading.",
+      "wrong_account": "That email belongs to a different Hatch account. Add it as a new integration instead."
     }
   },
   "options": {

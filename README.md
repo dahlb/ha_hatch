@@ -68,6 +68,9 @@ Change these under **Settings → Devices & services → Hatch → Configure**.
 | Auto turn on Rest+ when light turns on | on | Turning on a Rest+'s light also turns the Rest+ on |
 | Show preset numbers in favorite scene names | off | Favorite scenes are named with their preset number, such as `Preset 1 - Bedtime` |
 
+### Re-authentication and changing your sign-in ###
+If Hatch stops accepting the saved password, for example after you change it in the Hatch app, Home Assistant shows a **Re-authentication required** notice for Hatch. Open it and enter the account's current password; the integration reloads with it. To change the saved email or password yourself, choose **Reconfigure** from the Hatch integration's three-dot menu. Use the same Hatch account: a different email is a different account and needs its own integration.
+
 ## How Data Updates ##
 * **Live state:** each device pushes its changes over AWS IoT (MQTT), so entities update within a second or two of a change, whether it came from Home Assistant, the Hatch app or the device's buttons.
 * **Hourly reconnect:** the cloud connection's credentials last about an hour. Shortly before they expire, the integration logs in again and reconnects. Favorites and new devices added in the Hatch app are picked up then.
