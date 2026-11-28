@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_91614c827119f1a9_sensor_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.5">coverage.py v7.17.5</a>,
-            created at 2026-11-28 02:59 +0000
+            created at 2026-11-28 12:53 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -169,7 +169,7 @@
     <p class="run"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">        <span class="key">return</span> <span class="nam">MODE_ALWAYS_OFF</span> <span class="key">if</span> <span class="key">not</span> <span class="nam">dev</span><span class="op">.</span><span class="nam">is_clock_on</span> <span class="key">else</span> <span class="nam">MODE_ALWAYS_ON</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="op">@</span><span class="nam">translate_command_errors</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">    <span class="key">def</span> <span class="nam">select_option</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">option</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">async_select_option</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">option</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">        <span class="str">&quot;&quot;&quot;Select an option.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t"><span class="str">        Args:</span>&nbsp;</span><span class="r"></span></p>
@@ -177,7 +177,7 @@
     <p class="pln"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t"><span class="str">        &quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">        <span class="nam">mode</span> <span class="op">=</span> <span class="nam">OPTION_TO_TURN_OFF_MODE</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">option</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">        <span class="key">if</span> <span class="nam">mode</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">rest_device</span><span class="op">.</span><span class="nam">set_clock_turn_off_mode</span><span class="op">(</span><span class="nam">mode</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">            <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">rest_device</span><span class="op">.</span><span class="nam">async_command</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">rest_device</span><span class="op">.</span><span class="nam">set_clock_turn_off_mode</span><span class="op">,</span> <span class="nam">mode</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -187,7 +187,7 @@
             <a class="nav" href="z_91614c827119f1a9_sensor_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.5">coverage.py v7.17.5</a>,
-            created at 2026-11-28 02:59 +0000
+            created at 2026-11-28 12:53 +0000
         </p>
     </div>
 </footer>

@@ -14,19 +14,19 @@
 | custom\_components/ha\_hatch/diagnostics.py                      |       37 |       10 |        8 |        1 |     67% |     54-75 |
 | custom\_components/ha\_hatch/favorite\_slots.py                  |       77 |        0 |       24 |        1 |     99% | 235-\>223 |
 | custom\_components/ha\_hatch/favorites.py                        |        9 |        0 |        2 |        0 |    100% |           |
-| custom\_components/ha\_hatch/hatch\_data\_update\_coordinator.py |      237 |      130 |       58 |        1 |     43% |87-103, 123-140, 146-160, 163-164, 168-171, 182-187, 190-193, 200-230, 233-239, 245-247, 258-275, 286-295, 298-301, 308-378, 382-389, 538-\>exit, 543 |
+| custom\_components/ha\_hatch/hatch\_data\_update\_coordinator.py |      237 |      121 |       58 |        2 |     47% |87-103, 124, 143-157, 160-161, 165-168, 179-184, 187-190, 197-227, 230-236, 242-244, 255-272, 283-292, 295-298, 305-375, 379-386, 535-\>exit, 540 |
 | custom\_components/ha\_hatch/hatch\_entity.py                    |       21 |        0 |        0 |        0 |    100% |           |
 | custom\_components/ha\_hatch/light.py                            |       33 |        6 |       10 |        3 |     74% |34, 42-45, 55-59 |
-| custom\_components/ha\_hatch/light\_rest\_entity.py              |       38 |       16 |        4 |        0 |     52% |27-28, 33, 38, 43, 52-65, 70 |
-| custom\_components/ha\_hatch/light\_restoreiot\_entity.py        |       49 |       26 |        6 |        0 |     42% |33-34, 39-45, 50, 55, 65-98, 103 |
+| custom\_components/ha\_hatch/light\_rest\_entity.py              |       38 |       16 |        4 |        0 |     52% |27-28, 33, 38, 43, 52-67, 72 |
+| custom\_components/ha\_hatch/light\_restoreiot\_entity.py        |       49 |       26 |        6 |        0 |     42% |33-34, 39-45, 50, 55, 65-99, 106 |
 | custom\_components/ha\_hatch/light\_riot\_clock\_entity.py       |       67 |       39 |       14 |        0 |     35% |22-31, 42-49, 61, 65-66, 71, 76-81, 86-101, 106-107 |
-| custom\_components/ha\_hatch/light\_riot\_entity.py              |       46 |       13 |        8 |        2 |     65% |38-43, 66, 72-76, 90 |
+| custom\_components/ha\_hatch/light\_riot\_entity.py              |       46 |       13 |        8 |        2 |     65% |38-43, 66, 72-76, 93 |
 | custom\_components/ha\_hatch/media\_player.py                    |       26 |        0 |        4 |        0 |    100% |           |
-| custom\_components/ha\_hatch/media\_rest\_entity.py              |       72 |       30 |       18 |        1 |     48% |55-57, 71-75, 80, 85, 88-95, 103, 108-110, 115, 120, 125-130, 135, 140-141 |
+| custom\_components/ha\_hatch/media\_rest\_entity.py              |       72 |       30 |       18 |        1 |     48% |55-57, 71-75, 80, 85, 88-95, 103, 108-112, 117, 122, 127-132, 137, 142-143 |
 | custom\_components/ha\_hatch/media\_riot\_entity.py              |      105 |       11 |       28 |        4 |     87% |100-102, 112, 116-117, 127, 134, 155, 162-163 |
-| custom\_components/ha\_hatch/number.py                           |       51 |        8 |        4 |        1 |     84% |33-39, 60, 69, 74, 89, 98, 103 |
+| custom\_components/ha\_hatch/number.py                           |       51 |        8 |        4 |        1 |     84% |33-39, 60, 69, 74, 91, 100, 105 |
 | custom\_components/ha\_hatch/restore\_alarm\_slots.py            |       80 |        1 |       24 |        1 |     98% |       265 |
-| custom\_components/ha\_hatch/restore\_entities.py                |      379 |        3 |       50 |        5 |     98% |187-\>189, 189-\>exit, 653-654, 662-\>664, 676, 911-\>910 |
+| custom\_components/ha\_hatch/restore\_entities.py                |      379 |        3 |       50 |        5 |     98% |187-\>189, 189-\>exit, 657-658, 666-\>668, 680, 915-\>914 |
 | custom\_components/ha\_hatch/riot\_tracks.py                     |       18 |        0 |        6 |        0 |    100% |           |
 | custom\_components/ha\_hatch/scene.py                            |       93 |        0 |       30 |        0 |    100% |           |
 | custom\_components/ha\_hatch/select.py                           |       45 |        0 |        8 |        1 |     98% |   53-\>52 |
@@ -34,7 +34,7 @@
 | custom\_components/ha\_hatch/services.py                         |       77 |       33 |       34 |        6 |     52% |29-35, 46-49, 58, 62, 66, 87-116, 128-130, 144, 149-153 |
 | custom\_components/ha\_hatch/switch.py                           |      142 |       51 |       32 |        9 |     60% |47, 51, 55-58, 63, 66-\>45, 86, 90-109, 112-113, 130, 148, 153, 158, 163, 177, 182, 187, 192, 242-251, 255-259, 264, 269-272, 277, 282, 287, 290-294, 298 |
 | custom\_components/ha\_hatch/time.py                             |      115 |       35 |       30 |        7 |     64% |70-71, 81-\>67, 88-\>90, 103, 107-127, 130-131, 148, 206-214, 218-222, 227, 232, 237, 242-246, 250 |
-| **TOTAL**                                                        | **2356** |  **576** |  **570** |   **65** | **72%** |           |
+| **TOTAL**                                                        | **2356** |  **567** |  **570** |   **66** | **73%** |           |
 
 
 ## Setup coverage badge
