@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HatchDataUpdateCoordinator
+from .commands import translate_command_errors
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
 
@@ -67,6 +68,7 @@ class ClockDaytimeBrightnessNumber(HatchEntity, NumberEntity):
         """Return the native value."""
         return self.rest_device.clock_daytime
 
+    @translate_command_errors
     def set_native_value(self, value: float) -> None:
         """Set the native value."""
         self.rest_device.set_clock(daytime_brightness=int(value))
@@ -95,6 +97,7 @@ class ClockNighttimeBrightnessNumber(HatchEntity, NumberEntity):
         """Return the native value."""
         return self.rest_device.clock_nighttime
 
+    @translate_command_errors
     def set_native_value(self, value: float) -> None:
         """Set the native value."""
         self.rest_device.set_clock(nighttime_brightness=int(value))

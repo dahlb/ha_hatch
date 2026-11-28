@@ -23,6 +23,7 @@ from .alarm import (
     remove_stale_alarm_entities,
     update_alarm_entity_names,
 )
+from .commands import translate_command_errors
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
 from .restore_entities import RestoreAlarmTime, RestoreClockTime, async_setup_restore_alarm_entities
@@ -179,6 +180,7 @@ class HatchClockScheduleTime(HatchEntity, TimeEntity):
         """Return the native value."""
         return _parse_clock_time(getattr(self.rest_device, self._attr, None))
 
+    @translate_command_errors
     def set_value(self, value: time) -> None:
         """Set the value."""
         getattr(self.rest_device, self._setter)(value)
@@ -234,6 +236,7 @@ class HatchAlarmWakeTime(HatchEntity, TimeEntity):
         """Return extra state attributes."""
         return alarm_repeat_attributes(self._alarm)
 
+    @translate_command_errors
     async def async_set_value(self, value: time) -> None:
         """Set the value."""
         set_alarm_wake_time = getattr(self.rest_device, "set_alarm_wake_time", None)

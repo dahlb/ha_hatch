@@ -49,6 +49,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .alarm import alarm_repeat_label, alarm_weekdays
+from .commands import translate_command_errors
 from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 from .restore_alarm_slots import (
@@ -168,6 +169,7 @@ class RestoreLight(RestoreEntity, LightEntity):
         """The light's color while it is on."""
         return self.restore.color_name if self.is_on else None
 
+    @translate_command_errors
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on, or change its brightness or color while it is on.
 
@@ -187,6 +189,7 @@ class RestoreLight(RestoreEntity, LightEntity):
         if color_id is not None:
             device.set_light_color(color_id)
 
+    @translate_command_errors
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off.
 
@@ -243,18 +246,22 @@ class RestoreSound(RestoreEntity, MediaPlayerEntity):
         """The sound playing, if any."""
         return self.restore.sound_name if self.restore.is_sound_on else None
 
+    @translate_command_errors
     def media_play(self) -> None:
         """Play the current sound."""
         self.restore.play_sound()
 
+    @translate_command_errors
     def media_pause(self) -> None:
         """Stop the sound; the device cannot pause."""
         self.restore.stop_sound()
 
+    @translate_command_errors
     def media_stop(self) -> None:
         """Stop the sound."""
         self.restore.stop_sound()
 
+    @translate_command_errors
     def set_volume_level(self, volume: float) -> None:
         """Set the volume.
 
@@ -263,6 +270,7 @@ class RestoreSound(RestoreEntity, MediaPlayerEntity):
         """
         self.restore.set_volume(round(volume * 100))
 
+    @translate_command_errors
     def select_sound_mode(self, sound_mode: str) -> None:
         """Play a sound from the catalog.
 
@@ -313,6 +321,7 @@ class RestoreRoutineStep(RestoreEntity, SelectEntity):
             return options[device.current_step - 1]
         return None
 
+    @translate_command_errors
     def select_option(self, option: str) -> None:
         """Start the routine at a step.
 
@@ -347,6 +356,7 @@ class RestoreRoutineSwitch(RestoreEntity, SwitchEntity):
         """Whether anything is playing."""
         return self.restore.is_on
 
+    @translate_command_errors
     def turn_on(self, **kwargs: Any) -> None:
         """Start the routine at its first step.
 
@@ -355,6 +365,7 @@ class RestoreRoutineSwitch(RestoreEntity, SwitchEntity):
         """
         self.restore.turn_on_routine()
 
+    @translate_command_errors
     def turn_off(self, **kwargs: Any) -> None:
         """Stop whatever is playing.
 
@@ -390,6 +401,7 @@ class RestoreClockLight(RestoreEntity, LightEntity):
         """The display's brightness."""
         return percent_to_brightness(self.restore.clock_brightness)
 
+    @translate_command_errors
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the display on, optionally at a brightness.
 
@@ -401,6 +413,7 @@ class RestoreClockLight(RestoreEntity, LightEntity):
         )
         self.restore.set_clock(on=True, brightness=percent)
 
+    @translate_command_errors
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the display off.
 
@@ -432,6 +445,7 @@ class RestoreClock24Hour(RestoreEntity, SwitchEntity):
         """Whether the clock shows 24-hour time."""
         return self.restore.is_clock_24h
 
+    @translate_command_errors
     def turn_on(self, **kwargs: Any) -> None:
         """Show 24-hour time.
 
@@ -440,6 +454,7 @@ class RestoreClock24Hour(RestoreEntity, SwitchEntity):
         """
         self.restore.set_clock_24h(True)
 
+    @translate_command_errors
     def turn_off(self, **kwargs: Any) -> None:
         """Show 12-hour time.
 
@@ -479,6 +494,7 @@ class RestoreClockMode(RestoreEntity, SelectEntity):
             return CLOCK_MODE_ALWAYS_ON
         return None
 
+    @translate_command_errors
     def select_option(self, option: str) -> None:
         """Set the mode.
 
@@ -519,6 +535,7 @@ class RestoreClockTime(RestoreEntity, TimeEntity):
             device.clock_turn_on_at if self._turn_on else device.clock_turn_off_at
         )
 
+    @translate_command_errors
     def set_value(self, value: time) -> None:
         """Set the time.
 
@@ -551,6 +568,7 @@ class RestoreAlarmsSwitch(RestoreEntity, SwitchEntity):
         disabled = self.restore.alarms_disabled
         return None if disabled is None else not disabled
 
+    @translate_command_errors
     def turn_on(self, **kwargs: Any) -> None:
         """Allow alarms to go off.
 
@@ -559,6 +577,7 @@ class RestoreAlarmsSwitch(RestoreEntity, SwitchEntity):
         """
         self.restore.set_alarms_disabled(False)
 
+    @translate_command_errors
     def turn_off(self, **kwargs: Any) -> None:
         """Silence every alarm.
 
@@ -778,6 +797,7 @@ class RestoreAlarmSwitch(RestoreAlarmEntity, SwitchEntity):
         alarm = self._alarm
         return None if alarm is None else bool(alarm.get("enabled"))
 
+    @translate_command_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the alarm on.
 
@@ -787,6 +807,7 @@ class RestoreAlarmSwitch(RestoreAlarmEntity, SwitchEntity):
         await self.coordinator.async_set_restore_alarm_enabled(self.restore, self._slot_key, True)
         self.async_write_ha_state()
 
+    @translate_command_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the alarm off.
 
@@ -809,6 +830,7 @@ class RestoreAlarmTime(RestoreAlarmEntity, TimeEntity):
         """The wake time."""
         return restore_alarm_wake_time(self._alarm)
 
+    @translate_command_errors
     async def async_set_value(self, value: time) -> None:
         """Change the wake time.
 

@@ -21,6 +21,7 @@ from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.const import STATE_IDLE, STATE_PLAYING
 
 from . import HatchDataUpdateCoordinator
+from .commands import translate_command_errors
 from .custom_sounds import CustomSound, sound_details
 from .hatch_entity import HatchEntity
 from .riot_tracks import PROGRAM_SOUNDS, program_sound_name
@@ -148,10 +149,12 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             ),
         }
 
+    @translate_command_errors
     def set_volume_level(self, volume: float) -> None:
         """Set the volume level (0..1)."""
         self.rest_device.set_volume(volume * 100)
 
+    @translate_command_errors
     def media_play(self) -> None:
         """Start playback."""
         _LOGGER.debug("media play")
@@ -165,6 +168,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
         _LOGGER.debug("selecting sound mode of %s", new_sound_mode)
         self.select_sound_mode(new_sound_mode)
 
+    @translate_command_errors
     def select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
         _LOGGER.debug("Select sound mode: %s", sound_mode)
@@ -187,6 +191,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             _LOGGER.debug("set audio track: %s", track)
             self.rest_device.set_audio_track(track)
 
+    @translate_command_errors
     def media_stop(self) -> None:
         """Stop playback.
 

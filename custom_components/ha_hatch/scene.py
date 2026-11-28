@@ -19,6 +19,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HatchDataUpdateCoordinator
+from .commands import translate_command_errors
 from .const import CONFIG_NUMBERED_PRESET_SCENES, CONFIG_NUMBERED_PRESET_SCENES_DEFAULT, DOMAIN
 from .favorite_slots import (
     favorite_id,
@@ -172,6 +173,7 @@ class RiotScene(HatchEntity, Scene):
         preset_number, favorite = current
         return favorite_scene_attributes(favorite, preset_number)
 
+    @translate_command_errors
     async def async_activate(self, **kwargs: Any) -> None:
         """Start the slot's favorite under its current Hatch id.
 

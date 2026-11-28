@@ -8,6 +8,7 @@ from typing import ClassVar
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_RGBW_COLOR, ColorMode, LightEntity
 
 from . import HatchDataUpdateCoordinator
+from .commands import translate_command_errors
 from .hatch_entity import HatchEntity
 
 _LOGGER = getLogger(__name__)
@@ -58,6 +59,7 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
             self.rest_device.white,
         )
 
+    @translate_command_errors
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         _LOGGER.debug("args:%s", kwargs)
@@ -95,6 +97,7 @@ class LightRestoreIotEntity(HatchEntity, LightEntity):
         )
         self.rest_device.set_color(red, green, blue, white, brightness)
 
+    @translate_command_errors
     def turn_off(self) -> None:
         """Turn the entity off."""
         self.rest_device.turn_light_off()

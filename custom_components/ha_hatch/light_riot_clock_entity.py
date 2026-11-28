@@ -11,6 +11,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEnti
 from homeassistant.util import dt as dt_util
 
 from . import HatchDataUpdateCoordinator
+from .commands import translate_command_errors
 from .hatch_entity import HatchEntity
 
 _LOGGER = getLogger(__name__)
@@ -79,6 +80,7 @@ class LightRiotClockEntity(HatchEntity, LightEntity):
             channel = dev.clock
         return round((channel or 0.0) / 100 * 255.0)
 
+    @translate_command_errors
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         _LOGGER.debug("args:%s", kwargs)
@@ -98,6 +100,7 @@ class LightRiotClockEntity(HatchEntity, LightEntity):
         else:
             dev.set_clock(brightness)
 
+    @translate_command_errors
     def turn_off(self) -> None:
         """Turn the entity off."""
         _LOGGER.debug("turn off clock")

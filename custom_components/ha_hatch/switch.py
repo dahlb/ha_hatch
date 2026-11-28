@@ -21,6 +21,7 @@ from .alarm import (
     remove_stale_alarm_entities,
     update_alarm_entity_names,
 )
+from .commands import translate_command_errors
 from .const import DOMAIN
 from .hatch_entity import HatchEntity
 from .restore_entities import (
@@ -151,10 +152,12 @@ class HatchPowerSwitch(HatchEntity, SwitchEntity):
         """Return whether the entity is on."""
         return self.rest_device.is_on
 
+    @translate_command_errors
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         self.rest_device.set_on(True)
 
+    @translate_command_errors
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         self.rest_device.set_on(False)
@@ -178,10 +181,12 @@ class HatchToddlerLockSwitch(HatchEntity, SwitchEntity):
         """Return whether the entity is on."""
         return self.rest_device.toddler_lock
 
+    @translate_command_errors
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         self.rest_device.set_toddler_lock(True)
 
+    @translate_command_errors
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         self.rest_device.set_toddler_lock(False)
@@ -205,10 +210,12 @@ class HatchClockTapSwitch(HatchEntity, SwitchEntity):
         """Return whether the entity is on."""
         return self.rest_device.is_clock_tap_on
 
+    @translate_command_errors
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         self.rest_device.clock_tap_on()
 
+    @translate_command_errors
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         self.rest_device.clock_tap_off()
@@ -269,10 +276,12 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
         """Return extra state attributes."""
         return alarm_repeat_attributes(self._alarm)
 
+    @translate_command_errors
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         await self._async_set_enabled(True)
 
+    @translate_command_errors
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         await self._async_set_enabled(False)

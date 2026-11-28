@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import pytest
 
 from custom_components.ha_hatch import services
@@ -91,3 +93,29 @@ async def test_other_alarms_still_use_the_device(restore: RestoreFixture) -> Non
         await services._async_set_alarm_weekdays(hass, call)
 
     other.set_alarm_weekdays.assert_awaited_once_with("7", ["monday"])
+
+
+async def test_a_timed_out_alarm_edit_raises_a_home_assistant_error(
+    restore: RestoreFixture,
+) -> None:
+    """A device that does not confirm the edit in time fails like any service."""
+    error = TimeoutError()
+    other = SimpleNamespace(device_name="Rest", set_alarm_weekdays=AsyncMock(side_effect=error))
+    hass = SimpleNamespace(data={DOMAIN: restore.coordinator})
+    call = SimpleNamespace(data={services.ATTR_WEEKDAYS: ["monday"]})
+
+    with (
+        patch.object(services, "HatchDataUpdateCoordinator", FakeCoordinator),
+        patch.object(
+            services,
+            "_alarm_targets_from_service_call",
+            return_value={("thing-rest", "7"): (other, "7")},
+        ),
+        pytest.raises(HomeAssistantError) as raised,
+    ):
+        await services._async_set_alarm_weekdays(
+            cast("HomeAssistant", hass), cast("ServiceCall", call)
+        )
+
+    assert raised.value.translation_placeholders == {"target": "Rest"}
+    assert raised.value.__cause__ is error
