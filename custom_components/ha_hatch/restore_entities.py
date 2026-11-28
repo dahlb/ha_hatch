@@ -66,6 +66,11 @@ COLOR_IDS_BY_NAME = {name: color_id for color_id, name in RESTORE_COLORS.items()
 SOUND_IDS_BY_NAME = {name: sound_id for sound_id, name in RESTORE_SOUNDS.items()}
 
 
+def _name_or_id(names: dict[int, str], item_id: Any) -> Any:
+    """Return the name for a Hatch sound or color id, or the id itself if unknown."""
+    return names.get(item_id, item_id) if isinstance(item_id, int) else item_id
+
+
 def brightness_to_percent(brightness: int) -> int:
     """Convert a Home Assistant brightness (0-255) to a percentage, at least 1.
 
@@ -112,7 +117,7 @@ def parse_clock_time(value: str | None) -> time | None:
         return None
 
 
-class RestoreEntity(HatchEntity):
+class RestoreEntity(HatchEntity[Restore]):
     """Base for the original Restore's entities, typed to the Restore device."""
 
     @property
@@ -729,10 +734,10 @@ def restore_alarm_attributes(alarm: dict[str, Any] | None) -> dict[str, Any]:
         "time": wake_time.strftime("%H:%M") if wake_time else None,
         "repeat": alarm_repeat_label(days_of_week),
         "weekdays": alarm_weekdays(days_of_week),
-        "sound": RESTORE_SOUND_NAMES.get(sound.get("id"), sound.get("id")),
+        "sound": _name_or_id(RESTORE_SOUND_NAMES, sound.get("id")),
         "volume": convert_to_percentage(int(sound["v"])) if sound.get("v") is not None else None,
         "sunrise": bool(alarm.get("colorStartsEarly")),
-        "sunrise_color": RESTORE_COLOR_NAMES.get(color.get("id"), color.get("id")),
+        "sunrise_color": _name_or_id(RESTORE_COLOR_NAMES, color.get("id")),
         "sunrise_brightness": (
             convert_to_percentage(int(color["i"])) if color.get("i") is not None else None
         ),

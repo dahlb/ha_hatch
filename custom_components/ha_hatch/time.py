@@ -6,13 +6,12 @@ from datetime import time
 import logging
 from typing import Any
 
-from hatch_rest_api import Restore, RestoreV5
+from hatch_rest_api import Restore, RestoreIot, RestoreV5
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HatchDataUpdateCoordinator
 from .alarm import (
     alarm_base_names,
     alarm_by_id,
@@ -25,6 +24,7 @@ from .alarm import (
 )
 from .commands import translate_command_errors
 from .const import DOMAIN
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 from .restore_entities import RestoreAlarmTime, RestoreClockTime, async_setup_restore_alarm_entities
 
@@ -153,7 +153,7 @@ async def async_setup_entry(
     )
 
 
-class HatchClockScheduleTime(HatchEntity, TimeEntity):
+class HatchClockScheduleTime(HatchEntity[RestoreV5], TimeEntity):
     """Hatch clock schedule time."""
 
     def __init__(
@@ -186,7 +186,7 @@ class HatchClockScheduleTime(HatchEntity, TimeEntity):
         await self.rest_device.async_command(getattr(self.rest_device, self._setter), value)
 
 
-class HatchAlarmWakeTime(HatchEntity, TimeEntity):
+class HatchAlarmWakeTime(HatchEntity[RestoreIot | RestoreV5], TimeEntity):
     """Hatch alarm wake time."""
 
     entity_description = TimeEntityDescription(

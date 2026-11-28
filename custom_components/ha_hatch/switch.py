@@ -5,13 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hatch_rest_api import RestBaby, RestIot, Restore, RestoreV5, RestPlus
+from hatch_rest_api import RestBaby, RestIot, Restore, RestoreIot, RestoreV5, RestPlus
+from hatch_rest_api.iot_device import IotRestDevice
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HatchDataUpdateCoordinator
 from .alarm import (
     alarm_base_names,
     alarm_by_id,
@@ -23,6 +23,7 @@ from .alarm import (
 )
 from .commands import translate_command_errors
 from .const import DOMAIN
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 from .restore_entities import (
     RestoreAlarmsSwitch,
@@ -135,10 +136,10 @@ async def async_setup_entry(
     )
 
 
-class HatchPowerSwitch(HatchEntity, SwitchEntity):
+class HatchPowerSwitch(HatchEntity[RestPlus], SwitchEntity):
     """Hatch power switch."""
 
-    entity_description: SwitchEntityDescription(
+    entity_description = SwitchEntityDescription(
         key="power-switch",
         device_class=SwitchDeviceClass.SWITCH,
     )
@@ -153,20 +154,20 @@ class HatchPowerSwitch(HatchEntity, SwitchEntity):
         return self.rest_device.is_on
 
     @translate_command_errors
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.rest_device.async_command(self.rest_device.set_on, True)
 
     @translate_command_errors
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.rest_device.async_command(self.rest_device.set_on, False)
 
 
-class HatchToddlerLockSwitch(HatchEntity, SwitchEntity):
+class HatchToddlerLockSwitch(HatchEntity[IotRestDevice], SwitchEntity):
     """Hatch toddler lock switch."""
 
-    entity_description: SwitchEntityDescription(
+    entity_description = SwitchEntityDescription(
         key="toddler-lock",
         icon="mdi:human-child",
         device_class=SwitchDeviceClass.SWITCH,
@@ -182,17 +183,17 @@ class HatchToddlerLockSwitch(HatchEntity, SwitchEntity):
         return self.rest_device.toddler_lock
 
     @translate_command_errors
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.rest_device.async_command(self.rest_device.set_toddler_lock, True)
 
     @translate_command_errors
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.rest_device.async_command(self.rest_device.set_toddler_lock, False)
 
 
-class HatchClockTapSwitch(HatchEntity, SwitchEntity):
+class HatchClockTapSwitch(HatchEntity[RestoreV5], SwitchEntity):
     """Hatch clock tap switch."""
 
     _attr_icon = "mdi:gesture-tap"
@@ -211,17 +212,17 @@ class HatchClockTapSwitch(HatchEntity, SwitchEntity):
         return self.rest_device.is_clock_tap_on
 
     @translate_command_errors
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.rest_device.async_command(self.rest_device.clock_tap_on)
 
     @translate_command_errors
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.rest_device.async_command(self.rest_device.clock_tap_off)
 
 
-class HatchAlarmSwitch(HatchEntity, SwitchEntity):
+class HatchAlarmSwitch(HatchEntity[RestoreIot | RestoreV5], SwitchEntity):
     """Hatch alarm switch."""
 
     entity_description = SwitchEntityDescription(
@@ -277,12 +278,12 @@ class HatchAlarmSwitch(HatchEntity, SwitchEntity):
         return alarm_repeat_attributes(self._alarm)
 
     @translate_command_errors
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._async_set_enabled(True)
 
     @translate_command_errors
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._async_set_enabled(False)
 

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from hatch_rest_api import (
     REST_BABY_AUDIO_TRACKS,
@@ -12,17 +12,20 @@ from hatch_rest_api import (
     RestIot,
     RIoTAudioTrack,
 )
+from hatch_rest_api.iot_device import IotDevice, IotSoundDevice
+from hatch_rest_api.types import SimpleSoundContent
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerState,
 )
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature, MediaType
-from homeassistant.const import STATE_IDLE, STATE_PLAYING
+from homeassistant.exceptions import ServiceValidationError
 
-from . import HatchDataUpdateCoordinator
 from .commands import translate_command_errors
+from .const import DOMAIN
 from .custom_sounds import CustomSound, sound_details
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 from .riot_tracks import PROGRAM_SOUNDS, program_sound_name
 
@@ -43,7 +46,7 @@ def _find_rest_baby_track(track_name: str | None) -> RestBabyAudioTrack | None:
     )
 
 
-class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
+class MediaRiotEntity(HatchEntity[IotDevice], MediaPlayerEntity):
     """Media riot entity."""
 
     _attr_media_content_type = MediaType.MUSIC
@@ -63,6 +66,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             custom_sounds: User-defined sounds keyed by sound-mode name.
         """
         super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Media Player")
+        audio_data: list[RestBabyAudioTrack] | list[RIoTAudioTrack]
         if isinstance(self.rest_device, RestBaby):
             audio_data = REST_BABY_AUDIO_TRACKS[1:]
         elif isinstance(self.rest_device, RestIot):
@@ -72,7 +76,10 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             # catalog (sounds_by_name), so the built-in Rest tracks aren't offered.
             audio_data = []
         self._program_sounds = PROGRAM_SOUNDS if isinstance(self.rest_device, RestIot) else {}
-        self._custom_sounds: dict[str, CustomSound] = dict(custom_sounds or {})
+        # Custom sounds are played with set_sound, which the Restore (1st gen) lacks.
+        self._custom_sounds: dict[str, CustomSound] = (
+            dict(custom_sounds or {}) if isinstance(self.rest_device, IotSoundDevice) else {}
+        )
         self._custom_sounds_by_id: dict[int, CustomSound] = {
             sound["id"]: sound for sound in self._custom_sounds.values()
         }
@@ -98,8 +105,8 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """Return the media player state."""
         if self.rest_device.is_playing:
-            return STATE_PLAYING
-        return STATE_IDLE
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.IDLE
 
     @property
     def sound_mode(self) -> str | None:
@@ -108,6 +115,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
         sound_id = self.rest_device.sound_id
         program_sound = program_sound_name(sound_id)
         custom_sound = self._custom_sounds_by_id.get(sound_id)
+        sound_mode: str | None
         if program_sound in self._program_sounds:
             sound_mode = program_sound
         elif custom_sound is not None:
@@ -116,7 +124,9 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             _LOGGER.debug("Audio track found: %s", self.rest_device.audio_track)
             sound_mode = self.rest_device.audio_track.name
         else:
-            sound = self.rest_device.sounds_by_id.get(self.rest_device.sound_id) or {}
+            sound: Mapping[str, Any] = (
+                self.rest_device.sounds_by_id.get(self.rest_device.sound_id) or {}
+            )
             sound_mode = sound.get("title") or None
         _LOGGER.debug("sound mode: %s", sound_mode)
         return sound_mode
@@ -152,7 +162,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     @translate_command_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level (0..1)."""
-        await self.rest_device.async_command(self.rest_device.set_volume, volume * 100)
+        await self.rest_device.async_command(self.rest_device.set_volume, round(volume * 100))
 
     @translate_command_errors
     async def async_media_play(self) -> None:
@@ -172,24 +182,34 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
         _LOGGER.debug("Select sound mode: %s", sound_mode)
+        device = self.rest_device
+        if not isinstance(device, IotSoundDevice):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="sound_not_supported",
+                translation_placeholders={"target": device.device_name},
+            )
         # Program and custom sounds are full payloads, which play on any device.
         payload = self._program_sounds.get(sound_mode) or self._custom_sounds.get(sound_mode)
         if payload is not None:
             _LOGGER.debug("set program or custom sound: %s", sound_mode)
-            await self.rest_device.async_command(self.rest_device.set_sound, payload)
+            # set_sound sends any payload with an id and a sound URL.
+            await device.async_command(device.set_sound, cast("SimpleSoundContent", payload))
             return
-        if isinstance(self.rest_device, RestBaby):
-            track = _find_rest_baby_track(track_name=sound_mode)
-        elif isinstance(self.rest_device, RestIot):
+        if isinstance(device, RestBaby):
+            baby_track = _find_rest_baby_track(track_name=sound_mode)
+            if baby_track is not None:
+                _LOGGER.debug("set audio track: %s", baby_track)
+                await device.async_command(device.set_audio_track, baby_track)
+                return
+        elif isinstance(device, RestIot):
             track = _find_track(track_name=sound_mode)
-        else:
-            track = None
-        if track is None:
-            _LOGGER.debug("No track found")
-            await self.rest_device.async_command(self.rest_device.set_sound, sound_mode)
-        else:
-            _LOGGER.debug("set audio track: %s", track)
-            await self.rest_device.async_command(self.rest_device.set_audio_track, track)
+            if track is not None:
+                _LOGGER.debug("set audio track: %s", track)
+                await device.async_command(device.set_audio_track, track)
+                return
+        _LOGGER.debug("No track found")
+        await device.async_command(device.set_sound, sound_mode)
 
     @translate_command_errors
     async def async_media_stop(self) -> None:

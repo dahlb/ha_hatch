@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
-import voluptuous as vol
+import probatio
 
 from .alarm import alarm_reference_from_unique_id, normalize_alarm_weekdays
 from .commands import hatch_command_errors
@@ -37,7 +37,7 @@ def async_register_services(hass: HomeAssistant) -> None:
         SERVICE_SET_ALARM_WEEKDAYS,
         async_set_alarm_weekdays,
         schema=cv.make_entity_service_schema(
-            {vol.Optional(ATTR_WEEKDAYS, default=list): _validate_weekdays}
+            {probatio.Optional(ATTR_WEEKDAYS, default=list): _validate_weekdays}
         ),
     )
 
@@ -46,7 +46,7 @@ def _validate_weekdays(value: Any) -> list[str]:
     try:
         return normalize_alarm_weekdays(value)
     except ValueError as error:
-        raise vol.Invalid(str(error)) from error
+        raise probatio.Invalid(str(error)) from error
 
 
 async def _async_set_alarm_weekdays(

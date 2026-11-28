@@ -54,6 +54,9 @@
     },
     "command_failed": {
       "message": "The command for {target} could not be sent to Hatch ({error}). Check the device's connection and try again."
+    },
+    "sound_not_supported": {
+      "message": "{target} can't play sound modes; choose one of its favorites as the source instead."
     }
   }
 }

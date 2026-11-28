@@ -44,7 +44,7 @@ People *love* thorough bug reports. I'm not even kidding.
 
 ## Use a Consistent Coding Style
 
-Use [prek](https://prek.j178.dev) to make sure the code follows the style ([mypy](https://mypy-lang.org) is configured too and can be run with `.venv/bin/mypy .`).
+Use [prek](https://prek.j178.dev) to make sure the code follows the style, and [mypy](https://mypy-lang.org) (strict) to type-check it; `scripts/lint` runs both, as CI does.
 
 Run lint checks through the project virtualenv to avoid environment mismatch:
 

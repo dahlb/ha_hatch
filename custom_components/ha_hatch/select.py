@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import ClassVar
 
 from hatch_rest_api import Restore, RestoreV5
 from hatch_rest_api.const import (
@@ -16,9 +15,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HatchDataUpdateCoordinator
 from .commands import translate_command_errors
 from .const import DOMAIN
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 from .restore_entities import RestoreClockMode, RestoreRoutineStep
 
@@ -60,11 +59,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ClockModeSelect(HatchEntity, SelectEntity):
+class ClockModeSelect(HatchEntity[RestoreV5], SelectEntity):
     """Clock mode select."""
 
     _attr_icon = "mdi:clock-time-four-outline"
-    _attr_options: ClassVar[list[str]] = [MODE_ALWAYS_ON, MODE_OFF_AT_NIGHT, MODE_ALWAYS_OFF]
 
     def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
         """Initialize the clock mode select."""
@@ -73,13 +71,14 @@ class ClockModeSelect(HatchEntity, SelectEntity):
             thing_name=thing_name,
             entity_type="Clock Mode",
         )
+        self._attr_options = [MODE_ALWAYS_ON, MODE_OFF_AT_NIGHT, MODE_ALWAYS_OFF]
 
     @property
     def current_option(self) -> str | None:
         """Return the selected option."""
         dev = self.rest_device
-        option = TURN_OFF_MODE_TO_OPTION.get(getattr(dev, "clock_turn_off_mode", None))
-        if option is not None:
+        mode = dev.clock_turn_off_mode
+        if mode is not None and (option := TURN_OFF_MODE_TO_OPTION.get(mode)) is not None:
             return option
         # Fall back to the display flag until the mode field has been parsed.
         return MODE_ALWAYS_OFF if not dev.is_clock_on else MODE_ALWAYS_ON

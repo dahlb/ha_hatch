@@ -8,7 +8,7 @@ from decimal import Decimal
 import logging
 from typing import Any
 
-from hatch_rest_api import RestIot, Restore, RestPlus
+from hatch_rest_api import RestIot, Restore, RestoreIot, RestoreV5, RestPlus
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HatchDataUpdateCoordinator
 from .alarm import (
     alarm_base_names,
     alarm_by_id,
@@ -28,6 +27,7 @@ from .alarm import (
     update_alarm_entity_names,
 )
 from .const import DOMAIN
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 from .restore_entities import (
     RestoreAlarmRepeat,
@@ -130,7 +130,7 @@ async def async_setup_entry(
     )
 
 
-class HatchBattery(HatchEntity, SensorEntity):
+class HatchBattery(HatchEntity[RestPlus | RestIot], SensorEntity):
     """Hatch battery."""
 
     entity_description = SensorEntityDescription(
@@ -150,7 +150,7 @@ class HatchBattery(HatchEntity, SensorEntity):
         return self.rest_device.battery_level
 
 
-class HatchCharging(HatchEntity, SensorEntity):
+class HatchCharging(HatchEntity[RestIot], SensorEntity):
     """Hatch charging."""
 
     entity_description = SensorEntityDescription(
@@ -183,7 +183,7 @@ class HatchCharging(HatchEntity, SensorEntity):
         return self.entity_description.icon
 
 
-class HatchAlarmRepeat(HatchEntity, SensorEntity):
+class HatchAlarmRepeat(HatchEntity[RestoreIot | RestoreV5], SensorEntity):
     """Hatch alarm repeat."""
 
     entity_description = SensorEntityDescription(

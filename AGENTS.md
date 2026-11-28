@@ -40,7 +40,7 @@
 
 ## Local tooling note
 
-- Use the repo's `prek`, `mypy`, and `pytest` commands inside `./.venv`. You must always run these inside `./.venv`. `mypy` does not pass yet; do not add new type errors.
+- Use the repo's `prek`, `mypy`, and `pytest` commands inside `./.venv`. You must always run these inside `./.venv`. `mypy` runs in strict mode and must pass (`scripts/lint` runs `prek` and `mypy`).
 - By default, run the full pytest suite. If running targeted tests, explain why.
 
 ## Error handling & logging

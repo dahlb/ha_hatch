@@ -10,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HatchDataUpdateCoordinator
 from .const import CONFIG_TURN_ON_DEFAULT, CONFIG_TURN_ON_LIGHT, DOMAIN
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .light_rest_entity import LightRestEntity
 from .light_restoreiot_entity import LightRestoreIotEntity
 from .light_riot_clock_entity import LightRiotClockEntity

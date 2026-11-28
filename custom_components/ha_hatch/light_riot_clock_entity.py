@@ -4,14 +4,15 @@ from __future__ import annotations
 
 from datetime import time as dt_time
 from logging import getLogger
-from typing import Any, ClassVar
+from typing import Any
 
-from hatch_rest_api import RestDevice
+from hatch_rest_api import RestoreV5
+from hatch_rest_api.iot_device import IotDevice
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.util import dt as dt_util
 
-from . import HatchDataUpdateCoordinator
 from .commands import translate_command_errors
+from .hatch_data_update_coordinator import HatchDataUpdateCoordinator
 from .hatch_entity import HatchEntity
 
 _LOGGER = getLogger(__name__)
@@ -31,7 +32,7 @@ def _parse_clock_time(value: str | None) -> dt_time | None:
         return None
 
 
-def _clock_active_is_daytime(dev: RestDevice) -> bool:
+def _clock_active_is_daytime(dev: RestoreV5) -> bool:
     """Return True when the device is currently showing its daytime brightness.
 
     The daytime channel is active between turnBrightAt and turnDimAt, the
@@ -39,8 +40,8 @@ def _clock_active_is_daytime(dev: RestDevice) -> bool:
     On and Off at Night) - the mode only controls when the display turns fully
     off, not which brightness is shown.
     """
-    bright_at = _parse_clock_time(getattr(dev, "clock_turn_bright_at", None))
-    dim_at = _parse_clock_time(getattr(dev, "clock_turn_dim_at", None))
+    bright_at = _parse_clock_time(dev.clock_turn_bright_at)
+    dim_at = _parse_clock_time(dev.clock_turn_dim_at)
     if bright_at is None or dim_at is None:
         return False
     now = dt_util.now().time()
@@ -49,21 +50,16 @@ def _clock_active_is_daytime(dev: RestDevice) -> bool:
     return now >= bright_at or now < dim_at
 
 
-class LightRiotClockEntity(HatchEntity, LightEntity):
+class LightRiotClockEntity(HatchEntity[IotDevice], LightEntity):
     """Light riot clock entity."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_supported_color_modes: ClassVar[set[ColorMode]] = {ColorMode.BRIGHTNESS}
     _attr_icon = "mdi:clock"
 
     def __init__(self, coordinator: HatchDataUpdateCoordinator, thing_name: str) -> None:
         """Initialize the light riot clock entity."""
         super().__init__(coordinator=coordinator, thing_name=thing_name, entity_type="Clock")
-
-    @property
-    def _is_dual_channel(self) -> bool:
-        dev = self.rest_device
-        return hasattr(dev, "clock_nighttime") and hasattr(dev, "clock_daytime")
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
     def is_on(self) -> bool | None:
@@ -74,14 +70,15 @@ class LightRiotClockEntity(HatchEntity, LightEntity):
     def brightness(self) -> int | None:
         """Return the brightness."""
         dev = self.rest_device
-        if self._is_dual_channel:
+        # The Restore 3 (and Restore 2) has separate day and night brightness.
+        if isinstance(dev, RestoreV5):
             channel = dev.clock_daytime if _clock_active_is_daytime(dev) else dev.clock_nighttime
         else:
-            channel = dev.clock
+            channel = getattr(dev, "clock", None)
         return round((channel or 0.0) / 100 * 255.0)
 
     @translate_command_errors
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         _LOGGER.debug("args:%s", kwargs)
         if ATTR_BRIGHTNESS in kwargs:
@@ -92,7 +89,7 @@ class LightRiotClockEntity(HatchEntity, LightEntity):
         dev = self.rest_device
         # Drive only the channel the clock is currently displaying so the slider
         # tracks what the user sees. The number entities set each independently.
-        if self._is_dual_channel:
+        if isinstance(dev, RestoreV5):
             if _clock_active_is_daytime(dev):
                 await dev.async_command(dev.set_clock, daytime_brightness=brightness)
             else:
