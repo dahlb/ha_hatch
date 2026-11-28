@@ -14,7 +14,7 @@
 | custom\_components/ha\_hatch/diagnostics.py                      |       37 |       10 |        8 |        1 |     67% |     54-75 |
 | custom\_components/ha\_hatch/favorite\_slots.py                  |       77 |        0 |       24 |        1 |     99% | 235-\>223 |
 | custom\_components/ha\_hatch/favorites.py                        |        9 |        0 |        2 |        0 |    100% |           |
-| custom\_components/ha\_hatch/hatch\_data\_update\_coordinator.py |      236 |      111 |       58 |        2 |     51% |87-103, 124, 159-160, 164-167, 178-183, 186-189, 196-226, 229-235, 241-243, 254-271, 282-291, 294-297, 304-374, 378-385, 534-\>exit, 539 |
+| custom\_components/ha\_hatch/hatch\_data\_update\_coordinator.py |      236 |       66 |       58 |        4 |     70% |87-103, 160, 164-167, 178-183, 186-189, 196-226, 230-235, 294-297, 312, 315, 343, 349-350, 363-379, 383-390, 539-\>exit, 544 |
 | custom\_components/ha\_hatch/hatch\_entity.py                    |       21 |        0 |        0 |        0 |    100% |           |
 | custom\_components/ha\_hatch/light.py                            |       33 |        6 |       10 |        3 |     74% |34, 42-45, 55-59 |
 | custom\_components/ha\_hatch/light\_rest\_entity.py              |       38 |       16 |        4 |        0 |     52% |27-28, 33, 38, 43, 52-67, 72 |
@@ -34,7 +34,7 @@
 | custom\_components/ha\_hatch/services.py                         |       77 |       33 |       34 |        6 |     52% |29-35, 46-49, 58, 62, 66, 87-116, 128-130, 144, 149-153 |
 | custom\_components/ha\_hatch/switch.py                           |      142 |       51 |       32 |        9 |     60% |47, 51, 55-58, 63, 66-\>45, 86, 90-109, 112-113, 130, 148, 153, 158, 163, 177, 182, 187, 192, 242-251, 255-259, 264, 269-272, 277, 282, 287, 290-294, 298 |
 | custom\_components/ha\_hatch/time.py                             |      115 |       35 |       30 |        7 |     64% |70-71, 81-\>67, 88-\>90, 103, 107-127, 130-131, 148, 206-214, 218-222, 227, 232, 237, 242-246, 250 |
-| **TOTAL**                                                        | **2355** |  **557** |  **570** |   **66** | **73%** |           |
+| **TOTAL**                                                        | **2355** |  **512** |  **570** |   **68** | **75%** |           |
 
 
 ## Setup coverage badge
