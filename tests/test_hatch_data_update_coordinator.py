@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 from concurrent.futures import Future
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from hatch_rest_api import RestIot, RestoreV5
+from hatch_rest_api.errors import RateError
+from homeassistant.helpers.update_coordinator import UpdateFailed
 import pytest
 
 from custom_components.ha_hatch import hatch_data_update_coordinator as coordinator_module
 from custom_components.ha_hatch.favorite_slots import FavoriteSlots
 from custom_components.ha_hatch.hatch_data_update_coordinator import (
     FAVORITE_SLOTS_SAVE_DELAY,
+    RATE_LIMIT_RETRY_INTERVAL,
     RESTORE_ALARM_SLOTS_SAVE_DELAY,
     HatchDataUpdateCoordinator,
     favorite_slots_store_key,
@@ -177,6 +181,75 @@ async def test_unsubscribe_that_never_completes_is_cut_off() -> None:
         await HatchDataUpdateCoordinator._async_unsubscribe_shadows(coordinator)
 
     assert client.unsubscribe.call_count >= 1
+
+
+def _update_coordinator(email: str) -> HatchDataUpdateCoordinator:
+    """A coordinator with just what ``_async_update_data`` reads."""
+    coordinator = HatchDataUpdateCoordinator.__new__(HatchDataUpdateCoordinator)
+    coordinator.email = email
+    coordinator.password = "hunter2"
+    coordinator.hass = MagicMock()
+    coordinator.rest_devices = []
+    coordinator.mqtt_connection = None
+    coordinator.expiration_time = None
+    coordinator._alarm_refresh_callbacks = []
+    coordinator.update_interval = None
+    return coordinator
+
+
+def _forget_backoff(email: str) -> None:
+    for state in (
+        HatchDataUpdateCoordinator._retry_backoff_until,
+        HatchDataUpdateCoordinator._retry_backoff_attempts,
+        HatchDataUpdateCoordinator._retry_backoff_reasons,
+    ):
+        state.pop(email, None)
+
+
+async def test_setup_turns_off_the_librarys_rate_limit_retries() -> None:
+    """get_rest_devices is asked not to retry, leaving rate limits to the coordinator."""
+    email = "no-library-retries@example.invalid"
+    coordinator = _update_coordinator(email)
+    expires = (datetime.now(UTC) + timedelta(hours=1)).timestamp()
+    get_rest_devices = AsyncMock(return_value=(MagicMock(), MagicMock(), [], expires))
+    try:
+        with (
+            patch.object(coordinator_module, "get_rest_devices", get_rest_devices),
+            patch.object(coordinator_module, "async_get_clientsession", MagicMock()),
+        ):
+            assert await coordinator._async_update_data() == []
+    finally:
+        _forget_backoff(email)
+
+    assert get_rest_devices.await_args.kwargs["rate_limit_retries"] == 0
+
+
+async def test_rate_limit_backs_off_in_the_coordinator() -> None:
+    """A RateError goes straight to the coordinator's 15 minute backoff, which then doubles."""
+    email = "rate-limited@example.invalid"
+    coordinator = _update_coordinator(email)
+    get_rest_devices = AsyncMock(side_effect=RateError("API rate limit exceeded."))
+    try:
+        with (
+            patch.object(coordinator_module, "get_rest_devices", get_rest_devices),
+            patch.object(coordinator_module, "async_get_clientsession", MagicMock()),
+        ):
+            with pytest.raises(UpdateFailed):
+                await coordinator._async_update_data()
+            assert coordinator.update_interval == RATE_LIMIT_RETRY_INTERVAL
+
+            # A second attempt within the backoff does not call Hatch at all.
+            with pytest.raises(UpdateFailed, match="Retry backoff active"):
+                await coordinator._async_update_data()
+            assert get_rest_devices.await_count == 1
+
+            # Once it has passed, another rate limit doubles the wait.
+            HatchDataUpdateCoordinator._retry_backoff_until[email] = datetime.now(UTC)
+            with pytest.raises(UpdateFailed):
+                await coordinator._async_update_data()
+            assert coordinator.update_interval == RATE_LIMIT_RETRY_INTERVAL * 2
+    finally:
+        _forget_backoff(email)
 
 
 def _disconnecting_coordinator(future: Future[dict[str, object]]) -> SimpleNamespace:

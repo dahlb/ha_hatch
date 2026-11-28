@@ -326,6 +326,11 @@ class HatchDataUpdateCoordinator(DataUpdateCoordinator[dict]):
                 client_session=client_session,
                 on_connection_interrupted=disconnect,
                 on_connection_resumed=resumed,
+                # A rate limit raises RateError straight away so the backoff below
+                # (15 minutes, doubling to 6 hours) is the only retry policy. The
+                # library's own 2/4/8 second retries would spend more requests on
+                # an account Hatch is already limiting.
+                rate_limit_retries=0,
             )
             _LOGGER.debug(
                 "credentials expire at: %s", datetime.fromtimestamp(self.expiration_time, UTC)
