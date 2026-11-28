@@ -23,6 +23,10 @@ jobs:
         uses: cycjimmy/semantic-release-action@v8
         with:
           dry_run: true
+          # .releaserc.json uses the conventionalcommits preset so `feat!:` and
+          # `fix!:` mark breaking changes; the default angular preset ignores `!`.
+          extra_plugins: |
+            conventional-changelog-conventionalcommits@9.3.1
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Update Version and Commit
