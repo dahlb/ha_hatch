@@ -11,6 +11,8 @@ from custom_components.ha_hatch.select import (
     ClockModeSelect,
 )
 
+from .conftest import run_commands_on_mock
+
 
 def _clock_mode_select(rest_device: MagicMock) -> ClockModeSelect:
     """Build a clock mode select backed by a mocked coordinator and device.
@@ -21,6 +23,7 @@ def _clock_mode_select(rest_device: MagicMock) -> ClockModeSelect:
     Returns:
         The clock mode select entity under test.
     """
+    run_commands_on_mock(rest_device)
     rest_device.device_name = "Restore"
     rest_device.mac = "AA:BB:CC:DD:EE:FF"
     rest_device.firmware_version = "1.0"
@@ -37,18 +40,18 @@ def _clock_mode_select(rest_device: MagicMock) -> ClockModeSelect:
         (MODE_ALWAYS_OFF, "always"),
     ],
 )
-def test_select_option_calls_device_method(option: str, mode: str) -> None:
+async def test_select_option_calls_device_method(option: str, mode: str) -> None:
     """Selecting an option calls set_clock_turn_off_mode with the matching mode."""
     rest_device = MagicMock()
-    _clock_mode_select(rest_device).select_option(option)
+    await _clock_mode_select(rest_device).async_select_option(option)
     rest_device.set_clock_turn_off_mode.assert_called_once_with(mode)
     rest_device._update.assert_not_called()
 
 
-def test_select_unknown_option_does_nothing() -> None:
+async def test_select_unknown_option_does_nothing() -> None:
     """An unknown option sends nothing to the device."""
     rest_device = MagicMock()
-    _clock_mode_select(rest_device).select_option("bogus")
+    await _clock_mode_select(rest_device).async_select_option("bogus")
     rest_device.set_clock_turn_off_mode.assert_not_called()
 
 

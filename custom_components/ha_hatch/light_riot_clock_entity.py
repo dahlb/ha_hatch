@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import time as dt_time
 from logging import getLogger
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from hatch_rest_api import RestDevice
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -81,7 +81,7 @@ class LightRiotClockEntity(HatchEntity, LightEntity):
         return round((channel or 0.0) / 100 * 255.0)
 
     @translate_command_errors
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         _LOGGER.debug("args:%s", kwargs)
         if ATTR_BRIGHTNESS in kwargs:
@@ -94,14 +94,14 @@ class LightRiotClockEntity(HatchEntity, LightEntity):
         # tracks what the user sees. The number entities set each independently.
         if self._is_dual_channel:
             if _clock_active_is_daytime(dev):
-                dev.set_clock(daytime_brightness=brightness)
+                await dev.async_command(dev.set_clock, daytime_brightness=brightness)
             else:
-                dev.set_clock(nighttime_brightness=brightness)
+                await dev.async_command(dev.set_clock, nighttime_brightness=brightness)
         else:
-            dev.set_clock(brightness)
+            await dev.async_command(dev.set_clock, brightness)
 
     @translate_command_errors
-    def turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         _LOGGER.debug("turn off clock")
-        self.rest_device.turn_clock_off()
+        await self.rest_device.async_command(self.rest_device.turn_clock_off)

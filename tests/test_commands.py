@@ -8,10 +8,10 @@ import inspect
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from awscrt.exceptions import AwsCrtError
-from hatch_rest_api import RestIot
+from hatch_rest_api import RestIot, shadow_client_subscriber
 from homeassistant.exceptions import HomeAssistantError
 import pytest
 
@@ -45,7 +45,14 @@ COMMAND_METHODS = frozenset(
     {
         "activate",
         "async_activate",
+        "async_media_pause",
+        "async_media_play",
+        "async_media_stop",
+        "async_select_option",
+        "async_select_sound_mode",
+        "async_set_native_value",
         "async_set_value",
+        "async_set_volume_level",
         "async_turn_off",
         "async_turn_on",
         "media_pause",
@@ -179,11 +186,12 @@ def test_context_manager_translates_failures() -> None:
     assert raised.value.translation_placeholders == {"target": "Nursery"}
 
 
-def test_a_real_mqtt_publish_timeout_becomes_a_home_assistant_error() -> None:
+async def test_a_real_mqtt_publish_timeout_becomes_a_home_assistant_error() -> None:
     """The issue's case: a shadow publish never acknowledged within MQTT_TIMEOUT."""
     device, client = build_device(RestIot, "thing-rest", "AA:BB:CC:DD:EE:01")
-    unacknowledged = MagicMock(spec=Future)
-    unacknowledged.result.side_effect = TimeoutError
+    # A real future that is never acknowledged; async_command awaits it until
+    # MQTT_TIMEOUT, shortened here.
+    unacknowledged: Future[None] = Future()
     client.publish_update_shadow = MagicMock(  # type: ignore[method-assign]
         return_value=unacknowledged
     )
@@ -192,8 +200,11 @@ def test_a_real_mqtt_publish_timeout_becomes_a_home_assistant_error() -> None:
     light = LightRiotEntity(coordinator, "thing-rest")
     light.entity_id = "light.rest_light"
 
-    with pytest.raises(HomeAssistantError) as raised:
-        light.turn_on()
+    with (
+        patch.object(shadow_client_subscriber, "MQTT_TIMEOUT", 0.01),
+        pytest.raises(HomeAssistantError) as raised,
+    ):
+        await light.async_turn_on()
 
     assert isinstance(raised.value.__cause__, TimeoutError)
     assert raised.value.translation_placeholders == {"target": "light.rest_light"}
@@ -238,3 +249,19 @@ def test_error_messages_are_translated(path: str) -> None:
     assert "{target}" in exceptions["command_timeout"]["message"]
     assert "{target}" in exceptions["command_failed"]["message"]
     assert "{error}" in exceptions["command_failed"]["message"]
+
+
+def test_entity_commands_are_async() -> None:
+    """Commands are async and send through async_command, never on an executor thread.
+
+    A sync command method makes Home Assistant run it in its executor, where the
+    device's blocking MQTT wait ties up a worker thread.
+    """
+    sync_commands = [
+        f"{cls.__name__}.{method}"
+        for cls in _entity_classes()
+        for method in sorted(name for name in COMMAND_METHODS if not name.startswith("async_"))
+        if method in vars(cls) and not inspect.iscoroutinefunction(vars(cls)[method])
+    ]
+
+    assert sync_commands == []

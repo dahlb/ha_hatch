@@ -69,9 +69,11 @@ class ClockDaytimeBrightnessNumber(HatchEntity, NumberEntity):
         return self.rest_device.clock_daytime
 
     @translate_command_errors
-    def set_native_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the native value."""
-        self.rest_device.set_clock(daytime_brightness=int(value))
+        await self.rest_device.async_command(
+            self.rest_device.set_clock, daytime_brightness=int(value)
+        )
 
 
 class ClockNighttimeBrightnessNumber(HatchEntity, NumberEntity):
@@ -98,6 +100,8 @@ class ClockNighttimeBrightnessNumber(HatchEntity, NumberEntity):
         return self.rest_device.clock_nighttime
 
     @translate_command_errors
-    def set_native_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the native value."""
-        self.rest_device.set_clock(nighttime_brightness=int(value))
+        await self.rest_device.async_command(
+            self.rest_device.set_clock, nighttime_brightness=int(value)
+        )

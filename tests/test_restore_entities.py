@@ -217,7 +217,7 @@ def test_unique_ids_and_alarm_names(added: Added) -> None:
     )
 
 
-def test_light(restore: RestoreFixture, added: Added) -> None:
+async def test_light(restore: RestoreFixture, added: Added) -> None:
     """The light reports its color and brightness, and changes them while on."""
     light_entity = _entity(added, "light", f"{THING}_light")
     assert light_entity.is_on
@@ -225,8 +225,8 @@ def test_light(restore: RestoreFixture, added: Added) -> None:
     assert light_entity.brightness == 128
     assert "Warm White" in light_entity.effect_list
 
-    light_entity.turn_on(**{ATTR_BRIGHTNESS: 51, ATTR_EFFECT: "Peach"})
-    light_entity.turn_off()
+    await light_entity.async_turn_on(**{ATTR_BRIGHTNESS: 51, ATTR_EFFECT: "Peach"})
+    await light_entity.async_turn_off()
 
     assert restore.client.published == [
         {"color": {"i": convert_from_percentage(20)}},
@@ -235,19 +235,21 @@ def test_light(restore: RestoreFixture, added: Added) -> None:
     ]
 
 
-def test_light_while_idle_starts_remote_playback(restore: RestoreFixture, added: Added) -> None:
+async def test_light_while_idle_starts_remote_playback(
+    restore: RestoreFixture, added: Added
+) -> None:
     """Turning the light on while nothing plays starts remote playback."""
     restore.device._update_local_state({"content": {"playing": "none"}})
     light_entity = _entity(added, "light", f"{THING}_light")
     assert light_entity.brightness is None
 
-    light_entity.turn_on(**{ATTR_EFFECT: "Mint"})
+    await light_entity.async_turn_on(**{ATTR_EFFECT: "Mint"})
 
     assert restore.client.published[0]["content"] == REMOTE
     assert restore.client.published[0]["color"]["id"] == 214
 
 
-def test_sound(restore: RestoreFixture, added: Added) -> None:
+async def test_sound(restore: RestoreFixture, added: Added) -> None:
     """The sound player reports what plays and changes volume and sound."""
     sound = _entity(added, "media_player", f"{THING}_sound")
     assert sound.state == MediaPlayerState.PLAYING
@@ -255,10 +257,10 @@ def test_sound(restore: RestoreFixture, added: Added) -> None:
     assert sound.media_title == "White Noise"
     assert sound.volume_level == pytest.approx(0.3)
 
-    sound.set_volume_level(0.15)
-    sound.select_sound_mode("Fan")
-    sound.media_pause()
-    sound.media_stop()
+    await sound.async_set_volume_level(0.15)
+    await sound.async_select_sound_mode("Fan")
+    await sound.async_media_pause()
+    await sound.async_media_stop()
 
     assert restore.client.published == [
         {"sound": {"v": convert_from_percentage(15)}},
@@ -267,10 +269,10 @@ def test_sound(restore: RestoreFixture, added: Added) -> None:
         {"sound": {"enabled": False}},
     ]
     with pytest.raises(ServiceValidationError):
-        sound.select_sound_mode("Not a sound")
+        await sound.async_select_sound_mode("Not a sound")
 
 
-def test_sound_while_idle_shows_and_uses_the_remembered_volume(
+async def test_sound_while_idle_shows_and_uses_the_remembered_volume(
     restore: RestoreFixture, added: Added
 ) -> None:
     """While idle, the player shows and starts at the last volume used."""
@@ -282,7 +284,7 @@ def test_sound_while_idle_shows_and_uses_the_remembered_volume(
     assert sound.media_title is None
     assert sound.volume_level == pytest.approx(0.3)
 
-    sound.media_play()
+    await sound.async_media_play()
 
     assert restore.client.published == [
         {
@@ -293,13 +295,13 @@ def test_sound_while_idle_shows_and_uses_the_remembered_volume(
     ]
 
 
-def test_routine_step(restore: RestoreFixture, added: Added) -> None:
+async def test_routine_step(restore: RestoreFixture, added: Added) -> None:
     """The routine step select lists the steps and starts the routine at one."""
     step = _entity(added, "select", f"{THING}_routine_step")
     assert step.options == ["1. Read", "2. Dim", "3. Sleep"]
     assert step.current_option == "2. Dim"
 
-    step.select_option("3. Sleep")
+    await step.async_select_option("3. Sleep")
 
     assert restore.client.published == [
         {"content": {"playing": "routine", "paused": False, "offset": 0, "step": 3}}
@@ -310,13 +312,13 @@ def test_routine_step(restore: RestoreFixture, added: Added) -> None:
     assert not step.available
 
 
-def test_routine_switch(restore: RestoreFixture, added: Added) -> None:
+async def test_routine_switch(restore: RestoreFixture, added: Added) -> None:
     """The routine switch is on while anything plays, and starts or stops it."""
     routine = _entity(added, "switch", f"{THING}_bedtime_routine")
     assert routine.is_on
 
-    routine.turn_off()
-    routine.turn_on()
+    await routine.async_turn_off()
+    await routine.async_turn_on()
 
     assert [desired["content"]["playing"] for desired in restore.client.published] == [
         "none",
@@ -342,7 +344,7 @@ def test_diagnostic_sensors(added: Added) -> None:
     assert _entity(added, "sensor", f"{THING}_wifi_signal").native_value == -44
 
 
-def test_clock(restore: RestoreFixture, added: Added) -> None:
+async def test_clock(restore: RestoreFixture, added: Added) -> None:
     """The clock entities read and write the restoreClock settings."""
     clock = _entity(added, "light", f"{THING}_clock")
     hours_24 = _entity(added, "switch", f"{THING}_clock_24-hour")
@@ -356,13 +358,13 @@ def test_clock(restore: RestoreFixture, added: Added) -> None:
     assert turn_on_at.native_value == time(7, 0)
     assert turn_off_at.native_value == time(22, 0)
 
-    clock.turn_off()
-    clock.turn_on(**{ATTR_BRIGHTNESS: 102})
-    hours_24.turn_on()
-    hours_24.turn_off()
-    mode.select_option("Off at Night")
-    turn_on_at.set_value(time(6, 15))
-    turn_off_at.set_value(time(21, 30))
+    await clock.async_turn_off()
+    await clock.async_turn_on(**{ATTR_BRIGHTNESS: 102})
+    await hours_24.async_turn_on()
+    await hours_24.async_turn_off()
+    await mode.async_select_option("Off at Night")
+    await turn_on_at.async_set_value(time(6, 15))
+    await turn_off_at.async_set_value(time(21, 30))
 
     assert restore.client.published == [
         {"restoreClock": {"flags": 0}},
@@ -392,13 +394,13 @@ def test_parse_clock_time(value: str, expected: time | None) -> None:
     assert restore_entities.parse_clock_time(value) == expected
 
 
-def test_all_alarms_switch(restore: RestoreFixture, added: Added) -> None:
+async def test_all_alarms_switch(restore: RestoreFixture, added: Added) -> None:
     """The all-alarms switch is the inverse of alarmsDisabled."""
     alarms = _entity(added, "switch", f"{THING}_alarms")
     assert alarms.is_on
 
-    alarms.turn_off()
-    alarms.turn_on()
+    await alarms.async_turn_off()
+    await alarms.async_turn_on()
 
     assert restore.client.published == [{"alarmsDisabled": True}, {"alarmsDisabled": False}]
     restore.device.alarms_disabled = None
@@ -545,7 +547,7 @@ async def test_no_alarm_entities_until_the_alarms_load() -> None:
     assert "RestoreAlarmSwitch" in [type(entity).__name__ for entity in added["switch"]]
 
 
-def test_entities_go_unavailable_when_the_device_does(
+async def test_entities_go_unavailable_when_the_device_does(
     restore: RestoreFixture, added: Added
 ) -> None:
     """Without the device, entities are unavailable and refuse commands."""
@@ -558,7 +560,7 @@ def test_entities_go_unavailable_when_the_device_does(
     assert not alarm.available
     assert step.options == []
     with pytest.raises(HomeAssistantError):
-        light_entity.turn_off()
+        await light_entity.async_turn_off()
 
 
 def test_firmware_follows_onto_the_device_card(added: Added) -> None:

@@ -85,7 +85,7 @@ class ClockModeSelect(HatchEntity, SelectEntity):
         return MODE_ALWAYS_OFF if not dev.is_clock_on else MODE_ALWAYS_ON
 
     @translate_command_errors
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Select an option.
 
         Args:
@@ -93,4 +93,4 @@ class ClockModeSelect(HatchEntity, SelectEntity):
         """
         mode = OPTION_TO_TURN_OFF_MODE.get(option)
         if mode is not None:
-            self.rest_device.set_clock_turn_off_mode(mode)
+            await self.rest_device.async_command(self.rest_device.set_clock_turn_off_mode, mode)

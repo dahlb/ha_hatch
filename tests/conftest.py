@@ -12,7 +12,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from hatch_rest_api import RestDevice, Restore
 import pytest
@@ -98,6 +98,26 @@ def _done(result: Any = None) -> Future:
     return future
 
 
+def run_commands_on_mock(rest_device: MagicMock) -> MagicMock:
+    """Make a mocked device's ``async_command`` run the command it is given.
+
+    Entities send commands as ``await device.async_command(device.cmd, ...)``;
+    with this, tests keep asserting on ``device.cmd`` as for a direct call.
+
+    Args:
+        rest_device: The mocked device.
+
+    Returns:
+        The same mock.
+    """
+
+    async def run(command: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
+        command(*args, **kwargs)
+
+    rest_device.async_command = AsyncMock(side_effect=run)
+    return rest_device
+
+
 class StubShadowClient:
     """IotShadowClient stub that records each desired state.
 
@@ -107,8 +127,21 @@ class StubShadowClient:
     def __init__(self) -> None:
         """Start with nothing published."""
         self.published: list[dict[str, Any]] = []
+        self.unsubscribed: list[str] = []
         self.update_callback: Callable[[Any], None] | None = None
         self.version = 1
+
+    def unsubscribe(self, topic: str) -> Future:
+        """Record the released topic.
+
+        Args:
+            topic: The topic.
+
+        Returns:
+            A resolved future.
+        """
+        self.unsubscribed.append(topic)
+        return _done()
 
     def subscribe_to_update_shadow_accepted(
         self, request: Any, qos: Any, callback: Callable[[Any], None]

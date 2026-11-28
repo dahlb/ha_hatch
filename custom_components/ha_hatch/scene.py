@@ -190,4 +190,4 @@ class RiotScene(HatchEntity, Scene):
         _, favorite = current
         favorite_name_id = f"{favorite_name(favorite)}-{favorite_id(favorite)}"
         _LOGGER.debug("activating scene:%s with %s", self.unique_id, favorite_name_id)
-        await self.hass.async_add_executor_job(rest_device.set_favorite, favorite_name_id)
+        await rest_device.async_command(rest_device.set_favorite, favorite_name_id)

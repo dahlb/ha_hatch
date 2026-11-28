@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from concurrent.futures import Future
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from hatch_rest_api import RestIot, RestoreV5
 import pytest
 
 from custom_components.ha_hatch import hatch_data_update_coordinator as coordinator_module
@@ -18,7 +20,7 @@ from custom_components.ha_hatch.hatch_data_update_coordinator import (
     restore_alarm_slots_store_key,
 )
 
-from .conftest import RESTORE_THING, RestoreFixture, build_restore
+from .conftest import RESTORE_THING, RestoreFixture, build_device, build_restore
 
 
 def test_store_key_is_per_entry() -> None:
@@ -150,3 +152,28 @@ async def test_an_empty_slot_cannot_be_changed(restore: RestoreFixture) -> None:
     """Changing an alarm in an empty slot fails."""
     with pytest.raises(ValueError):
         await restore.coordinator.async_set_restore_alarm_enabled(restore.device, "404", True)
+
+
+async def test_unsubscribe_releases_every_shadow_subscription_without_an_executor() -> None:
+    """Teardown awaits async_unsubscribe on each device, with no executor job."""
+    first, first_client = build_device(RestIot, "thing-1", "AA:BB:CC:DD:EE:01")
+    second, second_client = build_device(RestoreV5, "thing-2", "AA:BB:CC:DD:EE:02")
+    # No hass: an executor job would fail here.
+    coordinator = cast("HatchDataUpdateCoordinator", SimpleNamespace(rest_devices=[first, second]))
+
+    await HatchDataUpdateCoordinator._async_unsubscribe_shadows(coordinator)
+
+    assert sorted(first_client.unsubscribed) == ["get-topic", "update-topic"]
+    assert sorted(second_client.unsubscribed) == ["get-topic", "update-topic"]
+
+
+async def test_unsubscribe_that_never_completes_is_cut_off() -> None:
+    """An UNSUBACK that never arrives does not hold up the reconnect."""
+    device, client = build_device(RestIot, "thing-1", "AA:BB:CC:DD:EE:01")
+    client.unsubscribe = MagicMock(return_value=Future())  # type: ignore[method-assign]
+    coordinator = cast("HatchDataUpdateCoordinator", SimpleNamespace(rest_devices=[device]))
+
+    with patch.object(coordinator_module, "MQTT_UNSUBSCRIBE_TIMEOUT", 0.01):
+        await HatchDataUpdateCoordinator._async_unsubscribe_shadows(coordinator)
+
+    assert client.unsubscribe.call_count >= 1

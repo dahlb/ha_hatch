@@ -181,9 +181,9 @@ class HatchClockScheduleTime(HatchEntity, TimeEntity):
         return _parse_clock_time(getattr(self.rest_device, self._attr, None))
 
     @translate_command_errors
-    def set_value(self, value: time) -> None:
+    async def async_set_value(self, value: time) -> None:
         """Set the value."""
-        getattr(self.rest_device, self._setter)(value)
+        await self.rest_device.async_command(getattr(self.rest_device, self._setter), value)
 
 
 class HatchAlarmWakeTime(HatchEntity, TimeEntity):

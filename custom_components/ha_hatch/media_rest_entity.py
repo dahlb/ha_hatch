@@ -98,44 +98,46 @@ class MediaRestEntity(HatchEntity, MediaPlayerEntity):
         )
 
     @translate_command_errors
-    def set_volume_level(self, volume: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level (0..1)."""
-        self.rest_device.set_volume(volume * 100)
+        await self.rest_device.async_command(self.rest_device.set_volume, volume * 100)
 
     @translate_command_errors
-    def media_play(self) -> None:
+    async def async_media_play(self) -> None:
         """Start playback."""
-        self.rest_device.set_audio_track(self.rest_device.audio_track)
+        await self.rest_device.async_command(
+            self.rest_device.set_audio_track, self.rest_device.audio_track
+        )
         if self.config_turn_on_media:
-            self.turn_on()
+            await self.async_turn_on()
 
     @translate_command_errors
-    def media_pause(self) -> None:
+    async def async_media_pause(self) -> None:
         """Pause playback."""
-        self.rest_device.set_audio_track(self.none_track)
+        await self.rest_device.async_command(self.rest_device.set_audio_track, self.none_track)
 
     @translate_command_errors
-    def media_stop(self) -> None:
+    async def async_media_stop(self) -> None:
         """Stop playback."""
-        self.rest_device.set_audio_track(self.none_track)
+        await self.rest_device.async_command(self.rest_device.set_audio_track, self.none_track)
 
     @translate_command_errors
-    def select_sound_mode(self, sound_mode: str) -> None:
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
         track = self._find_track(sound_mode=sound_mode)
         if track is None:
             track = self.none_track
-        self.rest_device.set_audio_track(track)
+        await self.rest_device.async_command(self.rest_device.set_audio_track, track)
         if self.config_turn_on_media:
-            self.turn_on()
+            await self.async_turn_on()
 
     @translate_command_errors
-    def turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self.media_stop()
+        await self.async_media_stop()
 
     @translate_command_errors
-    def turn_on(self) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if isinstance(self.rest_device, RestPlus):
-            self.rest_device.set_on(True)
+            await self.rest_device.async_command(self.rest_device.set_on, True)

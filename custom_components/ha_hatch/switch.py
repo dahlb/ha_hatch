@@ -153,14 +153,14 @@ class HatchPowerSwitch(HatchEntity, SwitchEntity):
         return self.rest_device.is_on
 
     @translate_command_errors
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        self.rest_device.set_on(True)
+        await self.rest_device.async_command(self.rest_device.set_on, True)
 
     @translate_command_errors
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        self.rest_device.set_on(False)
+        await self.rest_device.async_command(self.rest_device.set_on, False)
 
 
 class HatchToddlerLockSwitch(HatchEntity, SwitchEntity):
@@ -182,14 +182,14 @@ class HatchToddlerLockSwitch(HatchEntity, SwitchEntity):
         return self.rest_device.toddler_lock
 
     @translate_command_errors
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        self.rest_device.set_toddler_lock(True)
+        await self.rest_device.async_command(self.rest_device.set_toddler_lock, True)
 
     @translate_command_errors
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        self.rest_device.set_toddler_lock(False)
+        await self.rest_device.async_command(self.rest_device.set_toddler_lock, False)
 
 
 class HatchClockTapSwitch(HatchEntity, SwitchEntity):
@@ -211,14 +211,14 @@ class HatchClockTapSwitch(HatchEntity, SwitchEntity):
         return self.rest_device.is_clock_tap_on
 
     @translate_command_errors
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        self.rest_device.clock_tap_on()
+        await self.rest_device.async_command(self.rest_device.clock_tap_on)
 
     @translate_command_errors
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        self.rest_device.clock_tap_off()
+        await self.rest_device.async_command(self.rest_device.clock_tap_off)
 
 
 class HatchAlarmSwitch(HatchEntity, SwitchEntity):

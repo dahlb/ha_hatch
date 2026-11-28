@@ -150,12 +150,12 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
         }
 
     @translate_command_errors
-    def set_volume_level(self, volume: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level (0..1)."""
-        self.rest_device.set_volume(volume * 100)
+        await self.rest_device.async_command(self.rest_device.set_volume, volume * 100)
 
     @translate_command_errors
-    def media_play(self) -> None:
+    async def async_media_play(self) -> None:
         """Start playback."""
         _LOGGER.debug("media play")
         if self.rest_device.is_playing:
@@ -166,17 +166,17 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             _LOGGER.debug("no sound available to play")
             return
         _LOGGER.debug("selecting sound mode of %s", new_sound_mode)
-        self.select_sound_mode(new_sound_mode)
+        await self.async_select_sound_mode(new_sound_mode)
 
     @translate_command_errors
-    def select_sound_mode(self, sound_mode: str) -> None:
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
         _LOGGER.debug("Select sound mode: %s", sound_mode)
         # Program and custom sounds are full payloads, which play on any device.
         payload = self._program_sounds.get(sound_mode) or self._custom_sounds.get(sound_mode)
         if payload is not None:
             _LOGGER.debug("set program or custom sound: %s", sound_mode)
-            self.rest_device.set_sound(payload)
+            await self.rest_device.async_command(self.rest_device.set_sound, payload)
             return
         if isinstance(self.rest_device, RestBaby):
             track = _find_rest_baby_track(track_name=sound_mode)
@@ -186,13 +186,13 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
             track = None
         if track is None:
             _LOGGER.debug("No track found")
-            self.rest_device.set_sound(sound_mode)
+            await self.rest_device.async_command(self.rest_device.set_sound, sound_mode)
         else:
             _LOGGER.debug("set audio track: %s", track)
-            self.rest_device.set_audio_track(track)
+            await self.rest_device.async_command(self.rest_device.set_audio_track, track)
 
     @translate_command_errors
-    def media_stop(self) -> None:
+    async def async_media_stop(self) -> None:
         """Stop playback.
 
         A Rest+ (RestIot) stops only its sound so a light that is on stays on; other
@@ -200,7 +200,7 @@ class MediaRiotEntity(HatchEntity, MediaPlayerEntity):
         """
         if isinstance(self.rest_device, RestIot):
             _LOGGER.debug("media stop: stopping sound only")
-            self.rest_device.stop_sound()
+            await self.rest_device.async_command(self.rest_device.stop_sound)
         else:
             _LOGGER.debug("media stop: turning device off")
-            self.rest_device.turn_off()
+            await self.rest_device.async_command(self.rest_device.turn_off)
